@@ -52,13 +52,18 @@ class ThrusterFlame extends PositionComponent {
   void update(double dt) {
     super.update(dt);
 
-    // Обновляем существующие частицы
-    for (int i = _particles.length - 1; i >= 0; i--) {
+    // Обновляем существующие частицы (compaction pattern вместо removeAt)
+    int writeIndex = 0;
+    for (int i = 0; i < _particles.length; i++) {
       _particles[i].update(dt);
-      if (_particles[i].isDead) {
-        _particles.removeAt(i);
+      if (!_particles[i].isDead) {
+        if (writeIndex != i) {
+          _particles[writeIndex] = _particles[i];
+        }
+        writeIndex++;
       }
     }
+    _particles.length = writeIndex;
 
     // Если двигатель активен, генерируем новые частицы
     if (isActive) {

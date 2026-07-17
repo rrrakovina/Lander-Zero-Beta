@@ -130,6 +130,27 @@ class Cave extends BodyComponent {
         ..restitution = 0.05,
     );
 
+    // Боковые стенки (левая и правая границы пещеры)
+    final leftWall = EdgeShape()..set(
+      Vector2(floorPoints.first.x, floorPoints.first.y),
+      Vector2(ceilingPoints.first.x, ceilingPoints.first.y),
+    );
+    body.createFixture(
+      FixtureDef(leftWall)
+        ..friction = 0.5
+        ..restitution = 0.2,
+    );
+
+    final rightWall = EdgeShape()..set(
+      Vector2(floorPoints.last.x, floorPoints.last.y),
+      Vector2(ceilingPoints.last.x, ceilingPoints.last.y),
+    );
+    body.createFixture(
+      FixtureDef(rightWall)
+        ..friction = 0.5
+        ..restitution = 0.2,
+    );
+
     return body;
   }
 
@@ -368,13 +389,30 @@ class Cave extends BodyComponent {
     }
   }
 
-  double getFloorY(double x) {
-    if (floorPoints.isEmpty) return 0.0;
-    return floorPoints.reduce((curr, next) => (curr.x - x).abs() < (next.x - x).abs() ? curr : next).y;
+  double _getYFromPoints(List<Vector2> points, double x) {
+    if (points.isEmpty) return 0.0;
+    if (x <= points.first.x) return points.first.y;
+    if (x >= points.last.x) return points.last.y;
+
+    // Бинарный поиск ближайшего сегмента
+    int lo = 0, hi = points.length - 1;
+    while (lo < hi - 1) {
+      final mid = (lo + hi) ~/ 2;
+      if (points[mid].x <= x) {
+        lo = mid;
+      } else {
+        hi = mid;
+      }
+    }
+
+    // Линейная интерполяция между двумя ближайшими точками
+    final p0 = points[lo];
+    final p1 = points[hi];
+    final t = (x - p0.x) / (p1.x - p0.x);
+    return p0.y + (p1.y - p0.y) * t;
   }
 
-  double getCeilingY(double x) {
-    if (ceilingPoints.isEmpty) return 0.0;
-    return ceilingPoints.reduce((curr, next) => (curr.x - x).abs() < (next.x - x).abs() ? curr : next).y;
-  }
+  double getFloorY(double x) => _getYFromPoints(floorPoints, x);
+
+  double getCeilingY(double x) => _getYFromPoints(ceilingPoints, x);
 }

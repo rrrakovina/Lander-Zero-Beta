@@ -14,10 +14,10 @@ class GameConfig {
   static const double landerAngularDamping = 2.5;    // Стабилизация вращения
 
   // Настройки троса и капсулы
-  static const double cargoMass = 0.1;               // Относительная масса груза (уменьшена с 0.8 для легкого подъема)
-  static const double ropeLength = 6.0;              // Максимальная длина троса в метрах
-  static const int ropeSegmentsCount = 6;            // Количество звеньев для реалистичного провисания
-  static const double dockingRange = 4.0;            // Расстояние автоматической стыковки
+  static const double cargoMass = 0.6;               // Относительная масса груза
+  static const double ropeLength = 3.5;              // Максимальная длина троса в метрах
+  static const int ropeSegmentsCount = 4;            // Количество звеньев для стабильного поведения
+  static const double dockingRange = 3.5;            // Расстояние автоматической стыковки
 
   // Настройки ограничений скоростей
   static const double maxLinearVelocity = 12.0;       // Максимальная линейная скорость

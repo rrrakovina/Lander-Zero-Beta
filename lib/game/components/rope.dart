@@ -58,8 +58,8 @@ class Rope extends Component with HasGameReference<Forge2DGame> {
       final segmentDef = BodyDef(
         type: BodyType.dynamic,
         position: initialPos,
-        linearDamping: 0.5,
-        angularDamping: 0.5,
+        linearDamping: 2.5,
+        angularDamping: 3.0,
       );
 
       final segmentBody = world.createBody(segmentDef);
@@ -70,7 +70,7 @@ class Rope extends Component with HasGameReference<Forge2DGame> {
         ..set(Vector2(0, -segLength / 2), Vector2(0, segLength / 2));
 
       final fixtureDef = FixtureDef(shape)
-        ..density = 0.4
+        ..density = 0.2
         ..friction = 0.2
         ..filter.categoryBits = filter.categoryBits
         ..filter.maskBits = filter.maskBits;

@@ -81,27 +81,39 @@ class GameAudioManager {
     }
   }
 
+  bool _isThrustPlaying = false;
+
   void startThrustLoop() async {
     if (isTesting) return;
+    if (_isThrustPlaying) return; // Не запускаем повторно
     try {
       final state = GameState();
       if (state.sfxVolume > 0 && _thrustPlayer == null) {
+        _isThrustPlaying = true;
         _thrustPlayer = await FlameAudio.loop('thrust.wav', volume: state.sfxVolume * 0.4);
       }
     } catch (e) {
-      // Игнорируем
+      _isThrustPlaying = false;
     }
   }
 
   void stopThrustLoop() async {
     if (isTesting) return;
+    _isThrustPlaying = false;
     try {
       if (_thrustPlayer != null) {
         await _thrustPlayer!.stop();
+        await _thrustPlayer!.dispose();
         _thrustPlayer = null;
       }
     } catch (e) {
-      // Игнорируем
+      _thrustPlayer = null;
     }
+  }
+
+  /// Полная остановка всех звуков (вызывается при выходе из игрового экрана)
+  void disposeAll() {
+    stopThrustLoop();
+    stopBgm();
   }
 }

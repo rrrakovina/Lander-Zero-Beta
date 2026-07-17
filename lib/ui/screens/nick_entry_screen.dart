@@ -34,6 +34,15 @@ class _NickEntryWidgetState extends State<NickEntryWidget> {
     widget.onFinished();
   }
 
+  void _toggleLanguage() async {
+    final state = GameState();
+    final newLang = state.language == 'ru' ? 'en' : 'ru';
+    await state.setLanguage(newLang);
+    setState(() {
+      _error = ''; // Сброс ошибки при смене языка
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = GameState();
@@ -51,6 +60,32 @@ class _NickEntryWidgetState extends State<NickEntryWidget> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Кнопка переключения языка в правом верхнем углу панели
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: OutlinedButton.icon(
+                      onPressed: _toggleLanguage,
+                      icon: const Icon(Icons.language, size: 18),
+                      label: Text(
+                        isRu ? 'EN' : 'RU',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: GameConfig.colorPrimary,
+                        side: BorderSide(
+                          color: GameConfig.colorPrimary.withOpacity(0.5),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   const Icon(
                     Icons.rocket_launch_rounded,
                     color: GameConfig.colorPrimary,

@@ -53,8 +53,8 @@ class CargoCapsule extends BodyComponent {
     final bodyDef = BodyDef(
       type: BodyType.dynamic,
       position: initialPosition,
-      linearDamping: 0.8,   // Сопротивление воздуха для груза
-      angularDamping: 1.0,
+      linearDamping: 1.5,   // Сопротивление воздуха для груза
+      angularDamping: 3.0,  // Сильная стабилизация вращения
     );
 
     final body = world.createBody(bodyDef);
@@ -73,8 +73,8 @@ class CargoCapsule extends BodyComponent {
     final fixtureDef = FixtureDef(
       shape,
       density: GameConfig.cargoMass,
-      friction: 0.9,
-      restitution: 0.1,
+      friction: 0.3,
+      restitution: 0.05,
     );
 
     body.createFixture(fixtureDef);
