@@ -95129,7 +95129,7 @@ J.ap(n.save())
 s=b.a
 r=b.b
 n.translate(s/2,r/2)
-q=Math.min(s,r)/2
+q=Math.min(s,r)/2.5
 a.mr(q,q)
 s=o.c
 if(s>0)n.translate(0,Math.sin(s)*0.06)
