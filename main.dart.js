@@ -92474,7 +92474,7 @@ m.fe(n)
 l=A.kO(m,0.1,0.3,!1,0.05)
 o=l.r
 o.a=8
-o.b=3
+o.b=65531
 s.jY(l)
 return s},
 f9(a){var s,r,q,p=this
@@ -93054,7 +93054,7 @@ m.fe(n)
 l=A.kO(m,j,0.8,!1,0.1)
 h=l.r
 h.a=2
-h.b=9
+h.b=65531
 s.jY(l)
 return s},
 bg(a){var s,r,q,p,o,n,m,l,k,j,i,h,g,f=this
@@ -94410,7 +94410,7 @@ s=p.ax
 s===$&&A.a()
 n=new A.i(new Float32Array(2))
 n.aq(0,-0.9)
-if(Math.sqrt(i.m_(A.bv(s.d,n)))<=3.5){s=d.ax
+if(Math.sqrt(i.m_(A.bv(s.d,n)))<=1.2){s=d.ax
 s===$&&A.a()
 n=p.ax
 n===$&&A.a()
