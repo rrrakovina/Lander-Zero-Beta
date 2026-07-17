@@ -96,12 +96,12 @@ class Rope extends Component with HasGameReference<LanderZeroGame> {
       final segmentBody = world.createBody(segmentDef);
       segmentBody.userData = this;
 
-      // Тонкая линия-коллайдер для звена веревки
-      final shape = EdgeShape()
-        ..set(Vector2(0, -segLength / 2), Vector2(0, segLength / 2));
+      // Тонкий прямоугольник для корректного расчета массы и инерции движком Box2D
+      final shape = PolygonShape()
+        ..setAsBox(0.02, segLength / 2, Vector2.zero(), 0.0);
 
       final fixtureDef = FixtureDef(shape)
-        ..density = 0.2
+        ..density = 2.0  // Оптимальная плотность для стабильного соотношения масс
         ..friction = 0.2
         ..filter.categoryBits = filter.categoryBits
         ..filter.maskBits = filter.maskBits;
