@@ -17,7 +17,7 @@ class GameConfig {
   static const double cargoMass = 0.10;              // Относительная масса груза (лёгкий подъём)
   static const double ropeLength = 4.0;              // Максимальная длина троса в метрах
   static const int ropeSegmentsCount = 12;            // Количество звеньев для гибкости
-  static const double dockingRange = 3.5;            // Расстояние автоматической стыковки
+  static const double dockingRange = 1.2;            // Расстояние автоматической стыковки
 
   // Настройки ограничений скоростей
   static const double maxLinearVelocity = 12.0;       // Максимальная линейная скорость

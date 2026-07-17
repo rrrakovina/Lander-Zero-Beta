@@ -76,7 +76,7 @@ class CargoCapsule extends BodyComponent {
       friction: 0.3,
       restitution: 0.05,
     )..filter.categoryBits = 0x0008
-     ..filter.maskBits = 0x0001 | 0x0002; // Столкновения только со стенами пещеры (0x0001) и кораблем (0x0002)
+     ..filter.maskBits = 0xFFFF & ~0x0004; // Столкновения со всем, кроме троса (0x0004)
 
     body.createFixture(fixtureDef);
     return body;
