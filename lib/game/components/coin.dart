@@ -68,7 +68,7 @@ class Coin extends BodyComponent<LanderZeroGame> {
 
     final body = world.createBody(bodyDef);
 
-    final shape = CircleShape()..radius = 0.25;
+    final shape = CircleShape()..radius = 0.5;
 
     final fixtureDef = FixtureDef(
       shape,

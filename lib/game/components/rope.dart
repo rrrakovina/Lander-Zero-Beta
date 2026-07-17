@@ -58,8 +58,8 @@ class Rope extends Component with HasGameReference<Forge2DGame> {
       final segmentDef = BodyDef(
         type: BodyType.dynamic,
         position: initialPos,
-        linearDamping: 2.5,
-        angularDamping: 3.0,
+        linearDamping: 1.2,
+        angularDamping: 1.5,
       );
 
       final segmentBody = world.createBody(segmentDef);

@@ -85,9 +85,18 @@ class _MainScreenControllerState extends State<MainScreenController> {
   }
 
   void _navigateTo(ScreenState screen) {
+    final wasPlaying = _screen == ScreenState.playing;
     setState(() {
       _screen = screen;
     });
+    // При выходе из игры останавливаем звук тяги и перезапускаем фоновую музыку
+    if (wasPlaying && screen != ScreenState.playing) {
+      GameAudioManager().disposeGameSounds();
+      // Перезапускаем BGM (Flame мог прервать его)
+      Future.delayed(const Duration(milliseconds: 300), () {
+        GameAudioManager().playBgm();
+      });
+    }
   }
 
   void _startGame(String mapId) {

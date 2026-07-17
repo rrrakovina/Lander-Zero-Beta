@@ -70,7 +70,7 @@ class FuelPickup extends BodyComponent<LanderZeroGame> {
     final body = world.createBody(bodyDef);
 
     // Немного больше, чем монета
-    final shape = CircleShape()..radius = 0.35;
+    final shape = CircleShape()..radius = 0.6;
 
     final fixtureDef = FixtureDef(
       shape,
