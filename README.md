@@ -11,32 +11,31 @@
 
 ## English Version
 
-**Lander Zero (Rescue Ops)** is a tight, physics-driven 2D space flight simulator built with **Flutter** and the **Flame Engine** (using **Forge2D**). 
+**Lander Zero (Rescue Ops)** is a 2D physics-based space lander game built using **Flutter** and the **Flame Engine** (leveraging **Forge2D** for physical simulation). 
 
-This isn't your standard Lunar Lander clone where you just descend and park. Here, you are a pilot for the Cosmic Rescue Division, navigating deep, hazardous cave systems to recover lost survivors or cargo capsule pods. Your ship is tethered to a physical multi-segment rope, creating a pendulum effect that shifts your center of gravity dynamically. One wrong turn or sudden thrust, and the swinging cargo will pull your ship straight into a rocky wall.
+The gameplay focuses on rescue operations in narrow, hazardous caves. Players must descend into deep canyon shafts, dock with a cargo capsule or survivor pod via a flexible rope, and lift them back to the surface while managing the pendulum effect of the swinging cargo, gravity, and wind.
 
 ---
 
-### 🎮 Gameplay & Feel
+### 🎮 Gameplay & Mechanics
 
-*   **Dual-Thruster Simplicity:** Tap the left side of the screen to fire the left engine (tilts right, pushes up-right). Tap the right side for the right engine. Hold both for a balanced vertical burn. Easy to grasp, incredibly high skill ceiling.
-*   **The Pendulum Threat:** Your cargo hangs from a realistic **12-segment steel cable**. As you fly, the cargo swings and pulls your lander. You must counter the momentum of the cargo using thruster pulses.
+*   **Dual-Thruster Controls:** Tap the left side of the screen to fire the left thruster (tilts the ship right and gains diagonal upward thrust). Tap the right side for the right thruster. Hold both for balanced vertical lift.
+*   **Flexible Rope Physics:** The capsule is connected to the lander using a **12-segment physical cable**. The swinging cargo shifts the lander's center of gravity, requiring thruster corrections.
 *   **Two-Phase Missions:**
-    *   *Descent:* Navigate carefully into the depths, locate the landing pad, and dock with the capsule.
-    *   *Ascent:* Lift the heavy capsule back to the surface. Your ship is now heavier, slower, consumes more fuel, and handles like a beast.
-*   **Hangar & Customization:** Spend collected stars to upgrade your lander's thrust power, fuel capacity, and shield strength, or purchase advanced hulls like the heavy-duty *Cyclone* or the agile *Needle*.
+    *   *Descent:* Navigate carefully into the depths to locate and dock with the capsule.
+    *   *Ascent:* Lift the heavy cargo back to the exit hatch. The ship becomes heavier and less maneuverable with increased fuel consumption.
+*   **Garage & Customization:** Upgrade the lander's engines, shield durability, and fuel capacity using collected stars, or purchase alternative ships (*Sputnik*, *Cyclone*, *Needle*).
 
 ---
 
-### ✨ Visual & Aesthetic Overhaul
+### ✨ Visual & Technical Features
 
-*   **Neon-Industrial Style:** The game features a premium dark sci-fi look with glowing glassmorphic UI cards, neon buttons, and responsive control panels.
-*   **Interactive 3D-Perspective Grid:** Background interfaces utilize an animated perspective grid fading towards the horizon for a classic retro-futuristic arcade feel.
-*   **Dynamic Cockpits & Lights:** Hangar vessels float gracefully on magnetic pads. Astronauts bob their heads dynamically inside their capsules based on ship inertia, with realistic light glare sweeps running across the glass canopies.
-*   **Flickering Plasma Jets:** Engine thrusters emit a white-hot plasma core cone with trailing cyan and amber combustion sparks.
-*   **Active Rope Tension HUD:** The rescue cable changes color in real-time from neon cyan (safe/slack) through amber to warning crimson (high tension/about to snap), stretching visually under heavy loads.
-*   **Reactive Energy Shields:** Crashing into canyon walls triggers a temporary glowing cyan force shield dome around the ship that absorbs impact forces and fades out.
-*   **Planet Environments:** Each cave map has its own atmosphere (e.g. lava heat distortion and volcanic orange basalt inside the *Core* depths, storm wind vectors in the *Wind Shaft*).
+*   **UI Design:** Cyber-industrial theme utilizing glassmorphic panels and animated perspective background grids.
+*   **Dynamic Landing Modules:** Ships float in the hangar menus. Cockpits feature dynamic glare sweeps, and the pilot's head bobs in response to physical forces.
+*   **Thruster Plumes:** Engines render with a white-hot plasma core and trailing cyan/amber spark particles.
+*   **Active Rope Tension HUD:** The cable changes color in real-time from neon cyan (slack/safe) to crimson (high tension) and changes thickness based on the load.
+*   **Collision Shields:** A temporary cyan force field dome flashes around the hull upon heavy impact.
+*   **Map Atmospheres:** Each cave map has unique visual effects (e.g. lava heat distortion inside the *Core* depths, wind streams in the *Wind Shaft*).
 
 ---
 
@@ -44,9 +43,9 @@ This isn't your standard Lunar Lander clone where you just descend and park. Her
 
 #### Prerequisites
 *   [Flutter SDK](https://flutter.dev/docs/get-started/install) (version 3.44 or higher)
-*   [Node.js](https://nodejs.org/) (optional, only needed to host the local web build)
+*   [Node.js](https://nodejs.org/) (optional, only needed for local web hosting)
 
-#### Local Run (Desktop / Mobile)
+#### Running Locally (Desktop / Mobile)
 1. Install project dependencies:
    ```bash
    flutter pub get
@@ -57,7 +56,7 @@ This isn't your standard Lunar Lander clone where you just descend and park. Her
    ```
 
 #### Web Version (WASM / Multithreading)
-Due to multithreading and WebAssembly requirements in Flame Forge2D, the web version requires specific HTTP security headers (`Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy`). We provide a lightweight local server configuration:
+Due to multithreading and WebAssembly requirements, the web version requires specific HTTP security headers (`Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy`). A local helper server is provided:
 1. Compile the web version to WebAssembly:
    ```bash
    flutter build web --wasm
@@ -66,42 +65,41 @@ Due to multithreading and WebAssembly requirements in Flame Forge2D, the web ver
    ```bash
    npm install
    ```
-3. Boot the local server:
+3. Run the local server:
    ```bash
    node serve.js
    ```
-4. Access `http://localhost:8080` in your web browser.
+4. Open `http://localhost:8080` in your web browser.
 
 ---
 
 ## Русская Версия
 
-**Lander Zero (Rescue Ops)** — это напряженный физический 2D-симулятор космических спасательных операций, созданный на **Flutter** и игровом движке **Flame** (с физикой **Forge2D**).
+**Lander Zero (Rescue Ops)** — это 2D-симулятор космического посадочного модуля, разработанный на **Flutter** с использованием игрового движка **Flame** и физического движка **Forge2D**.
 
-Забудьте про скучные клоны Lunar Lander, где нужно просто ровно приземлиться. Здесь вы — пилот спасательного модуля, который спускается в узкие, извилистые пещеры для эвакуации выживших и ценных грузов. Капсула крепится к вашему кораблю на гибком тросе, превращаясь в тяжелый физический маятник. Одно резкое движение, и раскачавшийся груз утянет ваш корабль на острые скалы.
+Игровой процесс сфокусирован на проведении спасательных операций. Игроку необходимо спускаться в узкие пещеры, прикреплять спасательную капсулу с помощью гибкого троса и эвакуировать её на поверхность, преодолевая гравитационные аномалии, ветер и инерцию раскачивающегося груза.
 
 ---
 
-### 🎮 Геймплей и Физика
+### 🎮 Геймплей и Механики
 
-*   **Интуитивное управление двумя пальцами:** Тап слева — работает левый двигатель (корабль кренится вправо и летит вверх-вправо). Тап справа — работает правый двигатель. Зажаты обе стороны — вертикальный взлет. 
-*   **Физика тяжелого маятника:** Груз подвешен на честном **12-звенном тросе**. Раскачивание капсулы смещает центр тяжести модуля. Вам придется гасить инерцию груза короткими импульсами двигателей.
+*   **Двухкнопочная схема управления:** Нажатие на левую часть экрана включает левый двигатель (корабль наклоняется вправо и ускоряется по диагонали вверх-вправо). Нажатие справа включает правый двигатель. Зажатие обеих сторон дает вертикальный взлет.
+*   **Физика гибкого троса:** Капсула крепится к днищу модуля с помощью **12-звенного физического кабеля**. Раскачивающийся груз смещает центр тяжести корабля, что требует компенсации маневрами.
 *   **Две фазы полета:**
-    *   *Спуск:* Аккуратно маневрируйте вниз, уворачиваясь от сквозняков и гравитационных аномалий, чтобы приземлиться на платформу и зацепить груз.
-    *   *Эвакуация:* Тяжелый подъем на поверхность. Корабль расходует больше топлива, неохотно слушается руля и требует ювелирной точности управления.
-*   **Гараж и Ангар:** Тратьте собранные звезды на прокачку мощности дюз, прочности обшивки, емкости баков или покупайте новые модули (тяжелый *Ураган* или маневренную *Иглу*).
+    *   *Спуск:* Аккуратный полет в глубину шахты для поиска и автоматической стыковки с капсулой.
+    *   *Эвакуация:* Подъем с тяжелым грузом к верхнему шлюзу при повышенном расходе топлива и сниженной маневренности модуля.
+*   **Гараж и Улучшения:** Улучшение двигателей модуля, прочности корпуса и емкости топливных баков за собранные звезды, а также покупка альтернативных кораблей (*Спутник*, *Ураган*, *Игла*).
 
 ---
 
 ### ✨ Графика и Оформление
 
-*   **Стиль Неонового Индастриала:** Интерфейс выполнен в глубоких темных тонах с неоновой подсветкой, стеклянными консолями (эффект Glassmorphism) и высокотехнологичными кнопками.
-*   **Перспективная 3D-сетка:** Фоны экранов используют анимированную сетку, уходящую вглубь к линии горизонта, создавая ретро-футуристическую атмосферу аркадных автоматов.
-*   **Живые Кабины и Пилоты:** Модели кораблей в ангаре плавно левитируют на магнитной подушке. Пилоты внутри кабин забавно качают головами в такт движениям корабля, а на круглом стекле кабины переливаются световые блики.
-*   **Реактивное Пламя:** Двигатели ревут настоящим плазменным конусом с белым ядром, искрами сгорания и дымовым шлейфом.
-*   **Активный Трос:** Кабель динамически меняет свой цвет от неонового циана (безопасно) через желтый к красному (предельное натяжение) и визуально растягивается при нагрузках.
-*   **Силовой Купол:** При столкновениях со скалами вокруг модуля вспыхивает яркий силовой щит, поглощающий часть урона, с красивой сетчатой анимацией затухания.
-*   **Уникальная Погода Пещер:** Уровни имеют свою графику (эффект теплового марева и лавовые отсветы в *Ядре*, ветряные потоки и сносимый дым на уровне *Ветер*).
+*   **Интерфейс:** Оформление в стиле темного неонового индастриала с эффектом матового стекла (glassmorphism) и анимированной фоновой сеткой.
+*   **Визуализация кораблей:** Анимация покачивания модулей в меню, динамические блики на стекле кабины и покачивание головы пилота под действием физических сил.
+*   **Реактивное пламя:** Выхлоп двигателей со светящимся плазменным ядром и частицами искр.
+*   **Индикация натяжения троса:** Трос меняет цвет (от бирюзового к красному) и толщину в зависимости от растяжения и физической нагрузки.
+*   **Силовой щит:** Сферическое защитное поле, кратковременно вспыхивающее вокруг обшивки при соударениях со скалами.
+*   **Климат уровней:** Тематическое оформление пещер (эффект теплового марева в «Ядре», анимированные потоки ветра на ветреном уровне).
 
 ---
 
@@ -122,8 +120,8 @@ Due to multithreading and WebAssembly requirements in Flame Forge2D, the web ver
    ```
 
 #### Запуск в Браузере (WASM / Мультипоточность)
-Для корректной работы физического движка Flame Forge2D на WebAssembly требуются заголовки безопасности `Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy`. Запуск производится через наш готовый локальный сервер:
-1. Соберите веб-сборку:
+Для работы физического движка Flame Forge2D на WebAssembly требуются HTTP-заголовки безопасности `Cross-Origin-Opener-Policy` и `Cross-Origin-Embedder-Policy`. Запуск производится через локальный сервер:
+1. Соберите веб-версию:
    ```bash
    flutter build web --wasm
    ```
