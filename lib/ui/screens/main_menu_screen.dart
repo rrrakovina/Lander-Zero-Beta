@@ -131,21 +131,21 @@ class MainMenuWidget extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildMenuButton(
+                          HoverMenuButton(
                             title: state.translate('play'),
                             icon: Icons.play_arrow_rounded,
                             color: GameConfig.colorPrimary,
                             onTap: onPlay,
                           ),
                           const SizedBox(height: 16),
-                          _buildMenuButton(
+                          HoverMenuButton(
                             title: state.translate('garage'),
                             icon: Icons.build_rounded,
                             color: GameConfig.colorWarning,
                             onTap: onGarage,
                           ),
                           const SizedBox(height: 16),
-                          _buildMenuButton(
+                          HoverMenuButton(
                             title: state.translate('records'),
                             icon: Icons.emoji_events_rounded,
                             color: const Color(0xFFE040FB),
@@ -282,48 +282,8 @@ class MainMenuWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuButton({
-    required String title,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        hoverColor: color.withOpacity(0.08),
-        splashColor: color.withOpacity(0.15),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withOpacity(0.3), width: 1.5),
-            color: color.withOpacity(0.03),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: color, size: 32),
-              const SizedBox(width: 16),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                ),
-              ),
-              const Spacer(),
-              Icon(Icons.arrow_forward_ios_rounded, color: color.withOpacity(0.5), size: 18),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // Метод _buildMenuButton заменен на полноценный HoverMenuButton ниже по коду
+
 
   Widget _buildSpecBar({
     required String title,
@@ -387,14 +347,105 @@ class _MainMenuRocketPreviewState extends State<MainMenuRocketPreview> with Sing
     return AnimatedBuilder(
       animation: _animController,
       builder: (context, child) {
-        return CustomPaint(
-          size: const Size(120, 120),
-          painter: RocketPainter(
-            rocketId: widget.rocketId,
-            animationTime: _animController.value * 2 * pi,
+        final double hoverOffset = sin(_animController.value * 2 * pi) * 6.0; // Плавная левитация на 6 пикселей
+        return Transform.translate(
+          offset: Offset(0, hoverOffset),
+          child: CustomPaint(
+            size: const Size(120, 120),
+            painter: RocketPainter(
+              rocketId: widget.rocketId,
+              animationTime: _animController.value * 2 * pi,
+            ),
           ),
         );
       },
+    );
+  }
+}
+
+class HoverMenuButton extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const HoverMenuButton({
+    super.key,
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<HoverMenuButton> createState() => _HoverMenuButtonState();
+}
+
+class _HoverMenuButtonState extends State<HoverMenuButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = widget.color;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        transform: Matrix4.identity()..translate(_isHovered ? 8.0 : 0.0, 0.0), // Смещение вправо при наведении
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(12),
+            hoverColor: Colors.transparent,
+            splashColor: color.withOpacity(0.15),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _isHovered ? color : color.withOpacity(0.3),
+                  width: _isHovered ? 2.0 : 1.5,
+                ),
+                color: _isHovered ? color.withOpacity(0.08) : color.withOpacity(0.03),
+                boxShadow: _isHovered ? [
+                  BoxShadow(
+                    color: color.withOpacity(0.15),
+                    blurRadius: 15,
+                    spreadRadius: 1,
+                  )
+                ] : [],
+              ),
+              child: Row(
+                children: [
+                  Icon(widget.icon, color: color, size: 32),
+                  const SizedBox(width: 16),
+                  Text(
+                    widget.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const Spacer(),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    transform: Matrix4.identity()..translate(_isHovered ? 4.0 : 0.0),
+                    child: Icon(Icons.arrow_forward_ios_rounded, color: _isHovered ? color : color.withOpacity(0.5), size: 18),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

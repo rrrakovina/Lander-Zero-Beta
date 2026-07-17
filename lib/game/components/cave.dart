@@ -104,6 +104,51 @@ class Cave extends BodyComponent {
   final Path _spikePath = Path();
 
   @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+
+    // Настраиваем уникальные шейдеры и цвета в зависимости от планеты/карты
+    if (mapId == 'core') {
+      _stoneFillPaint.shader = const LinearGradient(
+        colors: [Color(0xFF28130E), Color(0xFF0F0705)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(const Rect.fromLTRB(-70.0, -35.0, 50.0, 25.0));
+      
+      _soilPaint.color = const Color(0xFF4E2C24);
+      _grassPaint.color = const Color(0xFFFF5722); // Ярко-оранжевая раскаленная каемка
+      
+      _ceilingSoilPaint.color = const Color(0xFF3E1F1A);
+      _ceilingTopPaint.color = const Color(0xFFFF7043);
+    } else if (mapId == 'wind') {
+      _stoneFillPaint.shader = const LinearGradient(
+        colors: [Color(0xFF14242A), Color(0xFF070E10)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(const Rect.fromLTRB(-70.0, -35.0, 50.0, 25.0));
+      
+      _soilPaint.color = const Color(0xFF37474F);
+      _grassPaint.color = const Color(0xFF00E5FF); // Неоново-бирюзовая каемка
+      
+      _ceilingSoilPaint.color = const Color(0xFF263238);
+      _ceilingTopPaint.color = const Color(0xFF80DEEA);
+    } else {
+      // echo / default
+      _stoneFillPaint.shader = const LinearGradient(
+        colors: [Color(0xFF212529), Color(0xFF0A0C0D)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(const Rect.fromLTRB(-70.0, -35.0, 50.0, 25.0));
+      
+      _soilPaint.color = const Color(0xFF5D4037);
+      _grassPaint.color = const Color(0xFFFFB300); // Янтарная каемка
+      
+      _ceilingSoilPaint.color = const Color(0xFF4E342E);
+      _ceilingTopPaint.color = const Color(0xFFFFD54F);
+    }
+  }
+
+  @override
   Body createBody() {
     final bodyDef = BodyDef(
       type: BodyType.static,

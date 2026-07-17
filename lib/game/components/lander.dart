@@ -35,6 +35,8 @@ class Lander extends BodyComponent with ContactCallbacks {
   double shield = 100.0;
   double _smokeTimer = 0.0;
   bool exploded = false;
+  double _totalTime = 0.0; // Для анимации бликов во время полета
+  double _shieldHitTimer = 0.0; // Таймер свечения защитного купола при ударе
 
   // Покачивание головы пилота
   final Vector2 headOffset = Vector2.zero();
@@ -299,7 +301,8 @@ class Lander extends BodyComponent with ContactCallbacks {
       density: 1.0 * massMult, // Масса пропорциональна весу кабины
       friction: 0.8,
       restitution: 0.1,
-    );
+    )..filter.categoryBits = 0x0002
+     ..filter.maskBits = 0x0001 | 0x0008; // Столкновения только со стенами пещеры (0x0001) и грузом (0x0008)
 
     body.createFixture(fixtureDef);
     return body;
@@ -308,6 +311,10 @@ class Lander extends BodyComponent with ContactCallbacks {
   @override
   void update(double dt) {
     super.update(dt);
+    _totalTime += dt;
+    if (_shieldHitTimer > 0) {
+      _shieldHitTimer -= dt;
+    }
 
     final dynamic gameRef = game;
     if (fuel <= 0 || gameRef.runStateNotifier.value != GameRunState.playing) {
@@ -449,6 +456,7 @@ class Lander extends BodyComponent with ContactCallbacks {
     if (maxNormalImpulse > 5.0) {
       final damage = (maxNormalImpulse - 5.0) * 2.5;
       shield = (shield - damage).clamp(0.0, maxShield);
+      _shieldHitTimer = 0.6; // Активируем визуальный щит на 0.6 сек
 
       // Упругое сжатие при ударе
       triggerSquash(1.15, 0.82, 0.35);
@@ -468,6 +476,23 @@ class Lander extends BodyComponent with ContactCallbacks {
     canvas.save();
     canvas.scale(scaleX, scaleY);
     super.render(canvas);
+
+    // Рисовка силового щита при ударе
+    if (_shieldHitTimer > 0) {
+      final double opacity = (_shieldHitTimer / 0.6).clamp(0.0, 1.0) * 0.5;
+      final Paint shieldPaint = Paint()
+        ..color = GameConfig.colorPrimary.withOpacity(opacity)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.12;
+      final Paint shieldGlowPaint = Paint()
+        ..color = GameConfig.colorPrimary.withOpacity(opacity * 0.4)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.25
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.1);
+      
+      canvas.drawCircle(Offset.zero, 1.8, shieldGlowPaint);
+      canvas.drawCircle(Offset.zero, 1.8, shieldPaint);
+    }
 
     // Рисовка кабины в стиле Hill Climb Racing (тени, градиентная кабина, пилот)
     if (rocketId == 'cyclone') {
@@ -653,5 +678,23 @@ class Lander extends BodyComponent with ContactCallbacks {
       ),
       _glassHighlightPaint,
     );
+
+    // Бегущий блик по стеклу во время полета
+    final double sweepProgress = (sin(_totalTime * 1.5) + 1.0) / 2.0;
+    final double sweepX = cabinCenter.dx - radius + (radius * 2.0 * sweepProgress);
+    canvas.save();
+    final Path clipPath = Path()..addCircle(cabinCenter, radius);
+    canvas.clipPath(clipPath);
+    final Paint sweepPaint = Paint()
+      ..color = Colors.white.withOpacity(0.08)
+      ..style = PaintingStyle.fill;
+    final Path sweepPath = Path()
+      ..moveTo(sweepX - radius * 0.2, cabinCenter.dy - radius)
+      ..lineTo(sweepX + radius * 0.1, cabinCenter.dy - radius)
+      ..lineTo(sweepX - radius * 0.1, cabinCenter.dy + radius)
+      ..lineTo(sweepX - radius * 0.4, cabinCenter.dy + radius)
+      ..close();
+    canvas.drawPath(sweepPath, sweepPaint);
+    canvas.restore();
   }
 }

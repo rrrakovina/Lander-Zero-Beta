@@ -46,8 +46,8 @@ class Rope extends Component with HasGameReference<Forge2DGame> {
     // Настройка фильтрации столкновений
     // Трос и капсула не должны сталкиваться с кораблем
     final filter = Filter()
-      ..categoryBits = 0x0002  // Категория троса
-      ..maskBits = 0x0001;     // Сталкиваться только со стенами пещеры
+      ..categoryBits = 0x0004  // Категория троса (0x0004)
+      ..maskBits = 0x0001;     // Сталкиваться только со стенами пещеры (0x0001)
 
     Body prevBody = landerBody;
     Vector2 prevAnchor = Vector2(0, 0.8); // Локальный анкер на предыдущем теле
@@ -144,9 +144,35 @@ class Rope extends Component with HasGameReference<Forge2DGame> {
     final endPoint = capsule.body.worldPoint(Vector2(0, -0.9));
     _ropePath.lineTo(endPoint.x, endPoint.y);
 
+    // Расчет натяжения троса на основе текущего расстояния между крайними точками
+    final double currentLength = (endPoint - startPoint).length;
+    final double maxLength = GameConfig.ropeLength; // Обычно 4.0
+    // Натяжение растет по мере приближения к максимальной длине
+    final double tension = ((currentLength - 3.0) / (maxLength - 3.0)).clamp(0.0, 1.0);
+
+    // Динамический цвет троса: от циана (безопасно) через желтый к красному (натянут)
+    Color ropeColor;
+    if (tension < 0.5) {
+      ropeColor = Color.lerp(
+        const Color(0xFF00E5FF), // Циан
+        const Color(0xFFFFB300), // Желтый/Оранжевый
+        tension * 2.0,
+      )!;
+    } else {
+      ropeColor = Color.lerp(
+        const Color(0xFFFFB300), // Желтый/Оранжевый
+        const Color(0xFFFF1744), // Сигнальный красный
+        (tension - 0.5) * 2.0,
+      )!;
+    }
+
+    _ropePaint.color = ropeColor;
+    _ropePaint.strokeWidth = 0.07 + (tension * 0.05); // Трос визуально сужается/утолщается при натяжении
+
     canvas.drawPath(_ropePath, _ropePaint);
 
-    // Стыковочные карабины
+    // Стыковочные карабины с подсветкой под цвет натяжения
+    _connectorPaint.color = ropeColor;
     canvas.drawCircle(Offset(startPoint.x, startPoint.y), 0.12, _connectorPaint);
     canvas.drawCircle(Offset(endPoint.x, endPoint.y), 0.12, _connectorPaint);
   }

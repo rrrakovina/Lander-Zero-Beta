@@ -118,6 +118,26 @@ class ThrusterFlame extends PositionComponent {
   void render(Canvas canvas) {
     super.render(canvas);
 
+    // Рисовка яркого внутреннего плазменного конуса (ядра пламени)
+    if (isActive) {
+      final double jetLength = 1.2 + _random.nextDouble() * 0.5; // Пульсирующая длина выхлопа
+      final Paint jetPaint = Paint()
+        ..shader = const LinearGradient(
+          colors: [Colors.white, Color(0xFF00E5FF), Color(0x00FF8F00)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(Rect.fromLTRB(-0.25, 0, 0.25, jetLength))
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.06);
+      
+      final Path jetPath = Path()
+        ..moveTo(-0.25, 0.0)
+        ..lineTo(0.25, 0.0)
+        ..lineTo(0.0, jetLength)
+        ..close();
+      
+      canvas.drawPath(jetPath, jetPaint);
+    }
+
     for (final particle in _particles) {
       final progress = (1.0 - (particle.life / particle.maxLife)).clamp(0.0, 1.0);
       final size = particle.startSize * (1.0 - progress * 0.7);

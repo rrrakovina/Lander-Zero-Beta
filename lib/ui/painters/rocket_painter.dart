@@ -263,7 +263,10 @@ class RocketPainter extends CustomPainter {
   void _renderPilot(Canvas canvas, Offset cabinCenter, double radius) {
     canvas.drawCircle(cabinCenter, radius, _pilotBgPaint);
 
-    final headPos = cabinCenter + const Offset(0.0, 0.05);
+    // Покачивание головы пилота в меню
+    final double bobX = sin(animationTime * 2.0) * 0.03 * radius;
+    final double bobY = cos(animationTime * 3.5) * 0.015 * radius;
+    final headPos = cabinCenter + Offset(bobX, 0.05 + bobY);
 
     canvas.drawOval(Rect.fromCenter(center: Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.6), width: radius * 1.3, height: radius * 0.7), _pilotSuitPaint);
     canvas.drawCircle(headPos, radius * 0.42, _pilotHelmetPaint);
@@ -279,6 +282,7 @@ class RocketPainter extends CustomPainter {
     canvas.drawCircle(cabinCenter, radius, _glassPaint);
     canvas.drawCircle(cabinCenter, radius, _glassBorder);
 
+    // Статичный блик
     canvas.drawOval(
       Rect.fromLTWH(
         cabinCenter.dx - radius * 0.6,
@@ -288,6 +292,24 @@ class RocketPainter extends CustomPainter {
       ),
       _glassHighlightPaint,
     );
+
+    // Дополнительный анимированный световой блик (пробегающая полоса)
+    final double sweepProgress = (sin(animationTime * 0.8) + 1.0) / 2.0; // от 0.0 до 1.0
+    final double sweepX = cabinCenter.dx - radius + (radius * 2.0 * sweepProgress);
+    canvas.save();
+    final Path clipPath = Path()..addCircle(cabinCenter, radius);
+    canvas.clipPath(clipPath);
+    final Paint sweepPaint = Paint()
+      ..color = Colors.white.withOpacity(0.08)
+      ..style = PaintingStyle.fill;
+    final Path sweepPath = Path()
+      ..moveTo(sweepX - radius * 0.2, cabinCenter.dy - radius)
+      ..lineTo(sweepX + radius * 0.1, cabinCenter.dy - radius)
+      ..lineTo(sweepX - radius * 0.1, cabinCenter.dy + radius)
+      ..lineTo(sweepX - radius * 0.4, cabinCenter.dy + radius)
+      ..close();
+    canvas.drawPath(sweepPath, sweepPaint);
+    canvas.restore();
   }
 
   @override

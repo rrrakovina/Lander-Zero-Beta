@@ -86,10 +86,28 @@ class _NickEntryWidgetState extends State<NickEntryWidget> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Icon(
-                    Icons.rocket_launch_rounded,
-                    color: GameConfig.colorPrimary,
-                    size: 64,
+                  // Пульсирующая иконка ракеты
+                  TweenAnimationBuilder<double>(
+                    tween: Tween<double>(begin: 0.85, end: 1.05),
+                    duration: const Duration(seconds: 2),
+                    curve: Curves.easeInOut,
+                    builder: (context, value, child) {
+                      return Transform.scale(
+                        scale: value,
+                        child: Icon(
+                          Icons.rocket_launch_rounded,
+                          color: GameConfig.colorPrimary,
+                          size: 64,
+                          shadows: [
+                            Shadow(
+                              color: GameConfig.colorPrimary.withOpacity(0.5),
+                              blurRadius: 15,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    onEnd: () {}, // Будет перезапускаться благодаря бесконечной анимации
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -98,14 +116,20 @@ class _NickEntryWidgetState extends State<NickEntryWidget> {
                       color: GameConfig.colorPrimary,
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
+                      letterSpacing: 2.5,
+                      shadows: [
+                        Shadow(
+                          color: GameConfig.colorPrimary,
+                          blurRadius: 10,
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     state.translate('enter_nick'),
                     style: const TextStyle(
-                      color: Colors.white70,
+                      color: Colors.white54,
                       fontSize: 14,
                       letterSpacing: 1.5,
                     ),
@@ -120,15 +144,15 @@ class _NickEntryWidgetState extends State<NickEntryWidget> {
                       hintText: isRu ? 'Кадет' : 'Cadet',
                       hintStyle: const TextStyle(color: Colors.white24),
                       counterStyle: const TextStyle(color: Colors.white30),
-                      fillColor: Colors.black26,
+                      fillColor: Colors.black45,
                       filled: true,
                       focusedBorder: OutlineInputBorder(
                         borderSide: const BorderSide(color: GameConfig.colorPrimary, width: 2),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderSide: const BorderSide(color: Colors.white24),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                     onSubmitted: (_) => _submit(),
@@ -141,22 +165,46 @@ class _NickEntryWidgetState extends State<NickEntryWidget> {
                     ),
                   ],
                   const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: GameConfig.colorPrimary,
-                      foregroundColor: Colors.black,
-                      minimumSize: const Size.fromHeight(55),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      textStyle: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
-                        fontSize: 16,
+                  // Высокотехнологичная кнопка с градиентом и свечением
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _submit,
+                      borderRadius: BorderRadius.circular(10),
+                      child: Ink(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              GameConfig.colorPrimary,
+                              Color(0xFF00B0FF),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: GameConfig.colorPrimary.withOpacity(0.35),
+                              blurRadius: 15,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Container(
+                          height: 55,
+                          alignment: Alignment.center,
+                          child: Text(
+                            state.translate('start').toUpperCase(),
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                    child: Text(state.translate('start')),
                   ),
                 ],
               ),

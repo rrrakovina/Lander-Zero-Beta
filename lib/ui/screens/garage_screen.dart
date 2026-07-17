@@ -327,48 +327,14 @@ class _GarageWidgetState extends State<GarageWidget> with SingleTickerProviderSt
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 1. Visual Indicator (Large preview frame)
+                  // 1. Visual Indicator (Large preview frame with floating animation)
                   Expanded(
                     flex: 5,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: cabinColor.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: cabinColor.withOpacity(0.15)),
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned.fill(
-                            child: Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: CustomPaint(
-                                painter: RocketPainter(rocketId: rocketId),
-                              ),
-                            ),
-                          ),
-                          if (isSelected)
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: cabinColor,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  state.translate('selected').toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
+                    child: CabinPreviewWidget(
+                      rocketId: rocketId,
+                      cabinColor: cabinColor,
+                      isSelected: isSelected,
+                      selectedText: state.translate('selected').toUpperCase(),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -510,6 +476,113 @@ class _GarageWidgetState extends State<GarageWidget> with SingleTickerProviderSt
           ),
         ),
       ],
+    );
+  }
+}
+
+class CabinPreviewWidget extends StatefulWidget {
+  final String rocketId;
+  final Color cabinColor;
+  final bool isSelected;
+  final String selectedText;
+
+  const CabinPreviewWidget({
+    super.key,
+    required this.rocketId,
+    required this.cabinColor,
+    required this.isSelected,
+    required this.selectedText,
+  });
+
+  @override
+  State<CabinPreviewWidget> createState() => _CabinPreviewWidgetState();
+}
+
+class _CabinPreviewWidgetState extends State<CabinPreviewWidget> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3), // Плавное колебание за 3 секунды
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final double angle = sin(_controller.value * 2 * pi) * 0.04; // Мягкий крен
+        final double hoverOffset = cos(_controller.value * 2 * pi) * 5.0; // Левитация
+        
+        return Container(
+          decoration: BoxDecoration(
+            color: widget.cabinColor.withOpacity(0.04),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: widget.isSelected ? widget.cabinColor.withOpacity(0.5) : widget.cabinColor.withOpacity(0.15),
+              width: widget.isSelected ? 2.0 : 1.0,
+            ),
+          ),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Transform.translate(
+                    offset: Offset(0, hoverOffset),
+                    child: Transform.rotate(
+                      angle: angle,
+                      child: CustomPaint(
+                        painter: RocketPainter(
+                          rocketId: widget.rocketId,
+                          animationTime: _controller.value * 2 * pi,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              if (widget.isSelected)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: widget.cabinColor,
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.cabinColor.withOpacity(0.4),
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      widget.selectedText,
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
