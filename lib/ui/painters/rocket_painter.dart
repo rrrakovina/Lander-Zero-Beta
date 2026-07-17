@@ -297,7 +297,7 @@ class RocketPainter extends CustomPainter {
     final double sweepProgress = (sin(animationTime * 0.8) + 1.0) / 2.0; // от 0.0 до 1.0
     final double sweepX = cabinCenter.dx - radius + (radius * 2.0 * sweepProgress);
     canvas.save();
-    final Path clipPath = Path()..addCircle(cabinCenter, radius);
+    final Path clipPath = Path()..addOval(Rect.fromCircle(center: cabinCenter, radius: radius));
     canvas.clipPath(clipPath);
     final Paint sweepPaint = Paint()
       ..color = Colors.white.withOpacity(0.08)
