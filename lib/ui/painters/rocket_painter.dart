@@ -171,7 +171,7 @@ class RocketPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.save();
     canvas.translate(size.width / 2, size.height / 2);
-    final double scale = min(size.width, size.height) / 2.0;
+    final double scale = min(size.width, size.height) / 2.5;
     canvas.scale(scale, scale);
 
     if (animationTime > 0) {
