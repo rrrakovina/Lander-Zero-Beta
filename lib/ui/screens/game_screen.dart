@@ -237,6 +237,66 @@ class _GameScreenState extends State<GameScreen> {
                 ),
               ),
 
+              // Кнопка сброса груза для мобильных/сенсорных экранов
+              Positioned(
+                bottom: 30,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: ValueListenableBuilder<Map<String, dynamic>>(
+                    valueListenable: _game.statsNotifier,
+                    builder: (context, stats, _) {
+                      if (!_game.isLoaded) return const SizedBox.shrink();
+                      final hasRope = stats['hasRope'] as bool? ?? false;
+                      if (!hasRope) return const SizedBox.shrink();
+
+                      return Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            if (_game.runStateNotifier.value == GameRunState.playing) {
+                              _game.releaseCargo();
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(30),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.black87,
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(color: GameConfig.colorDanger, width: 1.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: GameConfig.colorDanger.withOpacity(0.3),
+                                  blurRadius: 10,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.link_off_rounded, color: GameConfig.colorDanger, size: 20),
+                                const SizedBox(width: 8),
+                                Text(
+                                  state.translate('cargo_release').toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
               // 4. Пауза
               if (_isPaused)
                 Positioned.fill(

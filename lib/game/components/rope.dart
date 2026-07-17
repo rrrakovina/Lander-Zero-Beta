@@ -1,26 +1,29 @@
+import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame_forge2d/flame_forge2d.dart';
 import 'package:flutter/material.dart';
 import '../config/game_config.dart';
+import '../lander_zero_game.dart';
 import 'lander.dart';
 import 'cargo_capsule.dart';
 
-class Rope extends Component with HasGameReference<Forge2DGame> {
+class Rope extends Component with HasGameReference<LanderZeroGame> {
   final Lander lander;
   final CargoCapsule capsule;
 
   final List<Body> _segments = [];
   final List<Joint> _joints = [];
 
+  // Накопитель времени высокого натяжения для обрыва
+  double _tensionTimer = 0.0;
+
   // Оптимизированные Paint объекты для снижения GC Pressure
   final Paint _ropePaint = Paint()
-    ..color = const Color(0xFFB0BEC5) // Стальной серый
     ..style = PaintingStyle.stroke
     ..strokeWidth = 0.08
     ..strokeCap = StrokeCap.round;
 
   final Paint _connectorPaint = Paint()
-    ..color = Colors.orangeAccent
     ..style = PaintingStyle.fill;
 
   // Переиспользуемый Path
@@ -38,28 +41,56 @@ class Rope extends Component with HasGameReference<Forge2DGame> {
 
     final startAnchor = landerBody.worldPoint(Vector2(0, 0.8));
     final endAnchor = capsuleBody.worldPoint(Vector2(0, -0.9));
+    final double distance = startAnchor.distanceTo(endAnchor);
 
     final int segmentCount = GameConfig.ropeSegmentsCount;
-    final double segLength = GameConfig.ropeLength / segmentCount;
-    final Vector2 direction = (endAnchor - startAnchor).normalized();
+    final double maxLength = GameConfig.ropeLength;
+
+    // Расчет провисания троса (sag) по цепной линии на основе расстояния
+    double sag = 0.0;
+    if (distance < maxLength) {
+      sag = 0.5 * sqrt(maxLength * maxLength - distance * distance);
+    }
+
+    // Опорная точка квадратичной кривой Безье
+    final midPoint = (startAnchor + endAnchor) / 2;
+    // Провисание направлено вниз по вектору гравитации (в мире Forge2D +y — вниз)
+    final controlPoint = midPoint + Vector2(0, sag);
+
+    // Генерируем точки вдоль провисшего троса
+    final List<Vector2> points = [];
+    for (int i = 0; i <= segmentCount; i++) {
+      final double t = i / segmentCount;
+      // Формула квадратичной кривой Безье: (1-t)^2 * A + 2*(1-t)*t * P + t^2 * B
+      final Vector2 p = startAnchor * ((1 - t) * (1 - t)) +
+                        controlPoint * (2 * (1 - t) * t) +
+                        endAnchor * (t * t);
+      points.add(p);
+    }
 
     // Настройка фильтрации столкновений
-    // Трос и капсула не должны сталкиваться с кораблем
+    // Трос и капсула не должны сталкиваться с кораблем или друг с другом
     final filter = Filter()
       ..categoryBits = 0x0004  // Категория троса (0x0004)
       ..maskBits = 0x0001;     // Сталкиваться только со стенами пещеры (0x0001)
 
     Body prevBody = landerBody;
-    Vector2 prevAnchor = Vector2(0, 0.8); // Локальный анкер на предыдущем теле
 
     for (int i = 0; i < segmentCount; i++) {
-      final Vector2 initialPos = startAnchor + direction * (segLength * (i + 0.5));
+      final Vector2 pCurr = points[i];
+      final Vector2 pNext = points[i + 1];
+      
+      final Vector2 segmentCenter = (pCurr + pNext) / 2;
+      final Vector2 segDir = pNext - pCurr;
+      final double segLength = segDir.length;
+      final double angle = atan2(segDir.y, segDir.x) - pi / 2;
 
       final segmentDef = BodyDef(
         type: BodyType.dynamic,
-        position: initialPos,
-        linearDamping: 1.2,
-        angularDamping: 1.5,
+        position: segmentCenter,
+        angle: angle,
+        linearDamping: 1.8,   // Повышенное сопротивление снижает бесконечное болтание
+        angularDamping: 2.5,  // Высокая стабилизация вращения звеньев
       );
 
       final segmentBody = world.createBody(segmentDef);
@@ -78,12 +109,12 @@ class Rope extends Component with HasGameReference<Forge2DGame> {
       segmentBody.createFixture(fixtureDef);
       _segments.add(segmentBody);
 
-      // Соединяем с предыдущим телом
+      // Соединяем с предыдущим телом точно в точке их стыка pCurr без напряжений
       final jointDef = RevoluteJointDef()
         ..initialize(
           prevBody,
           segmentBody,
-          i == 0 ? startAnchor : prevBody.worldPoint(prevAnchor),
+          pCurr,
         )
         ..collideConnected = false;
 
@@ -92,15 +123,14 @@ class Rope extends Component with HasGameReference<Forge2DGame> {
       _joints.add(joint);
 
       prevBody = segmentBody;
-      prevAnchor = Vector2(0, segLength / 2);
     }
 
-    // Соединяем последнее звено с капсулой
+    // Соединяем последнее звено с капсулой точно в точке points[segmentCount]
     final finalJointDef = RevoluteJointDef()
       ..initialize(
         prevBody,
         capsuleBody,
-        prevBody.worldPoint(prevAnchor),
+        points[segmentCount],
       )
       ..collideConnected = false;
 
@@ -109,6 +139,28 @@ class Rope extends Component with HasGameReference<Forge2DGame> {
     _joints.add(finalJoint);
 
     capsule.isDocked = true;
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (_segments.isEmpty) return;
+
+    final startPoint = lander.body.worldPoint(Vector2(0, 0.8));
+    final endPoint = capsule.body.worldPoint(Vector2(0, -0.9));
+    final double currentLength = (endPoint - startPoint).length;
+    final double maxLength = GameConfig.ropeLength;
+
+    // Если трос растягивается сверх лимита на 10%
+    if (currentLength > maxLength * 1.10) {
+      _tensionTimer += dt;
+      if (_tensionTimer >= 0.4) {
+        // Трос лопается
+        game.snapRope();
+      }
+    } else {
+      _tensionTimer = (_tensionTimer - dt).clamp(0.0, 1.0);
+    }
   }
 
   @override
@@ -132,25 +184,15 @@ class Rope extends Component with HasGameReference<Forge2DGame> {
 
     if (_segments.isEmpty) return;
 
-    _ropePath.reset();
     final startPoint = lander.body.worldPoint(Vector2(0, 0.8));
-    _ropePath.moveTo(startPoint.x, startPoint.y);
-
-    for (final segment in _segments) {
-      final pos = segment.position;
-      _ropePath.lineTo(pos.x, pos.y);
-    }
-
     final endPoint = capsule.body.worldPoint(Vector2(0, -0.9));
-    _ropePath.lineTo(endPoint.x, endPoint.y);
 
     // Расчет натяжения троса на основе текущего расстояния между крайними точками
     final double currentLength = (endPoint - startPoint).length;
-    final double maxLength = GameConfig.ropeLength; // Обычно 4.0
-    // Натяжение растет по мере приближения к максимальной длине
+    final double maxLength = GameConfig.ropeLength;
     final double tension = ((currentLength - 3.0) / (maxLength - 3.0)).clamp(0.0, 1.0);
 
-    // Динамический цвет троса: от циана (безопасно) через желтый к красному (натянут)
+    // Динамический цвет троса: от циана (безопасно) через желтый к сигнальному красному (натянут)
     Color ropeColor;
     if (tension < 0.5) {
       ropeColor = Color.lerp(
@@ -166,8 +208,40 @@ class Rope extends Component with HasGameReference<Forge2DGame> {
       )!;
     }
 
+    // Если трос находится под угрозой разрыва, он мигает красным
+    if (_tensionTimer > 0.0) {
+      final bool flashOn = (game.flightTime * 15).toInt() % 2 == 0;
+      if (flashOn) {
+        ropeColor = const Color(0xFFFF1744);
+      }
+    }
+
     _ropePaint.color = ropeColor;
-    _ropePaint.strokeWidth = 0.07 + (tension * 0.05); // Трос визуально сужается/утолщается при натяжении
+    _ropePaint.strokeWidth = 0.07 + (tension * 0.05); // Трос сужается/утолщается при натяжении
+
+    // Расчет дрожания троса перед разрывом
+    final double jitterAmount = (_tensionTimer / 0.4) * 0.06;
+    final random = Random();
+
+    _ropePath.reset();
+    _ropePath.moveTo(startPoint.x, startPoint.y);
+
+    for (int i = 0; i < _segments.length; i++) {
+      final segment = _segments[i];
+      final double segLength = maxLength / GameConfig.ropeSegmentsCount;
+      final bottomPoint = segment.worldPoint(Vector2(0, segLength / 2));
+      
+      double jx = 0;
+      double jy = 0;
+      if (jitterAmount > 0) {
+        jx = (random.nextDouble() - 0.5) * jitterAmount;
+        jy = (random.nextDouble() - 0.5) * jitterAmount;
+      }
+      
+      _ropePath.lineTo(bottomPoint.x + jx, bottomPoint.y + jy);
+    }
+
+    _ropePath.lineTo(endPoint.x, endPoint.y);
 
     canvas.drawPath(_ropePath, _ropePaint);
 

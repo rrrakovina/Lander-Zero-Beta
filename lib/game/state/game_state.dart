@@ -290,6 +290,9 @@ class GameState extends ChangeNotifier {
       'thrust_left': 'ТЯГА СЛЕВА (A / ←)',
       'thrust_right': 'ТЯГА СПРАВА (D / →)',
       'error_empty_nick': 'Никнейм не может быть пустым',
+      'rope_snapped': 'ВНИМАНИЕ: ТРОС ОБОРВАН ОТ НАТЯЖЕНИЯ!',
+      'cargo_released': 'ГРУЗ ОТЦЕПЛЕН',
+      'cargo_release': 'СБРОСИТЬ ГРУЗ (S / ↓)',
     },
     'en': {
       'title': 'LANDER ZERO: RESCUE OPS',
@@ -346,6 +349,9 @@ class GameState extends ChangeNotifier {
       'thrust_left': 'LEFT THRUST (A / ←)',
       'thrust_right': 'RIGHT THRUST (D / →)',
       'error_empty_nick': 'Nickname cannot be empty',
+      'rope_snapped': 'WARNING: TENSION TOO HIGH, TETHER SNAPPED!',
+      'cargo_released': 'CARGO UNHOOKED',
+      'cargo_release': 'RELEASE CARGO (S / ↓)',
     }
   };
 

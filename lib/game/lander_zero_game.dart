@@ -8,6 +8,7 @@ import 'components/lander.dart';
 import 'components/cave.dart';
 import 'components/cargo_capsule.dart';
 import 'components/rope.dart';
+import 'components/docking_laser.dart';
 import 'components/background.dart';
 import 'components/coin.dart';
 import 'components/fuel_pickup.dart';
@@ -42,6 +43,15 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
   double _hitStopTimer = 0.0;
   double _accumulator = 0.0;
   static const double _fixedTimeStep = 1 / 60;
+
+  // Система кастомных всплывающих предупреждений
+  String? _customAlert;
+  double _customAlertTimer = 0.0;
+
+  void triggerCustomAlert(String message, double duration) {
+    _customAlert = message;
+    _customAlertTimer = duration;
+  }
 
   // Игровая статистика для отчета
   int coinsCollected = 0;
@@ -99,6 +109,9 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
     // 6. Инициализируем и добавляем пул искр
     sparkPool = SparkPoolManager();
     world.add(sparkPool);
+
+    // Добавляем докинг-лазер для визуализации сближения и магнитного зацепа
+    world.add(DockingLaser());
 
     // 7. Добавляем компонент вспышки экрана
     screenFlash = ScreenFlash();
@@ -200,7 +213,9 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
 
   void _updateStats() {
     String alertText = '';
-    if (rope == null && lander.isMounted && cargoCapsule.isMounted && lander.body.position.distanceTo(cargoCapsule.body.position) < 8.0) {
+    if (_customAlert != null) {
+      alertText = _customAlert!;
+    } else if (rope == null && lander.isMounted && cargoCapsule.isMounted && lander.body.position.distanceTo(cargoCapsule.body.position) < 8.0) {
       alertText = GameState().translate('cargo_nearby');
     } else if (rope != null) {
       final exitDistance = cargoCapsule.body.position.distanceTo(cave.exitPlatform);
@@ -219,6 +234,7 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
       'maxFuel': lander.isMounted ? lander.maxFuel : 1.0,
       'shield': lander.isMounted ? lander.shield : 1.0,
       'maxShield': lander.isMounted ? lander.maxShield : 1.0,
+      'hasRope': rope != null,
     };
   }
 
@@ -250,6 +266,13 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
         !cave.isMounted || 
         runStateNotifier.value != GameRunState.playing) {
       return;
+    }
+
+    if (_customAlertTimer > 0) {
+      _customAlertTimer -= fixedDt;
+      if (_customAlertTimer <= 0) {
+        _customAlert = null;
+      }
     }
 
     // Симуляция ветра на карте ветров (снос влево)
@@ -288,20 +311,8 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
         if (relativeVel.length <= 3.0) {
           _dockCargo();
         } else {
-          // Слишком быстро! Отталкивание и урон от жесткой коллизии
-          final pushForce = (lander.body.position - cargoCapsule.body.position).normalized()..scale(10.0 * lander.body.mass);
-          lander.body.applyLinearImpulse(pushForce);
-          cargoCapsule.body.applyLinearImpulse(-pushForce);
-          
-          final damage = (relativeVel.length - 3.0) * 12.0;
-          lander.shield = (lander.shield - damage).clamp(0.0, lander.maxShield);
-          
-          onCollisionImpact(landerHook, relativeVel.length * 1.5);
-          
-          statsNotifier.value = {
-            ...statsNotifier.value,
-            'alert': GameState().translate('approach_speed_alert'),
-          };
+          // Слишком быстро для магнитного захвата, предупреждаем игрока
+          triggerCustomAlert(GameState().translate('approach_speed_alert'), 2.0);
         }
       }
     }
@@ -342,6 +353,41 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
 
     // Звук успешной стыковки
     GameAudioManager().playSfx('dock.wav');
+  }
+
+  void snapRope() {
+    if (rope == null) return;
+    
+    // Звук лопнувшего троса
+    GameAudioManager().playSfx('collision.wav');
+    
+    // Спавним искры на месте разрыва (посередине между кораблем и капсулой)
+    final startPoint = lander.body.worldPoint(Vector2(0, 0.8));
+    final endPoint = cargoCapsule.body.worldPoint(Vector2(0, -0.9));
+    final midPoint = (startPoint + endPoint) / 2;
+    sparkPool.spawnSparks(midPoint);
+    
+    rope!.removeFromParent();
+    rope = null;
+    
+    // Тряска экрана от разрыва
+    shakeCamera(0.8, 0.4);
+    
+    // Уведомление об обрыве
+    triggerCustomAlert(GameState().translate('rope_snapped'), 4.0);
+  }
+
+  void releaseCargo() {
+    if (rope == null) return;
+    
+    // Звук сброса
+    GameAudioManager().playSfx('dock.wav');
+    
+    rope!.removeFromParent();
+    rope = null;
+    
+    // Уведомление о сбросе
+    triggerCustomAlert(GameState().translate('cargo_released'), 2.5);
   }
 
   // Завершение миссии: расчет начисления монет и сохранение рекордов
@@ -425,6 +471,12 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
       setLeftThrust(isKeyDown);
       setRightThrust(isKeyDown);
       return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.keyS || event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      if (isKeyDown && rope != null) {
+        releaseCargo();
+        return KeyEventResult.handled;
+      }
     }
     
     return KeyEventResult.ignored;
