@@ -302,7 +302,7 @@ class Lander extends BodyComponent with ContactCallbacks {
       friction: 0.8,
       restitution: 0.1,
     )..filter.categoryBits = 0x0002
-     ..filter.maskBits = 0xFFFF & ~0x0004; // Столкновения со всем, кроме троса (0x0004)
+     ..filter.maskBits = 0xFFFF & ~0x0004 & ~0x0008; // Столкновения со всем, кроме троса (0x0004) и груза (0x0008)
 
     body.createFixture(fixtureDef);
     return body;

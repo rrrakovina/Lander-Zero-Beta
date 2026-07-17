@@ -300,20 +300,14 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
       camera.viewfinder.position = lander.body.position;
     }
 
-    // Автоматический зацеп капсулы тросом при сближении с проверкой безопасной скорости
+    // Автоматический зацеп капсулы тросом при сближении
     if (rope == null) {
       final landerHook = lander.body.worldPoint(Vector2(0, 0.8));
       final cargoHook = cargoCapsule.body.worldPoint(Vector2(0, -0.9));
       
       final distance = landerHook.distanceTo(cargoHook);
       if (distance <= GameConfig.dockingRange) {
-        final relativeVel = lander.body.linearVelocity - cargoCapsule.body.linearVelocity;
-        if (relativeVel.length <= 3.0) {
-          _dockCargo();
-        } else {
-          // Слишком быстро для магнитного захвата, предупреждаем игрока
-          triggerCustomAlert(GameState().translate('approach_speed_alert'), 2.0);
-        }
+        _dockCargo();
       }
     }
 
