@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../audio/game_audio_manager.dart';
+import 'achievements_manager.dart';
 
 class GameState extends ChangeNotifier {
   static final GameState _instance = GameState._internal();
@@ -29,6 +30,7 @@ class GameState extends ChangeNotifier {
   List<Map<String, dynamic>> _leaderboard = [];
 
   bool get initialized => _initialized;
+  SharedPreferences get prefs => _prefs;
   String get nickname => _nickname;
   String get language => _language;
   double get musicVolume => _musicVolume;
@@ -101,6 +103,8 @@ class GameState extends ChangeNotifier {
     } catch (e) {
       _leaderboard = [];
     }
+
+    await AchievementsManager().load(_prefs);
 
     _initialized = true;
     notifyListeners();

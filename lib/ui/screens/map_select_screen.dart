@@ -6,6 +6,181 @@ import '../widgets/menu_background.dart';
 import '../widgets/glass_panel.dart';
 import '../painters/map_preview_painter.dart';
 
+class MapBriefingData {
+  final String id;
+  final String nameRu;
+  final String nameEn;
+  final String descRu;
+  final String descEn;
+  final String difficultyRu;
+  final String difficultyEn;
+  final Color themeColor;
+  final IconData icon;
+  final String commStatusRu;
+  final String commStatusEn;
+  final Color commStatusColor;
+  final String gravityRu;
+  final String gravityEn;
+  final String windRu;
+  final String windEn;
+  final String thermalRu;
+  final String thermalEn;
+  final String radiationRu;
+  final String radiationEn;
+  final String seismicRu;
+  final String seismicEn;
+  final String recCabinRu;
+  final String recCabinEn;
+  final String hazardsRu;
+  final String hazardsEn;
+  final String bountyRangeRu;
+  final String bountyRangeEn;
+  final String missionStoryRu;
+  final String missionStoryEn;
+  final String missionObjectiveRu;
+  final String missionObjectiveEn;
+
+  const MapBriefingData({
+    required this.id,
+    required this.nameRu,
+    required this.nameEn,
+    required this.descRu,
+    required this.descEn,
+    required this.difficultyRu,
+    required this.difficultyEn,
+    required this.themeColor,
+    required this.icon,
+    required this.commStatusRu,
+    required this.commStatusEn,
+    required this.commStatusColor,
+    required this.gravityRu,
+    required this.gravityEn,
+    required this.windRu,
+    required this.windEn,
+    required this.thermalRu,
+    required this.thermalEn,
+    required this.radiationRu,
+    required this.radiationEn,
+    required this.seismicRu,
+    required this.seismicEn,
+    required this.recCabinRu,
+    required this.recCabinEn,
+    required this.hazardsRu,
+    required this.hazardsEn,
+    required this.bountyRangeRu,
+    required this.bountyRangeEn,
+    required this.missionStoryRu,
+    required this.missionStoryEn,
+    required this.missionObjectiveRu,
+    required this.missionObjectiveEn,
+  });
+
+  static const Map<String, MapBriefingData> maps = {
+    'echo': MapBriefingData(
+      id: 'echo',
+      nameRu: 'Каньон Эхо',
+      nameEn: 'Echo Canyon',
+      descRu: 'Заброшенная научная шахта. Стабильная атмосфера, идеальна для тренировки.',
+      descEn: 'Abandoned research shaft. Stable atmosphere, ideal for flight practice.',
+      difficultyRu: 'Легко',
+      difficultyEn: 'Easy',
+      themeColor: Color(0xFF00E676),
+      icon: Icons.terrain_rounded,
+      commStatusRu: 'СВЯЗЬ: СТАБИЛЬНАЯ',
+      commStatusEn: 'COMM STATUS: ACTIVE',
+      commStatusColor: Color(0xFF00E676),
+      gravityRu: '1.0x (3.5 м/с²)',
+      gravityEn: '1.0x (3.5 m/s²)',
+      windRu: '0.0 Н (Штиль)',
+      windEn: '0.0 N (Calm / None)',
+      thermalRu: '+22°C (Умеренная)',
+      thermalEn: '+22°C (Temperate)',
+      radiationRu: '0.05 мЗв (Фон в норме)',
+      radiationEn: '0.05 mSv (Safe Background)',
+      seismicRu: 'Класс 0 (Стабильно)',
+      seismicEn: 'Class 0 (Stable)',
+      recCabinRu: 'Спутник-1 (Сбалансирован)',
+      recCabinEn: 'Sputnik-1 (Balanced)',
+      hazardsRu: 'Минимум обломков, стабильная гравитация',
+      hazardsEn: 'Low debris, stable gravity pull',
+      bountyRangeRu: '100 - 300 монет',
+      bountyRangeEn: '100 - 300 coins',
+      missionStoryRu: 'Каньон Эхо — заброшенная научная шахта на окраине обитаемой зоны. Радар зафиксировал здесь аварийный сигнал с грузового контейнера. Разведка сообщает о стабильной атмосфере и слабом магнитном поле. Идеальная стартовая миссия для отработки навыков маневрирования.',
+      missionStoryEn: 'Echo Canyon is an abandoned research shaft on the edge of the habitable zone. Radar detected an emergency signal from a cargo container. Intel reports a stable atmosphere and weak magnetic fields. The perfect starter mission to hone your piloting skills.',
+      missionObjectiveRu: 'Спуститься в каньон, прицепить контейнер с ценными материалами с помощью автоматического троса и осторожно доставить его на выходную платформу в правой части пещеры.',
+      missionObjectiveEn: 'Descend into the canyon, dock with the valuable material container using the automated tether, and carefully transport it to the exit platform on the far right.',
+    ),
+    'wind': MapBriefingData(
+      id: 'wind',
+      nameRu: 'Солнечные Ветра',
+      nameEn: 'Solar Winds',
+      descRu: 'Расселина с открытым космосом. Мощные плазменные порывы сдувают корабль.',
+      descEn: 'Deep rift exposed to space. Violent lateral plasma winds push your craft.',
+      difficultyRu: 'Средне',
+      difficultyEn: 'Medium',
+      themeColor: GameConfig.colorWarning,
+      icon: Icons.air_rounded,
+      commStatusRu: 'СВЯЗЬ: ПОМЕХИ В КАНАЛЕ',
+      commStatusEn: 'COMM STATUS: DEGRADED',
+      commStatusColor: GameConfig.colorWarning,
+      gravityRu: '1.0x (3.5 м/с²)',
+      gravityEn: '1.0x (3.5 m/s²)',
+      windRu: '-4.5 Н (Боковой снос влево)',
+      windEn: '-4.5 N (Strong lateral left gusts)',
+      thermalRu: '-120°C (Криогенная плазма)',
+      thermalEn: '-120°C (Cryo Plasma Dust)',
+      radiationRu: '18.4 мЗв (Солнечные вспышки)',
+      radiationEn: '18.4 mSv (Solar Plasma Flares)',
+      seismicRu: 'Класс 1 (Микрометеориты)',
+      seismicEn: 'Class 1 (Micro-meteorites)',
+      recCabinRu: 'Игла (Маневренность / Мин. лобовое сопротивление)',
+      recCabinEn: 'Needle (Agile / Low Drag Profile)',
+      hazardsRu: 'Непрерывный боковой снос ветром, ионизированные вспышки',
+      hazardsEn: 'Continuous lateral wind drag, ionized solar flare bursts',
+      bountyRangeRu: '300 - 600 монет',
+      bountyRangeEn: '300 - 600 coins',
+      missionStoryRu: 'Эта расселина выходит прямо к открытому космосу и подвергается постоянным выбросам ионизированной плазмы. Мощнейший боковой солнечный ветер непрерывно сдувает любой пролетающий корабль влево. Будьте предельно осторожны при удержании курса!',
+      missionStoryEn: 'This crevice is exposed directly to deep space and experiences constant bursts of ionized plasma. A powerful solar wind continuously blows any passing vessel to the left. Exercise extreme caution to hold your course!',
+      missionObjectiveRu: 'Оказать сопротивление боковому сносу, найти контейнер в глубине пещеры и эвакуировать его. Потребуется постоянная компенсация траектории правым двигателем.',
+      missionObjectiveEn: 'Combat the strong lateral wind, locate the container deep inside, and evacuate it. Requires constant trajectory correction using your right thruster.',
+    ),
+    'core': MapBriefingData(
+      id: 'core',
+      nameRu: 'Глубинное Ядро',
+      nameEn: 'Deep Core',
+      descRu: 'Экстремальная гравитационная аномалия. Повышенный расход топлива.',
+      descEn: 'Extreme gravity anomaly. Heavy fuel drain and lethal impact hazards.',
+      difficultyRu: 'Сложно',
+      difficultyEn: 'Hard',
+      themeColor: GameConfig.colorDanger,
+      icon: Icons.south_rounded,
+      commStatusRu: 'СВЯЗЬ: ДЕСТАБИЛИЗИРОВАНА',
+      commStatusEn: 'COMM STATUS: CRITICAL',
+      commStatusColor: GameConfig.colorDanger,
+      gravityRu: '1.5x (5.3 м/с² - Тяжелое ядро)',
+      gravityEn: '1.5x (5.3 m/s² - Heavy Core)',
+      windRu: '0.0 Н (Плотный вакуум)',
+      windEn: '0.0 N (Dense void)',
+      thermalRu: '+850°C (Магматический перегрев)',
+      thermalEn: '+850°C (Magma Thermal Venting)',
+      radiationRu: '94.2 мЗв (Гамма-излучение ядра)',
+      radiationEn: '94.2 mSv (Gamma Core Flux)',
+      seismicRu: 'Класс 4 (Тектонические толчки)',
+      seismicEn: 'Class 4 (Tectonic Tremors)',
+      recCabinRu: 'Ураган (Усиленная броня и тяга)',
+      recCabinEn: 'Cyclone (Reinforced Armor & Heavy Thrust)',
+      hazardsRu: 'Сокрушительная гравитация, критический урон при столкновении',
+      hazardsEn: 'Crushing gravity, catastrophic impact damage risks',
+      bountyRangeRu: '600+ монет',
+      bountyRangeEn: '600+ coins',
+      missionStoryRu: 'Сверхглубокая гравитационная аномалия. Сила тяжести здесь повышена на 50%, что создает колоссальную нагрузку на двигатели. Любое резкое падение приведет к моментальному взрыву кабины. Запасы топлива ограничены, а расход увеличен из-за постоянной работы двигателей.',
+      missionStoryEn: 'An ultra-deep gravitational anomaly. Gravity is 50% stronger here, putting colossal load on your thrusters. Any sudden drop will trigger an immediate hull breach. Fuel is highly limited, and consumption is accelerated due to constant burns.',
+      missionObjectiveRu: 'Совершить ювелирный спуск в ядро планеты. Подхватить контейнер и вытащить его наверх, борясь с экстремальным притяжением. Каждое столкновение наносит критический урон!',
+      missionObjectiveEn: 'Execute a pinpoint landing into the planet\'s core. Hook the cargo and lift it back up, fighting the extreme pull. Every impact deals critical structural damage!',
+    ),
+  };
+}
+
 class MapSelectWidget extends StatefulWidget {
   final ValueChanged<String> onMapSelected;
   final VoidCallback onBack;
@@ -77,38 +252,20 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
               children: [
                 _buildMapCard(
                   context: context,
-                  mapId: 'echo',
-                  name: state.translate('map_echo'),
-                  desc: state.translate('map_echo_desc'),
-                  difficulty: isRu ? 'Легко' : 'Easy',
-                  gravity: '1.0x',
-                  wind: isRu ? 'Нет' : 'None',
-                  color: const Color(0xFF00E676),
-                  icon: Icons.terrain_rounded,
+                  mapData: MapBriefingData.maps['echo']!,
+                  isRu: isRu,
                 ),
                 const SizedBox(width: 16),
                 _buildMapCard(
                   context: context,
-                  mapId: 'wind',
-                  name: state.translate('map_wind'),
-                  desc: state.translate('map_wind_desc'),
-                  difficulty: isRu ? 'Средне' : 'Medium',
-                  gravity: '1.0x',
-                  wind: isRu ? 'Сильный (влево)' : 'Strong (left)',
-                  color: GameConfig.colorWarning,
-                  icon: Icons.air_rounded,
+                  mapData: MapBriefingData.maps['wind']!,
+                  isRu: isRu,
                 ),
                 const SizedBox(width: 16),
                 _buildMapCard(
                   context: context,
-                  mapId: 'core',
-                  name: state.translate('map_core'),
-                  desc: state.translate('map_core_desc'),
-                  difficulty: isRu ? 'Сложно' : 'Hard',
-                  gravity: '1.5x',
-                  wind: isRu ? 'Нет' : 'None',
-                  color: GameConfig.colorDanger,
-                  icon: Icons.south_rounded,
+                  mapData: MapBriefingData.maps['core']!,
+                  isRu: isRu,
                 ),
               ],
             ),
@@ -121,96 +278,145 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
 
   Widget _buildMapCard({
     required BuildContext context,
-    required String mapId,
-    required String name,
-    required String desc,
-    required String difficulty,
-    required String gravity,
-    required String wind,
-    required Color color,
-    required IconData icon,
+    required MapBriefingData mapData,
+    required bool isRu,
   }) {
+    final color = mapData.themeColor;
+    final name = isRu ? mapData.nameRu : mapData.nameEn;
+    final desc = isRu ? mapData.descRu : mapData.descEn;
+    final difficulty = isRu ? mapData.difficultyRu : mapData.difficultyEn;
+    final gravity = isRu ? mapData.gravityRu : mapData.gravityEn;
+    final wind = isRu ? mapData.windRu : mapData.windEn;
+    final thermal = isRu ? mapData.thermalRu : mapData.thermalEn;
+    final radiation = isRu ? mapData.radiationRu : mapData.radiationEn;
+    final bounty = isRu ? mapData.bountyRangeRu : mapData.bountyRangeEn;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
           setState(() {
-            _previewMapId = mapId;
+            _previewMapId = mapData.id;
           });
         },
         borderRadius: BorderRadius.circular(16),
         hoverColor: color.withOpacity(0.05),
         splashColor: color.withOpacity(0.1),
         child: Container(
-          width: 245,
-          height: 370,
+          width: 250,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withOpacity(0.3), width: 2),
-            color: const Color(0xFF16161E).withOpacity(0.9),
+            border: Border.all(color: color.withOpacity(0.35), width: 2),
+            color: const Color(0xFF16161E).withOpacity(0.92),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.08),
+                blurRadius: 16,
+                spreadRadius: 2,
+              ),
+            ],
           ),
-          padding: const EdgeInsets.all(22),
+          padding: const EdgeInsets.all(18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: color, size: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(mapData.icon, color: color, size: 28),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: color.withOpacity(0.4)),
+                    ),
+                    child: Text(
+                      difficulty.toUpperCase(),
+                      style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Text(
                 name,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  difficulty.toUpperCase(),
-                  style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
-                ),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 6),
               Text(
                 desc,
-                style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
+                style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.35),
               ),
-              const Spacer(),
-              const Divider(color: Colors.white10),
               const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Gravity', style: TextStyle(color: Colors.white30, fontSize: 13)),
-                  Text(gravity, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
-                ],
-              ),
+              const Divider(color: Colors.white10),
               const SizedBox(height: 6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Wind force', style: TextStyle(color: Colors.white30, fontSize: 13)),
-                  Text(wind, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
-                ],
+              _buildCardParamRow(
+                label: isRu ? 'Гравитация' : 'Gravity',
+                value: gravity,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 4),
+              _buildCardParamRow(
+                label: isRu ? 'Ветровой снос' : 'Wind force',
+                value: wind,
+                color: mapData.id == 'wind' ? GameConfig.colorWarning : Colors.white,
+              ),
+              const SizedBox(height: 4),
+              _buildCardParamRow(
+                label: isRu ? 'Температура' : 'Thermal',
+                value: thermal,
+                color: mapData.id == 'core' ? GameConfig.colorDanger : Colors.white,
+              ),
+              const SizedBox(height: 4),
+              _buildCardParamRow(
+                label: isRu ? 'Радиация' : 'Radiation',
+                value: radiation,
+                color: mapData.id == 'core' ? GameConfig.colorDanger : (mapData.id == 'wind' ? GameConfig.colorWarning : Colors.white),
+              ),
+              const SizedBox(height: 4),
+              _buildCardParamRow(
+                label: isRu ? 'Награда' : 'Bounty',
+                value: bounty,
+                color: GameConfig.colorWarning,
+                isBold: true,
               ),
               const SizedBox(height: 10),
               Center(
-                child: Icon(
-                  Icons.arrow_forward_rounded,
-                  color: color.withOpacity(0.6),
-                  size: 28,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: color.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        isRu ? 'БРИФИНГ' : 'BRIEFING',
+                        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        color: color,
+                        size: 14,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -220,82 +426,46 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
     );
   }
 
+  Widget _buildCardParamRow({
+    required String label,
+    required String value,
+    required Color color,
+    bool isBold = false,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.white38, fontSize: 11)),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildMapPreviewScreen(GameState state, bool isRu) {
-    String name = '';
-    String difficulty = '';
-    String gravity = '';
-    String wind = '';
-    Color themeColor = GameConfig.colorPrimary;
-    IconData icon = Icons.terrain_rounded;
-    String missionStory = '';
-    String missionObjective = '';
-
-    if (_previewMapId == 'echo') {
-      name = state.translate('map_echo');
-      difficulty = isRu ? 'Легко' : 'Easy';
-      gravity = '1.0x (Normal)';
-      wind = isRu ? 'Нет' : 'None';
-      themeColor = const Color(0xFF00E676);
-      icon = Icons.terrain_rounded;
-      missionStory = isRu
-          ? 'Каньон Эхо — заброшенная научная шахта на окраине обитаемой зоны. Радар зафиксировал здесь аварийный сигнал с грузового контейнера. Разведка сообщает о стабильной атмосфере и слабом магнитном полем. Идеальная стартовая миссия для отработки навыков маневрирования.'
-          : 'Echo Canyon is an abandoned research shaft on the edge of the habitable zone. Radar detected an emergency signal from a cargo container. Intel reports a stable atmosphere and weak magnetic fields. The perfect starter mission to hone your piloting skills.';
-      missionObjective = isRu
-          ? 'Спуститься в каньон, прицепить контейнер с ценными материалами с помощью автоматического троса и осторожно доставить его на выходную платформу в правой части пещеры.'
-          : 'Descend into the canyon, dock with the valuable material container using the automated tether, and carefully transport it to the exit platform on the far right.';
-    } else if (_previewMapId == 'wind') {
-      name = state.translate('map_wind');
-      difficulty = isRu ? 'Средне' : 'Medium';
-      gravity = '1.0x (Normal)';
-      wind = isRu ? 'Сильный космический ветер (влево)' : 'Strong solar wind (left)';
-      themeColor = GameConfig.colorWarning;
-      icon = Icons.air_rounded;
-      missionStory = isRu
-          ? 'Эта расселина выходит прямо к открытому космосу и подвергается постоянным выбросам ионизированной плазмы. Мощнейший боковой солнечный ветер непрерывно сдувает любой пролетающий корабль влево. Будьте предельно осторожны при удержании курса!'
-          : 'This crevice is exposed directly to deep space and experiences constant bursts of ionized plasma. A powerful solar wind continuously blows any passing vessel to the left. Exercise extreme caution to hold your course!';
-      missionObjective = isRu
-          ? 'Оказать сопротивление боковому сносу, найти контейнер в глубине пещеры и эвакуировать его. Потребуется постоянная компенсация траектории правым двигателем.'
-          : 'Combat the strong lateral wind, locate the container deep inside, and evacuate it. Requires constant trajectory correction using your right thruster.';
-    } else if (_previewMapId == 'core') {
-      name = state.translate('map_core');
-      difficulty = isRu ? 'Сложно' : 'Hard';
-      gravity = '1.5x (Heavy Core)';
-      wind = isRu ? 'Нет' : 'None';
-      themeColor = GameConfig.colorDanger;
-      icon = Icons.south_rounded;
-      missionStory = isRu
-          ? 'Сверхглубокая гравитационная аномалия. Сила тяжести здесь повышена на 50%, что создает колоссальную нагрузку на двигатели. Любое резкое падение приведет к моментальному взрыву кабины. Запасы топлива ограничены, а расход увеличен из-за постоянной работы двигателей.'
-          : 'An ultra-deep gravitational anomaly. Gravity is 50% stronger here, putting colossal load on your thrusters. Any sudden drop will trigger an immediate hull breach. Fuel is highly limited, and consumption is accelerated due to constant burns.';
-      missionObjective = isRu
-          ? 'Совершить ювелирный спуск в ядро планеты. Подхватить контейнер и вытащить его наверх, борясь с экстремальным притяжением. Каждое столкновение наносит критический урон!'
-          : 'Execute a pinpoint landing into the planet\'s core. Hook the cargo and lift it back up, fighting the extreme pull. Every impact deals critical structural damage!';
-    }
-
-    String statusBadge = '';
-    Color statusBadgeColor = Colors.green;
-    String recCabin = '';
-    String hazards = '';
-    String estimatedBounty = '';
-
-    if (_previewMapId == 'echo') {
-      statusBadge = isRu ? 'СВЯЗЬ: СТАБИЛЬНАЯ' : 'COMM STATUS: ACTIVE';
-      statusBadgeColor = const Color(0xFF00E676);
-      recCabin = isRu ? 'Спутник-1 (рекомендуется)' : 'Sputnik-1 (recommended)';
-      hazards = isRu ? 'Аномалии отсутствуют' : 'None detected';
-      estimatedBounty = isRu ? '100 - 300 монет' : '100 - 300 coins';
-    } else if (_previewMapId == 'wind') {
-      statusBadge = isRu ? 'СВЯЗЬ: ПОМЕХИ В КАНАЛЕ' : 'COMM STATUS: DEGRADED';
-      statusBadgeColor = GameConfig.colorWarning;
-      recCabin = isRu ? 'Игла (рекомендуется)' : 'Needle (recommended)';
-      hazards = isRu ? 'Сильные порывы ветра влево' : 'Strong solar wind gusts left';
-      estimatedBounty = isRu ? '300 - 600 монет' : '300 - 600 coins';
-    } else if (_previewMapId == 'core') {
-      statusBadge = isRu ? 'СВЯЗЬ: ДЕСТАБИЛИЗИРОВАНА' : 'COMM STATUS: CRITICAL';
-      statusBadgeColor = GameConfig.colorDanger;
-      recCabin = isRu ? 'Ураган (рекомендуется)' : 'Cyclone (recommended)';
-      hazards = isRu ? 'Тяжелое ядро, высокий урон' : 'High gravity core, high impacts';
-      estimatedBounty = isRu ? '600+ монет' : '600+ coins';
-    }
+    final mapData = MapBriefingData.maps[_previewMapId] ?? MapBriefingData.maps['echo']!;
+    final themeColor = mapData.themeColor;
+    final name = isRu ? mapData.nameRu : mapData.nameEn;
+    final difficulty = isRu ? mapData.difficultyRu : mapData.difficultyEn;
+    final statusBadge = isRu ? mapData.commStatusRu : mapData.commStatusEn;
+    final statusBadgeColor = mapData.commStatusColor;
+    final missionStory = isRu ? mapData.missionStoryRu : mapData.missionStoryEn;
+    final missionObjective = isRu ? mapData.missionObjectiveRu : mapData.missionObjectiveEn;
+    final recCabin = isRu ? mapData.recCabinRu : mapData.recCabinEn;
+    final hazards = isRu ? mapData.hazardsRu : mapData.hazardsEn;
+    final gravity = isRu ? mapData.gravityRu : mapData.gravityEn;
+    final wind = isRu ? mapData.windRu : mapData.windEn;
+    final bountyRange = isRu ? mapData.bountyRangeRu : mapData.bountyRangeEn;
 
     // Считываем личный рекорд
     int bestDist = 0;
@@ -307,7 +477,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
         }
       }
     }
-    final String recordText = bestDist > 0 
+    final String recordText = bestDist > 0
         ? (isRu ? '$bestDist м' : '$bestDist m')
         : (isRu ? 'Нет попыток' : 'No attempts yet');
 
@@ -338,15 +508,15 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Expanded(
               child: Row(
                 children: [
                   Expanded(
-                    flex: 4,
+                    flex: 5,
                     child: GlassPanel(
                       borderColor: themeColor.withOpacity(0.3),
-                      padding: 20,
+                      padding: 18,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -359,7 +529,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                                   color: themeColor.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Icon(icon, color: themeColor, size: 24),
+                                child: Icon(mapData.icon, color: themeColor, size: 24),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -412,7 +582,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
                           // 2. Scrollable Body
                           Expanded(
                             child: SingleChildScrollView(
@@ -426,15 +596,113 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                                     themeColor: themeColor,
                                     content: missionStory,
                                   ),
-                                  const SizedBox(height: 12),
+                                  const SizedBox(height: 10),
                                   // Objective Card
                                   _buildBriefingSubCard(
                                     title: isRu ? 'ОСНОВНАЯ ЗАДАЧА' : 'PRIMARY OBJECTIVE',
                                     themeColor: themeColor,
                                     content: missionObjective,
                                   ),
-                                  const SizedBox(height: 12),
-                                  // Diagnostics Card
+                                  const SizedBox(height: 10),
+                                  // Environmental Hazard Telemetry Card
+                                  _buildBriefingSubCard(
+                                    title: isRu ? 'ТЕЛЕМЕТРИЯ СРЕДЫ И АНОМАЛИЙ' : 'ENVIRONMENTAL HAZARD TELEMETRY',
+                                    themeColor: themeColor,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        _buildDiagRow(
+                                          icon: Icons.south_rounded,
+                                          label: isRu ? 'Гравитационное поле:' : 'Gravity pull:',
+                                          value: gravity,
+                                          color: Colors.white,
+                                        ),
+                                        const SizedBox(height: 5),
+                                        _buildDiagRow(
+                                          icon: Icons.air_rounded,
+                                          label: isRu ? 'Ветровые потоки / Тяга:' : 'Wind force / Vector:',
+                                          value: wind,
+                                          color: mapData.id == 'wind' ? GameConfig.colorWarning : Colors.white70,
+                                        ),
+                                        const SizedBox(height: 5),
+                                        _buildDiagRow(
+                                          icon: Icons.thermostat_rounded,
+                                          label: isRu ? 'Температурный фон:' : 'Thermal flux / Temp:',
+                                          value: isRu ? mapData.thermalRu : mapData.thermalEn,
+                                          color: mapData.id == 'core' ? GameConfig.colorDanger : (mapData.id == 'wind' ? const Color(0xFF80D8FF) : Colors.white),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        _buildDiagRow(
+                                          icon: Icons.wb_sunny_rounded,
+                                          label: isRu ? 'Радиационный / Солн. фон:' : 'Radiation / Solar flux:',
+                                          value: isRu ? mapData.radiationRu : mapData.radiationEn,
+                                          color: mapData.id == 'core' ? GameConfig.colorDanger : (mapData.id == 'wind' ? GameConfig.colorWarning : Colors.white70),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        _buildDiagRow(
+                                          icon: Icons.vibration_rounded,
+                                          label: isRu ? 'Сейсмическая активность:' : 'Seismic activity:',
+                                          value: isRu ? mapData.seismicRu : mapData.seismicEn,
+                                          color: mapData.id == 'core' ? GameConfig.colorDanger : Colors.white70,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  // Mission Rewards Breakdown Card
+                                  _buildBriefingSubCard(
+                                    title: isRu ? 'НАГРАДЫ И БОНУСЫ ЗА МИССИЮ' : 'MISSION REWARDS & CRITERIA',
+                                    themeColor: themeColor,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        _buildRewardRow(
+                                          icon: Icons.stars_rounded,
+                                          label: isRu ? 'Оценочная общая награда:' : 'Estimated total bounty:',
+                                          value: bountyRange,
+                                          color: GameConfig.colorWarning,
+                                          isBold: true,
+                                        ),
+                                        const SizedBox(height: 5),
+                                        _buildRewardRow(
+                                          icon: Icons.inventory_2_rounded,
+                                          label: isRu ? 'Базовая эвакуация груза:' : 'Base cargo extraction:',
+                                          value: '+100 🪙',
+                                          color: const Color(0xFF00E676),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        _buildRewardRow(
+                                          icon: Icons.shield_rounded,
+                                          label: isRu ? 'Без повреждений (Мягкая посадка):' : '0 Damage (Soft Landing):',
+                                          value: '+100 🪙',
+                                          color: const Color(0xFF00E5FF),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        _buildRewardRow(
+                                          icon: Icons.timer_rounded,
+                                          label: isRu ? 'Скоростной подъем (< 45 сек):' : 'Speed rescue (< 45s):',
+                                          value: '+120 🪙',
+                                          color: const Color(0xFFFFD700),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        _buildRewardRow(
+                                          icon: Icons.local_gas_station_rounded,
+                                          label: isRu ? 'Эко-пилот (> 50% топлива):' : 'Eco-pilot (> 50% fuel):',
+                                          value: '+80 🪙',
+                                          color: const Color(0xFFE040FB),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        _buildRewardRow(
+                                          icon: Icons.monetization_on_rounded,
+                                          label: isRu ? 'Сбор кристаллов в полете:' : 'In-flight star-coins:',
+                                          value: isRu ? '+10 🪙 за шт.' : '+10 🪙 each',
+                                          color: Colors.white70,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  // Cavern Diagnostics Card
                                   _buildBriefingSubCard(
                                     title: isRu ? 'ТАКТИЧЕСКИЙ АНАЛИЗ' : 'CAVERN DIAGNOSTICS',
                                     themeColor: themeColor,
@@ -442,26 +710,22 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         _buildDiagRow(
+                                          icon: Icons.rocket_launch_rounded,
                                           label: isRu ? 'Реком. кабина:' : 'Rec. module:',
                                           value: recCabin,
                                           color: Colors.white,
                                         ),
-                                        const SizedBox(height: 6),
+                                        const SizedBox(height: 5),
                                         _buildDiagRow(
+                                          icon: Icons.warning_amber_rounded,
                                           label: isRu ? 'Опасности:' : 'Hazards:',
                                           value: hazards,
                                           color: statusBadgeColor,
                                         ),
-                                        const SizedBox(height: 6),
-                                        _buildDiagRow(
-                                          label: isRu ? 'Награда:' : 'Est. bounty:',
-                                          value: estimatedBounty,
-                                          color: GameConfig.colorWarning,
-                                        ),
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(height: 12),
+                                  const SizedBox(height: 10),
                                   // Record Card
                                   _buildBriefingSubCard(
                                     title: isRu ? 'ВАШ РЕКОРД ДИСТАНЦИИ' : 'YOUR BEST DISTANCE',
@@ -485,9 +749,9 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 10),
                           const Divider(color: Colors.white10),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
                           // 3. Pinned Bottom Metrics
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -496,7 +760,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                               Text(gravity, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                             ],
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 4),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -504,14 +768,22 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                               Text(wind, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(isRu ? 'Оценочная награда' : 'Est. bounty', style: const TextStyle(color: Colors.white30, fontSize: 11)),
+                              Text(bountyRange, style: const TextStyle(color: GameConfig.colorWarning, fontSize: 11, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
                           // 4. Launch Button
                           ElevatedButton(
                             onPressed: () => widget.onMapSelected(_previewMapId!),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: themeColor,
                               foregroundColor: Colors.black,
-                              minimumSize: const Size.fromHeight(50),
+                              minimumSize: const Size.fromHeight(46),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -529,7 +801,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                       ),
                     ),
                   ),
-                  const SizedBox(width: 24),
+                  const SizedBox(width: 20),
                   Expanded(
                     flex: 6,
                     child: GlassPanel(
@@ -582,7 +854,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
           Text(
             title,
             style: TextStyle(
-              color: themeColor.withOpacity(0.8),
+              color: themeColor.withOpacity(0.9),
               fontSize: 10,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.0,
@@ -605,6 +877,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
   }
 
   Widget _buildDiagRow({
+    IconData? icon,
     required String label,
     required String value,
     required Color color,
@@ -612,15 +885,50 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (icon != null) ...[
+          Icon(icon, size: 13, color: color.withOpacity(0.7)),
+          const SizedBox(width: 5),
+        ],
         Text(
           label,
-          style: const TextStyle(color: Colors.white30, fontSize: 10),
+          style: const TextStyle(color: Colors.white38, fontSize: 10),
         ),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             value,
             style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRewardRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+    bool isBold = false,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 10),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 10,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
           ),
         ),
       ],

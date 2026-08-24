@@ -6,6 +6,8 @@ import '../../game/config/game_config.dart';
 import '../../game/state/game_state.dart';
 import '../../game/lander_zero_game.dart';
 import '../widgets/glass_panel.dart';
+import '../widgets/achievement_toast.dart';
+import '../widgets/minimap_widget.dart';
 
 class GameScreen extends StatefulWidget {
   final String mapId;
@@ -59,17 +61,18 @@ class _GameScreenState extends State<GameScreen> {
 
     return Scaffold(
       backgroundColor: GameConfig.colorBackground,
-      body: Focus(
-        autofocus: true,
-        onKeyEvent: (node, event) {
-          if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
-            _togglePause();
-            return KeyEventResult.handled;
-          }
-          return KeyEventResult.ignored;
-        },
-        child: SizedBox.expand(
-          child: Stack(
+      body: AchievementToastOverlay(
+        child: Focus(
+          autofocus: true,
+          onKeyEvent: (node, event) {
+            if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+              _togglePause();
+              return KeyEventResult.handled;
+            }
+            return KeyEventResult.ignored;
+          },
+          child: SizedBox.expand(
+            child: Stack(
             children: [
               // 1. Игровое поле Flame
               Positioned.fill(
@@ -107,6 +110,7 @@ class _GameScreenState extends State<GameScreen> {
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Датчик топлива
                             _buildStatusIndicator(
@@ -164,12 +168,20 @@ class _GameScreenState extends State<GameScreen> {
                               ),
                             ),
 
-                            // Датчик брони/щита
-                            _buildStatusIndicator(
-                              title: state.translate('shield'),
-                              value: shieldPercent,
-                              activeColor: GameConfig.colorDanger,
-                              icon: Icons.shield_rounded,
+                            // Датчик брони/щита + Миникарта
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildStatusIndicator(
+                                  title: state.translate('shield'),
+                                  value: shieldPercent,
+                                  activeColor: GameConfig.colorDanger,
+                                  icon: Icons.shield_rounded,
+                                ),
+                                const SizedBox(width: 12),
+                                MinimapWidget(game: _game),
+                              ],
                             ),
                           ],
                         ),
@@ -396,8 +408,9 @@ class _GameScreenState extends State<GameScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildStatusIndicator({
     required String title,

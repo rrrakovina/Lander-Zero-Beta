@@ -20,6 +20,7 @@ import 'components/stalactite.dart';
 import 'components/wind_effect.dart';
 import 'config/game_config.dart';
 import 'state/game_state.dart';
+import 'state/achievements_manager.dart';
 import 'audio/game_audio_manager.dart';
 
 enum GameRunState { playing, won, lost }
@@ -411,6 +412,17 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
     if (endState == GameRunState.won) {
       rewardCoins += 100;
       GameAudioManager().playSfx('victory.wav');
+
+      // Проверка и начисление достижений
+      final double fuelPercent = lander.fuel / lander.maxFuel;
+      AchievementsManager().checkMissionCompletionStats(
+        prefs: state.prefs,
+        damageTaken: totalDamage,
+        fuelPercentRemaining: fuelPercent,
+        missionSeconds: flightTime,
+        coinsCollected: coinsCollected,
+        isSuccess: true,
+      );
     } else {
       GameAudioManager().playSfx('defeat.wav');
     }

@@ -165,17 +165,62 @@ class RocketPainter extends CustomPainter {
     ..lineTo(-0.4, -0.9)
     ..close();
 
-  RocketPainter({required this.rocketId, this.animationTime = 0.0});
+  final Color? glowColor;
+  final bool isSelected;
+
+  /// Exact model bounding boxes enclosing hull, landing gear/skis/feet, nozzles, and antenna tips.
+  static const Map<String, Rect> modelBounds = {
+    'sputnik': Rect.fromLTRB(-1.65, -1.30, 1.65, 1.30),
+    'cyclone': Rect.fromLTRB(-2.20, -1.40, 2.20, 1.55),
+    'needle': Rect.fromLTRB(-1.45, -1.70, 1.45, 1.35),
+  };
+
+  /// Safety margin ensuring hover/tilt dynamics, strokes, and glows fit comfortably without clipping.
+  static const double safetyMargin = 1.20;
+
+  static Rect getBounds(String id) => modelBounds[id] ?? modelBounds['sputnik']!;
+  static Offset getCenterOffset(String id) => getBounds(id).center;
+  static double calculateScale(String id, Size size, {double margin = safetyMargin}) {
+    if (size.width <= 0 || size.height <= 0) return 0.0;
+    final b = getBounds(id);
+    final maxDim = max(b.width, b.height);
+    return min(size.width, size.height) / (maxDim * margin);
+  }
+
+  RocketPainter({
+    required this.rocketId,
+    this.animationTime = 0.0,
+    this.glowColor,
+    this.isSelected = false,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (size.width <= 0 || size.height <= 0) return;
+
+    final bounds = getBounds(rocketId);
+    final double centerX = bounds.center.dx;
+    final double centerY = bounds.center.dy;
+    final double maxDimension = max(bounds.width, bounds.height);
+
+    final double scale = min(size.width, size.height) / (maxDimension * safetyMargin);
+
     canvas.save();
     canvas.translate(size.width / 2, size.height / 2);
-    final double scale = min(size.width, size.height) / 2.5;
-    canvas.scale(scale, scale);
 
     if (animationTime > 0) {
-      canvas.translate(0, sin(animationTime) * 0.06);
+      canvas.translate(0, sin(animationTime) * 0.04 * scale);
+    }
+
+    canvas.scale(scale, scale);
+    // Center the actual model's visual bounding box
+    canvas.translate(-centerX, -centerY);
+
+    if (glowColor != null) {
+      final Paint glowPaint = Paint()
+        ..color = glowColor!.withOpacity(0.18)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.4);
+      canvas.drawOval(bounds.inflate(0.15), glowPaint);
     }
 
     if (rocketId == 'cyclone') {
@@ -313,5 +358,10 @@ class RocketPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant RocketPainter oldDelegate) {
+    return oldDelegate.rocketId != rocketId ||
+        oldDelegate.animationTime != animationTime ||
+        oldDelegate.glowColor != glowColor ||
+        oldDelegate.isSelected != isSelected;
+  }
 }

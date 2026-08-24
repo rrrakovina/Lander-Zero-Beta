@@ -2,10 +2,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../game/config/game_config.dart';
 import '../../game/state/game_state.dart';
+import '../../game/state/achievements_manager.dart';
 import '../widgets/menu_background.dart';
 import '../widgets/glass_panel.dart';
 import '../painters/rocket_painter.dart';
 import '../dialogs/settings_dialog.dart';
+import '../dialogs/achievements_dialog.dart';
 
 class MainMenuWidget extends StatelessWidget {
   final VoidCallback onPlay;
@@ -28,6 +30,16 @@ class MainMenuWidget extends StatelessWidget {
         final isRu = state.language == 'ru';
         final selectedCabin = state.selectedRocket;
         final cabinConfig = GameState.rocketConfigs[selectedCabin]!;
+
+        final unlockedAchievementsCount = AchievementsManager().achievements.where((a) => a.isUnlocked).length;
+        final totalUpgrades = state.engineLevel + state.fuelLevel + state.shieldLevel;
+        final rankInfo = PilotRankingInfo.calculate(
+          unlockedAchievementsCount: unlockedAchievementsCount,
+          totalUpgradeLevels: totalUpgrades,
+          ownedShipsCount: state.ownedRockets.length,
+          totalCoins: state.totalCoins,
+          completedRecordsCount: state.leaderboard.length,
+        );
 
         return MenuBackground(
           child: Padding(
@@ -151,6 +163,18 @@ class MainMenuWidget extends StatelessWidget {
                             color: const Color(0xFFE040FB),
                             onTap: onLeaderboard,
                           ),
+                          const SizedBox(height: 16),
+                          HoverMenuButton(
+                            title: state.language == 'ru' ? 'ДОСТИЖЕНИЯ' : 'ACHIEVEMENTS',
+                            icon: Icons.military_tech_rounded,
+                            color: const Color(0xFFFFD700),
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => const AchievementsDialog(),
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ),
@@ -166,29 +190,66 @@ class MainMenuWidget extends StatelessWidget {
                             Row(
                               children: [
                                 CircleAvatar(
-                                  backgroundColor: GameConfig.colorPrimary.withOpacity(0.1),
-                                  child: const Icon(Icons.person_outline_rounded, color: GameConfig.colorPrimary),
+                                  radius: 24,
+                                  backgroundColor: rankInfo.color.withOpacity(0.15),
+                                  child: Icon(Icons.person_outline_rounded, color: rankInfo.color, size: 28),
                                 ),
-                                const SizedBox(width: 12),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      state.nickname,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            state.nickname.isEmpty ? (isRu ? 'Пилот' : 'Pilot') : state.nickname,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: rankInfo.color.withOpacity(0.15),
+                                              borderRadius: BorderRadius.circular(8),
+                                              border: Border.all(color: rankInfo.color.withOpacity(0.6)),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: rankInfo.color.withOpacity(0.15),
+                                                  blurRadius: 6,
+                                                ),
+                                              ],
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  rankInfo.icon,
+                                                  size: 13,
+                                                  color: rankInfo.color,
+                                                ),
+                                                const SizedBox(width: 5),
+                                                Text(
+                                                  isRu ? rankInfo.badgeTextRu : rankInfo.badgeTextEn,
+                                                  style: TextStyle(
+                                                    color: rankInfo.color,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.bold,
+                                                    letterSpacing: 1.1,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                    Text(
-                                      isRu ? 'Статус: Готов к вылету' : 'Status: Ready for flight',
-                                      style: const TextStyle(
-                                        color: Colors.white54,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 4),
+                                      _buildTelemetryIndicators(state, isRu),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -282,8 +343,85 @@ class MainMenuWidget extends StatelessWidget {
     );
   }
 
-  // Метод _buildMenuButton заменен на полноценный HoverMenuButton ниже по коду
+  Widget _buildTelemetryIndicators(GameState state, bool isRu) {
+    final totalUpgrades = state.engineLevel + state.fuelLevel + state.shieldLevel;
+    // Compute ship systems readiness percentage: 60% base for level 1 stats, up to 100% at max level 5 stats (15 total levels)
+    final readinessPercent = min(100, (60 + ((totalUpgrades - 3) / 12.0) * 40).round());
 
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.35),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
+      ),
+      child: Row(
+        children: [
+          const TelemetryPulseDot(color: Color(0xFF00E676)),
+          const SizedBox(width: 6),
+          Text(
+            isRu ? 'ТЕЛЕМЕТРИЯ: АКТИВНА' : 'TELEMETRY: ACTIVE',
+            style: const TextStyle(
+              color: Color(0xFF00E676),
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.6,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(width: 1, height: 10, color: Colors.white24),
+          const SizedBox(width: 8),
+          Text(
+            isRu ? 'СВЯЗЬ: 99.8%' : 'LINK: 99.8%',
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(width: 1, height: 10, color: Colors.white24),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    isRu ? 'ГОТОВНОСТЬ: $readinessPercent%' : 'SYS READY: $readinessPercent%',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: readinessPercent >= 90 ? GameConfig.colorPrimary : GameConfig.colorWarning,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                SizedBox(
+                  width: 28,
+                  height: 4,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: LinearProgressIndicator(
+                      value: readinessPercent / 100.0,
+                      backgroundColor: Colors.white12,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        readinessPercent >= 90 ? GameConfig.colorPrimary : GameConfig.colorWarning,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildSpecBar({
     required String title,
@@ -312,6 +450,147 @@ class MainMenuWidget extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+enum PilotRankTier {
+  cadet,
+  pilot,
+  officer,
+  veteran,
+  commander,
+}
+
+class PilotRankingInfo {
+  final PilotRankTier tier;
+  final String titleRu;
+  final String titleEn;
+  final Color color;
+  final String badgeTextRu;
+  final String badgeTextEn;
+  final IconData icon;
+
+  const PilotRankingInfo({
+    required this.tier,
+    required this.titleRu,
+    required this.titleEn,
+    required this.color,
+    required this.badgeTextRu,
+    required this.badgeTextEn,
+    required this.icon,
+  });
+
+  static PilotRankingInfo calculate({
+    required int unlockedAchievementsCount,
+    required int totalUpgradeLevels,
+    required int ownedShipsCount,
+    required int totalCoins,
+    required int completedRecordsCount,
+  }) {
+    if (unlockedAchievementsCount >= 4 || totalUpgradeLevels >= 13 || (unlockedAchievementsCount >= 3 && ownedShipsCount >= 3)) {
+      return const PilotRankingInfo(
+        tier: PilotRankTier.commander,
+        titleRu: 'Командор',
+        titleEn: 'Commander',
+        color: Color(0xFFFFD700),
+        badgeTextRu: 'РАНГ: КОМАНДОР',
+        badgeTextEn: 'RANK: COMMANDER',
+        icon: Icons.workspace_premium_rounded,
+      );
+    } else if (unlockedAchievementsCount >= 3 || totalUpgradeLevels >= 10 || ownedShipsCount >= 3) {
+      return const PilotRankingInfo(
+        tier: PilotRankTier.veteran,
+        titleRu: 'Ветеран',
+        titleEn: 'Veteran',
+        color: Color(0xFFE040FB),
+        badgeTextRu: 'РАНГ: ВЕТЕРАН',
+        badgeTextEn: 'RANK: VETERAN',
+        icon: Icons.military_tech_rounded,
+      );
+    } else if (unlockedAchievementsCount >= 2 || totalUpgradeLevels >= 7 || ownedShipsCount >= 2) {
+      return const PilotRankingInfo(
+        tier: PilotRankTier.officer,
+        titleRu: 'Офицер',
+        titleEn: 'Officer',
+        color: Color(0xFFFF9100),
+        badgeTextRu: 'РАНГ: ОФИЦЕР',
+        badgeTextEn: 'RANK: OFFICER',
+        icon: Icons.shield_rounded,
+      );
+    } else if (unlockedAchievementsCount >= 1 || totalUpgradeLevels >= 4 || totalCoins >= 100 || completedRecordsCount >= 1) {
+      return const PilotRankingInfo(
+        tier: PilotRankTier.pilot,
+        titleRu: 'Пилот',
+        titleEn: 'Pilot',
+        color: Color(0xFF00E5FF),
+        badgeTextRu: 'РАНГ: ПИЛОТ',
+        badgeTextEn: 'RANK: PILOT',
+        icon: Icons.flight_takeoff_rounded,
+      );
+    } else {
+      return const PilotRankingInfo(
+        tier: PilotRankTier.cadet,
+        titleRu: 'Кадет',
+        titleEn: 'Cadet',
+        color: Color(0xFF80D8FF),
+        badgeTextRu: 'РАНГ: КАДЕТ',
+        badgeTextEn: 'RANK: CADET',
+        icon: Icons.school_rounded,
+      );
+    }
+  }
+}
+
+class TelemetryPulseDot extends StatefulWidget {
+  final Color color;
+  const TelemetryPulseDot({super.key, this.color = const Color(0xFF00E676)});
+
+  @override
+  State<TelemetryPulseDot> createState() => _TelemetryPulseDotState();
+}
+
+class _TelemetryPulseDotState extends State<TelemetryPulseDot> with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animController,
+      builder: (context, _) {
+        final scale = 0.8 + (_animController.value * 0.4);
+        final opacity = 0.5 + (_animController.value * 0.5);
+        return Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: widget.color.withOpacity(opacity),
+            boxShadow: [
+              BoxShadow(
+                color: widget.color.withOpacity(0.6 * _animController.value),
+                blurRadius: 6 * scale,
+                spreadRadius: 2 * scale,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

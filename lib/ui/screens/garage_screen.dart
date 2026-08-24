@@ -245,55 +245,139 @@ class _GarageWidgetState extends State<GarageWidget> with SingleTickerProviderSt
           const SizedBox(width: 24),
           // Upgrade Button
           SizedBox(
-            width: 150,
-            height: 55,
-            child: ElevatedButton(
-              onPressed: (isMax || !canAfford)
-                  ? null
-                  : () async {
-                      await state.upgradeStat(statKey);
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isMax ? Colors.white12 : (canAfford ? color : Colors.white10),
-                foregroundColor: Colors.black,
-                disabledBackgroundColor: Colors.white10,
-                disabledForegroundColor: Colors.white24,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: isMax ? BorderSide.none : BorderSide(color: canAfford ? Colors.transparent : Colors.white10),
-                ),
-              ),
+            width: 154,
+            height: 54,
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
               child: isMax
-                  ? Text(
-                      state.translate('max_level'),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                    )
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          state.translate('buy').toUpperCase(),
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.stars_rounded, color: GameConfig.colorWarning, size: 12),
-                            const SizedBox(width: 4),
-                            Text(
-                              costText,
-                              style: TextStyle(
-                                color: canAfford ? Colors.black87 : GameConfig.colorDanger,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
+                  ? Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E2430),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.white12, width: 1),
+                      ),
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.verified_rounded, color: GameConfig.colorPrimary, size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            state.translate('max_level'),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Color(0xFF94A3B8),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                    )
+                  : canAfford
+                      ? Ink(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [color, color.withOpacity(0.85)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: color.withOpacity(0.45),
+                                blurRadius: 10,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(10),
+                            onTap: () async {
+                              await state.upgradeStat(statKey);
+                            },
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  state.translate('buy').toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Color(0xFF0F0F13),
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 13,
+                                    letterSpacing: 1.1,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.stars_rounded, color: Color(0xFF1E1E1E), size: 15),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      costText,
+                                      style: const TextStyle(
+                                        color: Color(0xFF0F0F13),
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF161B26),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: const Color(0xFFFF5252).withOpacity(0.65),
+                              width: 1.5,
+                            ),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x33FF5252),
+                                blurRadius: 8,
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                state.translate('buy').toUpperCase(),
+                                style: const TextStyle(
+                                  color: Color(0xFFF1F5F9),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  letterSpacing: 1.1,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.stars_rounded, color: Color(0xFFFFD700), size: 15),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    costText,
+                                    style: const TextStyle(
+                                      color: Color(0xFFFF5252),
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
             ),
           ),
         ],
@@ -383,63 +467,193 @@ class _GarageWidgetState extends State<GarageWidget> with SingleTickerProviderSt
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   // 4. Action Button
                   SizedBox(
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: isSelected
-                          ? null
-                          : () async {
-                              if (isOwned) {
-                                  await state.selectRocket(rocketId);
-                              } else {
-                                  await state.buyRocket(rocketId);
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isSelected
-                            ? Colors.white10
-                            : (isOwned
-                                ? GameConfig.colorPrimary
-                                : (canAfford ? GameConfig.colorWarning : Colors.white10)),
-                        foregroundColor: Colors.black,
-                        disabledBackgroundColor: Colors.white10,
-                        disabledForegroundColor: Colors.white24,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
+                    height: 48,
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
                       child: isSelected
-                          ? Text(
-                              state.translate('selected').toUpperCase(),
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                            )
-                          : (isOwned
-                              ? Text(
-                                  state.translate('select').toUpperCase(),
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      state.translate('buy').toUpperCase(),
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ? Container(
+                              decoration: BoxDecoration(
+                                color: cabinColor.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: cabinColor.withOpacity(0.6),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: cabinColor.withOpacity(0.15),
+                                    blurRadius: 8,
+                                  ),
+                                ],
+                              ),
+                              alignment: Alignment.center,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.check_circle_rounded, color: cabinColor, size: 16),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    state.translate('selected').toUpperCase(),
+                                    style: TextStyle(
+                                      color: cabinColor,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 13,
+                                      letterSpacing: 1.2,
                                     ),
-                                    const SizedBox(width: 6),
-                                    const Icon(Icons.stars_rounded, color: Colors.black87, size: 16),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      '$price',
-                                      style: TextStyle(
-                                        color: canAfford ? Colors.black87 : GameConfig.colorDanger,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 13,
+                                  ),
+                                ],
+                              ),
+                            )
+                          : isOwned
+                              ? Ink(
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [GameConfig.colorPrimary, Color(0xFF00B0FF)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: GameConfig.colorPrimary.withOpacity(0.45),
+                                        blurRadius: 10,
+                                        spreadRadius: 1,
+                                      ),
+                                    ],
+                                  ),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(10),
+                                    onTap: () async {
+                                      await state.selectRocket(rocketId);
+                                    },
+                                    child: Center(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(Icons.rocket_launch_rounded, color: Color(0xFF0F0F13), size: 16),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            state.translate('select').toUpperCase(),
+                                            style: const TextStyle(
+                                              color: Color(0xFF0F0F13),
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 13,
+                                              letterSpacing: 1.2,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ],
-                                )),
+                                  ),
+                                )
+                              : canAfford
+                                  ? Ink(
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [Color(0xFFFFB300), Color(0xFFFF8F00)],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: const Color(0xFFFFE082), width: 1.5),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFFFFB300).withOpacity(0.45),
+                                            blurRadius: 12,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
+                                      ),
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(10),
+                                        onTap: () async {
+                                          await state.buyRocket(rocketId);
+                                        },
+                                        child: Center(
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                state.translate('buy').toUpperCase(),
+                                                style: const TextStyle(
+                                                  color: Color(0xFF0F0F13),
+                                                  fontWeight: FontWeight.w900,
+                                                  fontSize: 13,
+                                                  letterSpacing: 1.1,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              const Icon(
+                                                Icons.stars_rounded,
+                                                color: Color(0xFF1E1E1E),
+                                                size: 18,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                '$price',
+                                                style: const TextStyle(
+                                                  color: Color(0xFF0F0F13),
+                                                  fontWeight: FontWeight.w900,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : Container(
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF181F2A),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: const Color(0xFFFF5252).withOpacity(0.65),
+                                          width: 1.5,
+                                        ),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Color(0x33FF5252),
+                                            blurRadius: 8,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            state.translate('buy').toUpperCase(),
+                                            style: const TextStyle(
+                                              color: Color(0xFFF1F5F9),
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                              letterSpacing: 1.1,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Icon(
+                                            Icons.stars_rounded,
+                                            color: Color(0xFFFFD700),
+                                            size: 18,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '$price',
+                                            style: const TextStyle(
+                                              color: Color(0xFFFF5252),
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                     ),
                   ),
                 ],
@@ -507,7 +721,7 @@ class _CabinPreviewWidgetState extends State<CabinPreviewWidget> with SingleTick
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3), // Плавное колебание за 3 секунды
+      duration: const Duration(seconds: 3),
     )..repeat();
   }
 
@@ -522,65 +736,87 @@ class _CabinPreviewWidgetState extends State<CabinPreviewWidget> with SingleTick
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        final double angle = sin(_controller.value * 2 * pi) * 0.04; // Мягкий крен
-        final double hoverOffset = cos(_controller.value * 2 * pi) * 5.0; // Левитация
-        
+        final double angle = sin(_controller.value * 2 * pi) * 0.035;
+        final double hoverOffset = cos(_controller.value * 2 * pi) * 3.5;
+
         return Container(
           decoration: BoxDecoration(
             color: widget.cabinColor.withOpacity(0.04),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: widget.isSelected ? widget.cabinColor.withOpacity(0.5) : widget.cabinColor.withOpacity(0.15),
+              color: widget.isSelected ? widget.cabinColor.withOpacity(0.6) : widget.cabinColor.withOpacity(0.18),
               width: widget.isSelected ? 2.0 : 1.0,
             ),
+            boxShadow: widget.isSelected
+                ? [
+                    BoxShadow(
+                      color: widget.cabinColor.withOpacity(0.15),
+                      blurRadius: 12,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : null,
           ),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Transform.translate(
-                    offset: Offset(0, hoverOffset),
-                    child: Transform.rotate(
-                      angle: angle,
-                      child: CustomPaint(
-                        painter: RocketPainter(
-                          rocketId: widget.rocketId,
-                          animationTime: _controller.value * 2 * pi,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+                    child: Transform.translate(
+                      offset: Offset(0, hoverOffset),
+                      child: Transform.rotate(
+                        angle: angle,
+                        child: CustomPaint(
+                          painter: RocketPainter(
+                            rocketId: widget.rocketId,
+                            animationTime: _controller.value * 2 * pi,
+                            glowColor: widget.isSelected ? widget.cabinColor : null,
+                            isSelected: widget.isSelected,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              if (widget.isSelected)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: widget.cabinColor,
-                      borderRadius: BorderRadius.circular(4),
-                      boxShadow: [
-                        BoxShadow(
-                          color: widget.cabinColor.withOpacity(0.4),
-                          blurRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      widget.selectedText,
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
+                if (widget.isSelected)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: widget.cabinColor,
+                        borderRadius: BorderRadius.circular(5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: widget.cabinColor.withOpacity(0.5),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.check_circle_rounded, size: 12, color: Colors.black),
+                          const SizedBox(width: 4),
+                          Text(
+                            widget.selectedText,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         );
       },
