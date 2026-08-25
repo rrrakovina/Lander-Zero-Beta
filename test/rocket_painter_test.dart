@@ -27,6 +27,21 @@ void main() {
       expect(needleBounds.center.dx, equals(0.0));
       expect(needleBounds.center.dy, closeTo(-0.175, 0.001));
 
+      final swiftBounds = RocketPainter.getBounds('swift');
+      expect(swiftBounds.width, equals(2.90));
+      expect(swiftBounds.height, equals(3.05));
+      expect(swiftBounds.center.dx, equals(0.0));
+
+      final titanBounds = RocketPainter.getBounds('titan');
+      expect(titanBounds.width, equals(4.40));
+      expect(titanBounds.height, equals(2.95));
+      expect(titanBounds.center.dx, equals(0.0));
+
+      final quasarBounds = RocketPainter.getBounds('quasar');
+      expect(quasarBounds.width, equals(2.90));
+      expect(quasarBounds.height, equals(3.05));
+      expect(quasarBounds.center.dx, equals(0.0));
+
       // Fallback for unknown ID defaults to sputnik bounds
       final unknownBounds = RocketPainter.getBounds('unknown_ship');
       expect(unknownBounds, equals(sputnikBounds));
@@ -63,7 +78,7 @@ void main() {
       }
     });
 
-    test('RocketPainter calculateScale guarantees no vertical clipping for Needle', () {
+    test('RocketPainter calculateScale guarantees no vertical clipping for Needle and Swift', () {
       const testSizes = [
         Size(100, 100),
         Size(120, 120),
@@ -72,24 +87,23 @@ void main() {
         Size(150, 300),
       ];
 
-      for (final size in testSizes) {
-        final scale = RocketPainter.calculateScale('needle', size);
-        final bounds = RocketPainter.getBounds('needle');
-        final renderedWidth = bounds.width * scale;
-        final renderedHeight = bounds.height * scale;
+      for (final shipId in ['needle', 'swift', 'quasar']) {
+        for (final size in testSizes) {
+          final scale = RocketPainter.calculateScale(shipId, size);
+          final bounds = RocketPainter.getBounds(shipId);
+          final renderedWidth = bounds.width * scale;
+          final renderedHeight = bounds.height * scale;
 
-        // Rendered dimensions must strictly fit within canvas dimensions with safety margin
-        expect(renderedWidth, lessThanOrEqualTo(size.width));
-        expect(renderedHeight, lessThanOrEqualTo(size.height));
+          expect(renderedWidth, lessThanOrEqualTo(size.width));
+          expect(renderedHeight, lessThanOrEqualTo(size.height));
 
-        // Vertical margin must be >= 0
-        final verticalMargin = (size.height - renderedHeight) / 2;
-        expect(verticalMargin, greaterThanOrEqualTo(0.0));
+          final verticalMargin = (size.height - renderedHeight) / 2;
+          expect(verticalMargin, greaterThanOrEqualTo(0.0));
 
-        // For square 120x120 canvas, rendered height is exactly (120 / 1.20) = 100px
-        if (size.width == 120 && size.height == 120) {
-          expect(renderedHeight, closeTo(100.0, 0.1));
-          expect(verticalMargin, closeTo(10.0, 0.1));
+          if (size.width == 120 && size.height == 120) {
+            expect(renderedHeight, closeTo(100.0, 0.1));
+            expect(verticalMargin, closeTo(10.0, 0.1));
+          }
         }
       }
     });
@@ -143,44 +157,67 @@ void main() {
       expect(rocketFinder, findsOneWidget);
     });
 
-    testWidgets('CustomPaint renders Cyclone and Needle without throwing exception', (tester) async {
+    testWidgets('CustomPaint renders all 5 fleet vessels cleanly without throwing exceptions', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Column(
-              children: [
-                CustomPaint(
-                  size: const Size(150, 150),
-                  painter: RocketPainter(
-                    rocketId: 'cyclone',
-                    animationTime: 0.5,
-                    glowColor: Colors.amber,
-                    isSelected: false,
+            body: SingleChildScrollView(
+              child: Column(
+                children: [
+                  CustomPaint(
+                    size: const Size(150, 150),
+                    painter: RocketPainter(
+                      rocketId: 'sputnik',
+                      animationTime: 0.5,
+                      isSelected: true,
+                    ),
                   ),
-                ),
-                CustomPaint(
-                  size: const Size(150, 150),
-                  painter: RocketPainter(
-                    rocketId: 'needle',
-                    animationTime: 0.5,
-                    isSelected: false,
+                  CustomPaint(
+                    size: const Size(150, 150),
+                    painter: RocketPainter(
+                      rocketId: 'swift',
+                      animationTime: 0.5,
+                      isSelected: false,
+                    ),
                   ),
-                ),
-              ],
+                  CustomPaint(
+                    size: const Size(150, 150),
+                    painter: RocketPainter(
+                      rocketId: 'titan',
+                      animationTime: 0.5,
+                      isSelected: false,
+                    ),
+                  ),
+                  CustomPaint(
+                    size: const Size(150, 150),
+                    painter: RocketPainter(
+                      rocketId: 'quasar',
+                      animationTime: 0.5,
+                      isSelected: false,
+                    ),
+                  ),
+                  CustomPaint(
+                    size: const Size(150, 150),
+                    painter: RocketPainter(
+                      rocketId: 'cyclone',
+                      animationTime: 0.5,
+                      glowColor: Colors.amber,
+                      isSelected: false,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       );
 
-      final cycloneFinder = find.byWidgetPredicate(
-        (w) => w is CustomPaint && w.painter is RocketPainter && (w.painter as RocketPainter).rocketId == 'cyclone',
-      );
-      final needleFinder = find.byWidgetPredicate(
-        (w) => w is CustomPaint && w.painter is RocketPainter && (w.painter as RocketPainter).rocketId == 'needle',
-      );
-
-      expect(cycloneFinder, findsOneWidget);
-      expect(needleFinder, findsOneWidget);
+      for (final shipId in ['sputnik', 'swift', 'titan', 'quasar', 'cyclone']) {
+        final finder = find.byWidgetPredicate(
+          (w) => w is CustomPaint && w.painter is RocketPainter && (w.painter as RocketPainter).rocketId == shipId,
+        );
+        expect(finder, findsOneWidget);
+      }
     });
   });
 }

@@ -17,7 +17,9 @@ import 'components/spark_particle.dart';
 import 'components/screen_flash.dart';
 import 'components/geyser.dart';
 import 'components/stalactite.dart';
+import 'components/magma_bubble.dart';
 import 'components/wind_effect.dart';
+import 'components/endless_cave_manager.dart';
 import 'config/game_config.dart';
 import 'state/game_state.dart';
 import 'state/achievements_manager.dart';
@@ -31,8 +33,10 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
   LanderZeroGame({required this.mapId}) : super(gravity: Vector2(0, _getGravity(mapId)));
 
   static double _getGravity(String mapId) {
-    if (mapId == 'core') return 5.3; // Повышенная гравитация на карте Ядра
-    return 3.5;
+    if (mapId == 'core') return 5.3; // 1.5g Heavy Core
+    if (mapId == 'ice') return 2.275; // 0.65g Europa low gravity
+    if (mapId == 'orbit') return 0.0; // 0.0g Zero Gravity
+    return 3.5; // 1.0g Standard
   }
 
   late final Lander lander;
@@ -41,6 +45,7 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
   Rope? rope;
   late final SparkPoolManager sparkPool;
   late final ScreenFlash screenFlash;
+  EndlessCaveManager? endlessManager;
   double _hitStopTimer = 0.0;
   double _accumulator = 0.0;
   static const double _fixedTimeStep = 1 / 60;
@@ -89,6 +94,11 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
 
     if (mapId == 'wind') {
       world.add(WindVisualEffect());
+    }
+
+    if (mapId == 'endless') {
+      endlessManager = EndlessCaveManager();
+      world.add(endlessManager!);
     }
 
     // 2. Добавляем ландшафт пещеры
@@ -153,16 +163,21 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
   void _spawnObstacles() {
     // Спавним гейзеры на полу
     final double g1x = -13.0;
-    world.add(Geyser(position: Vector2(g1x, cave.getFloorY(g1x))));
+    world.add(Geyser(position: Vector2(g1x, cave.getFloorY(g1x)), biome: mapId));
 
     final double g2x = 11.0;
-    world.add(Geyser(position: Vector2(g2x, cave.getFloorY(g2x))));
+    world.add(Geyser(position: Vector2(g2x, cave.getFloorY(g2x)), biome: mapId));
 
     // Спавним сталактиты на потолке
     final stalactiteXs = [-20.0, -7.0, 7.0, 17.0];
     for (final sx in stalactiteXs) {
       final cy = cave.getCeilingY(sx);
-      world.add(Stalactite(initialPosition: Vector2(sx, cy + 0.8)));
+      world.add(Stalactite(initialPosition: Vector2(sx, cy + 0.8), biome: mapId));
+    }
+
+    if (mapId == 'core') {
+      world.add(MagmaBubble(minX: -22.0, maxX: 22.0));
+      world.add(MagmaBubble(minX: -15.0, maxX: 15.0, speed: 2.8));
     }
   }
 
@@ -214,11 +229,53 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
 
   void _updateStats() {
     String alertText = '';
+    double gForceVal = 1.0;
+    double pitchAngleVal = 0.0;
+    double proxDistance = 99.0;
+    bool isProxAlert = false;
+    String radioMessage = '';
+
+    if (lander.isMounted) {
+      gForceVal = lander.gForce;
+      pitchAngleVal = lander.body.angle;
+      if (cave.isMounted) {
+        final pos = lander.body.position;
+        final floorY = cave.getFloorY(pos.x);
+        final ceilY = cave.getCeilingY(pos.x);
+        final distFloor = (floorY - pos.y).abs();
+        final distCeil = (ceilY - pos.y).abs();
+        proxDistance = min(distFloor, distCeil);
+        final speed = lander.body.linearVelocity.length;
+        if (proxDistance < 3.0 && speed > 3.5) {
+          isProxAlert = true;
+        }
+      }
+
+      final state = GameState();
+      final isRu = state.language == 'ru';
+      final fuelPct = lander.maxFuel > 0 ? lander.fuel / lander.maxFuel : 1.0;
+
+      if (isProxAlert) {
+        radioMessage = isRu ? 'ТРЕВОГА: Опасное сближение со скалой!' : 'ALERT: Terrain proximity warning!';
+      } else if (fuelPct < 0.20 && lander.fuel > 0) {
+        radioMessage = isRu ? 'ВНИМАНИЕ: Критический остаток топлива (< 20%)!' : 'WARNING: Fuel reserves critical (< 20%)!';
+      } else if (rope != null) {
+        final exitDist = cargoCapsule.isMounted ? cargoCapsule.body.position.distanceTo(cave.exitPlatform) : 99.0;
+        if (exitDist < 12.0) {
+          radioMessage = isRu ? 'База: Выходной шлюз на прицеле, погасите скорость!' : 'Base: Extraction bay in sight, slow down!';
+        } else {
+          radioMessage = isRu ? 'Пилот: Груз зафиксирован, начинаю транспортировку.' : 'Pilot: Cargo secured on tether, proceeding to exit.';
+        }
+      } else if (flightTime < 4.0) {
+        radioMessage = isRu ? 'База: Старт разрешен, контролируйте вектор тяги.' : 'Base: Clearance granted, monitor thrust vector.';
+      }
+    }
+
     if (_customAlert != null) {
       alertText = _customAlert!;
     } else if (rope == null && lander.isMounted && cargoCapsule.isMounted && lander.body.position.distanceTo(cargoCapsule.body.position) < 8.0) {
       alertText = GameState().translate('cargo_nearby');
-    } else if (rope != null) {
+    } else if (rope != null && cargoCapsule.isMounted) {
       final exitDistance = cargoCapsule.body.position.distanceTo(cave.exitPlatform);
       if (exitDistance < 12.0) {
         alertText = GameState().translate('exit_gate_alert');
@@ -236,6 +293,11 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
       'shield': lander.isMounted ? lander.shield : 1.0,
       'maxShield': lander.isMounted ? lander.maxShield : 1.0,
       'hasRope': rope != null,
+      'gForce': gForceVal,
+      'pitchAngle': pitchAngleVal,
+      'proximityDistance': proxDistance,
+      'isProximityAlert': isProxAlert,
+      'radioChatterMessage': radioMessage,
     };
   }
 
@@ -276,9 +338,10 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
       }
     }
 
-    // Симуляция ветра на карте ветров (снос влево)
+    // Симуляция ветра на карте ветров (динамический снос влево с турбулентностью)
     if (mapId == 'wind') {
-      final windForce = Vector2(-4.0 * lander.body.mass, 0);
+      final double windFactor = -4.0 + 1.2 * sin(flightTime * 1.8) + 0.6 * sin(flightTime * 3.5);
+      final windForce = Vector2(windFactor * lander.body.mass, 0);
       lander.body.applyForce(windForce);
     }
 
@@ -320,7 +383,7 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
     }
 
     // Проверка победы (груз доставлен к выходному шлюзу с проверкой угла крена)
-    if (rope != null) {
+    if (rope != null && mapId != 'endless') {
       final exitDistance = cargoCapsule.body.position.distanceTo(cave.exitPlatform);
       if (exitDistance < 4.0 && lander.body.linearVelocity.length2 < 0.6) {
         final angle = lander.body.angle.abs() % (2 * pi);
@@ -407,7 +470,7 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
 
     final state = GameState();
     
-    // Монеты заезда: 1 монета за собранную + бонус за успешную эвакуацию (100 монет)
+    // Монеты заезда: 10 монет за каждую собранную + бонус за успешную эвакуацию (100 монет)
     int rewardCoins = coinsCollected * 10;
     if (endState == GameRunState.won) {
       rewardCoins += 100;
@@ -427,6 +490,10 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
       GameAudioManager().playSfx('defeat.wav');
     }
     
+    if (mapId == 'endless' && endlessManager != null) {
+      rewardCoins += endlessManager!.rescuesCount * 100;
+    }
+
     state.addCoins(rewardCoins);
     state.addRecord(maxDistance, coinsCollected, mapId);
   }
@@ -481,6 +548,13 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
     if (event.logicalKey == LogicalKeyboardKey.keyS || event.logicalKey == LogicalKeyboardKey.arrowDown) {
       if (isKeyDown && rope != null) {
         releaseCargo();
+        return KeyEventResult.handled;
+      } else if (mapId == 'orbit' && isKeyDown && rope == null) {
+        // Zero-G reverse RCS counter-braking
+        final vel = lander.body.linearVelocity;
+        if (vel.length > 0.05) {
+          lander.body.applyLinearImpulse(-vel.normalized() * 0.15 * lander.body.mass);
+        }
         return KeyEventResult.handled;
       }
     }

@@ -327,7 +327,7 @@ void main() {
       expect(find.text('РЕКОРДЫ'), findsOneWidget);
       expect(find.text('ДОСТИЖЕНИЯ'), findsOneWidget);
       expect(find.text('Пилот'), findsOneWidget);
-      expect(find.text('РАНГ: КАДЕТ'), findsOneWidget);
+      expect(find.text('РАНГ: ОФИЦЕР'), findsOneWidget);
       expect(find.text('ТЕЛЕМЕТРИЯ: АКТИВНА'), findsOneWidget);
       expect(find.text('СВЯЗЬ: 99.8%'), findsOneWidget);
       expect(find.textContaining('ГОТОВНОСТЬ: 60%'), findsOneWidget);
@@ -340,8 +340,7 @@ void main() {
 
       expect(find.text('StarLord'), findsOneWidget);
       expect(find.text('777'), findsOneWidget);
-      // Coins >= 100 promotes to Pilot rank
-      expect(find.text('РАНГ: ПИЛОТ'), findsOneWidget);
+      expect(find.text('РАНГ: ОФИЦЕР'), findsOneWidget);
 
       // 3. Switch to EN
       await tester.tap(find.text('EN'));
@@ -354,7 +353,7 @@ void main() {
       expect(find.text('GARAGE'), findsOneWidget);
       expect(find.text('HIGHSCORES'), findsOneWidget);
       expect(find.text('ACHIEVEMENTS'), findsOneWidget);
-      expect(find.text('RANK: PILOT'), findsOneWidget);
+      expect(find.text('RANK: OFFICER'), findsOneWidget);
       expect(find.text('TELEMETRY: ACTIVE'), findsOneWidget);
       expect(find.text('LINK: 99.8%'), findsOneWidget);
       expect(find.textContaining('SYS READY: 60%'), findsOneWidget);
@@ -454,7 +453,7 @@ void main() {
       expect(find.text('Ураган'), findsOneWidget);
       expect(find.text('Игла'), findsOneWidget);
       expect(find.text('ВЫБРАНО'), findsWidgets);
-      expect(find.text('ВЫБРАТЬ'), findsOneWidget); // Sputnik now available to select
+      expect(find.text('ВЫБРАТЬ'), findsWidgets); // Sputnik and Swift now available to select
     });
 
     testWidgets('Map Select Screen: Language toggle across map cards and location preview sub-screens', (tester) async {
@@ -488,7 +487,7 @@ void main() {
       expect(find.text('ЛЕГКО'), findsOneWidget);
       expect(find.text('СРЕДНЕ'), findsOneWidget);
       expect(find.text('СЛОЖНО'), findsOneWidget);
-      expect(find.text('БРИФИНГ'), findsNWidgets(3));
+      expect(find.text('БРИФИНГ'), findsNWidgets(6));
 
       // 2. Open Deep Core briefing in RU
       await tester.tap(find.text('Глубинное Ядро'));
@@ -527,7 +526,7 @@ void main() {
       expect(find.text('EASY'), findsOneWidget);
       expect(find.text('MEDIUM'), findsOneWidget);
       expect(find.text('HARD'), findsOneWidget);
-      expect(find.text('BRIEFING'), findsNWidgets(3));
+      expect(find.text('BRIEFING'), findsNWidgets(6));
     });
   });
 

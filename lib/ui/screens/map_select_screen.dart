@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../game/config/game_config.dart';
 import '../../game/state/game_state.dart';
+import '../../game/audio/game_audio_manager.dart';
 import '../widgets/menu_background.dart';
 import '../widgets/glass_panel.dart';
 import '../painters/map_preview_painter.dart';
@@ -178,6 +179,108 @@ class MapBriefingData {
       missionObjectiveRu: 'Совершить ювелирный спуск в ядро планеты. Подхватить контейнер и вытащить его наверх, борясь с экстремальным притяжением. Каждое столкновение наносит критический урон!',
       missionObjectiveEn: 'Execute a pinpoint landing into the planet\'s core. Hook the cargo and lift it back up, fighting the extreme pull. Every impact deals critical structural damage!',
     ),
+    'ice': MapBriefingData(
+      id: 'ice',
+      nameRu: 'Ледяные Разломы Европы',
+      nameEn: 'Europa Ice Chasms',
+      descRu: 'Криогенный спутник Юпитера. Сверхнизкое сцепление со льдом и геотермальные гейзеры.',
+      descEn: 'Cryogenic Jovian moon. Ultra-low surface friction with active cryo-geysers.',
+      difficultyRu: 'Эксперт',
+      difficultyEn: 'Expert',
+      themeColor: Color(0xFF00E5FF),
+      icon: Icons.ac_unit_rounded,
+      commStatusRu: 'СВЯЗЬ: ЗАДЕРЖКА СИГНАЛА',
+      commStatusEn: 'COMM STATUS: HIGH LATENCY',
+      commStatusColor: Color(0xFF00E5FF),
+      gravityRu: '0.65x (2.28 м/с²)',
+      gravityEn: '0.65x (2.28 m/s²)',
+      windRu: 'Крио-гейзеры (Вертикальные выбросы)',
+      windEn: 'Cryo-geysers (Vertical plumes)',
+      thermalRu: '-170°C (Криогенный холод)',
+      thermalEn: '-170°C (Deep Cryo Freeze)',
+      radiationRu: '42.0 мЗв (Магнитосфера Юпитера)',
+      radiationEn: '42.0 mSv (Jovian Magnetosphere)',
+      seismicRu: 'Класс 2 (Ледовые трещины)',
+      seismicEn: 'Class 2 (Ice Fractures)',
+      recCabinRu: 'Стриж (Маневренность для обхода гейзеров)',
+      recCabinEn: 'Swift-02 (High agility for geyser evasion)',
+      hazardsRu: 'Скользкий лед (низкое сцепление), падающие сосульки, выбросы пара',
+      hazardsEn: 'Slippery ice (low friction), falling icicles, cryo steam bursts',
+      bountyRangeRu: '500 - 900 монет',
+      bountyRangeEn: '500 - 900 coins',
+      missionStoryRu: 'Ледяная кора Европы скрывает подземные океаны. Посадка на ледяную поверхность сопряжена с критически низким сцеплением (корабль долго скользит). Геотермальные гейзеры выбрасывают столбы ледяного пара, подбрасывая корабль вверх.',
+      missionStoryEn: 'Europa\'s frozen crust conceals subsurface oceans. Landing on frictionless ice causes extreme drift. High-pressure cryo-geysers erupt from fissures, launching any vessel caught in the plume skyward.',
+      missionObjectiveRu: 'Осуществить точную посадку на скользкий лед, перехватить крио-контейнер и эвакуировать его сквозь разломы и гейзерные выбросы.',
+      missionObjectiveEn: 'Navigate low-friction icy caverns, evade erupting cryo-geysers, and extract the stranded cryogenic specimen to the upper orbital platform.',
+    ),
+    'orbit': MapBriefingData(
+      id: 'orbit',
+      nameRu: 'Орбитальные Обломки',
+      nameEn: 'Orbital Debris Salvage',
+      descRu: 'Глубокий космос в поясе астероидов. Полная невесомость (0G) и свободный дрейф.',
+      descEn: 'Deep space asteroid salvage field. Zero gravity (0G) and frictionless inertia.',
+      difficultyRu: 'Мастер',
+      difficultyEn: 'Master',
+      themeColor: Color(0xFFE040FB),
+      icon: Icons.blur_on_rounded,
+      commStatusRu: 'СВЯЗЬ: РЕТРАНСЛЯТОР',
+      commStatusEn: 'COMM STATUS: RELAY LINK',
+      commStatusColor: Color(0xFFE040FB),
+      gravityRu: '0.0x (0.0 м/с² - Невесомость)',
+      gravityEn: '0.0x (0.0 m/s² - Zero Gravity)',
+      windRu: '0.0 Н (Открытый вакуум)',
+      windEn: '0.0 N (Hard Vacuum)',
+      thermalRu: '-270°C (Космический вакуум)',
+      thermalEn: '-270°C (Cosmic Void)',
+      radiationRu: '78.5 мЗв (Космические лучи)',
+      radiationEn: '78.5 mSv (Cosmic Ray Flux)',
+      seismicRu: 'Класс 0 (Вакуум)',
+      seismicEn: 'Class 0 (Zero Drift)',
+      recCabinRu: 'Квазар (Ионный РСУ для маневров в 0G)',
+      recCabinEn: 'Quasar-IX (Ion RCS for 0G maneuvering)',
+      hazardsRu: 'Отсутствие гравитации, свободный дрейф, дрейфующие обломки',
+      hazardsEn: 'Zero gravity, high momentum drift, floating debris',
+      bountyRangeRu: '800 - 1500 монет',
+      bountyRangeEn: '800 - 1500 coins',
+      missionStoryRu: 'Кладбище орбитальных станций в глубоком вакууме. Гравитационное поле отсутствует полностью. Корабль продолжает двигаться бесконечно по инерции, пока не включены реверсивные двигатели или маневровые РСУ.',
+      missionStoryEn: 'A zero-G orbital graveyard of derelict research satellites. With zero gravitational deceleration, every burst of thrust must be actively counter-braked to avoid catastrophic collision.',
+      missionObjectiveRu: 'Аккуратно состыковаться с дрейфующим спутником в невесомости, погасить инерцию и доставить модуль в спасательный док.',
+      missionObjectiveEn: 'Execute zero-gravity docking with the drifting orbital module, master reverse thruster braking, and safely tow the salvage to the recovery cruiser.',
+    ),
+    'endless': MapBriefingData(
+      id: 'endless',
+      nameRu: 'Бесконечный Сектор',
+      nameEn: 'Endless Rescue Sector',
+      descRu: 'Процедурно генерируемый лабиринт. Бесконечная череда выживших, заправок и опасностей.',
+      descEn: 'Procedurally generated labyrinth. Infinite chain of survivor capsules, outposts, and hazards.',
+      difficultyRu: 'Выживание',
+      difficultyEn: 'Survival',
+      themeColor: Color(0xFFFFD700),
+      icon: Icons.all_inclusive_rounded,
+      commStatusRu: 'СВЯЗЬ: АВТОНОМНЫЙ ПОИСК',
+      commStatusEn: 'COMM STATUS: AUTONOMOUS SCAN',
+      commStatusColor: Color(0xFFFFD700),
+      gravityRu: '1.0x - 1.5x (Динамическая)',
+      gravityEn: '1.0x - 1.5x (Dynamic)',
+      windRu: 'Переменные порывы ветра',
+      windEn: 'Turbulent variable gusts',
+      thermalRu: 'Динамический фон',
+      thermalEn: 'Dynamic sector flux',
+      radiationRu: 'Прогрессирующий фон',
+      radiationEn: 'Progressive radiation index',
+      seismicRu: 'Класс 1-4 (Нарастающий)',
+      seismicEn: 'Class 1-4 (Escalating)',
+      recCabinRu: 'Буран-М / Ураган (Тяжелая броня)',
+      recCabinEn: 'Titan-V / Cyclone (Reinforced Armor)',
+      hazardsRu: 'Непрерывная череда препятствий, увеличивающаяся скорость, нехватка топлива',
+      hazardsEn: 'Chained rescues, tightening gaps, fuel starvation risk',
+      bountyRangeRu: 'Не ограничено',
+      bountyRangeEn: 'Unlimited (1000/res)',
+      missionStoryRu: 'Бесконечный неизведанный сектор глубокого космоса. Экстренный сигнал SOS поступает непрерывно от множества изолированных капсул. Продвигайтесь вперед как можно дальше, заправляясь на промежуточных аванпостах.',
+      missionStoryEn: 'An infinite uncharted deep-space cavern system. Consecutive survivor beacons are detected ahead. Push as deep as possible while refueling at modular outpost stations.',
+      missionObjectiveRu: 'Эвакуировать максимальное число выживших подряд, устанавливая новые рекорды дистанции и спасательного рейтинга.',
+      missionObjectiveEn: 'Rescue as many stranded astronauts as possible across infinite cavern chunks, managing fuel reserves and enduring progressive environmental hazards.',
+    ),
   };
 }
 
@@ -223,6 +326,8 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
       return _buildMapPreviewScreen(state, isRu);
     }
 
+    final mapKeys = ['echo', 'wind', 'core', 'ice', 'orbit', 'endless'];
+
     return MenuBackground(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -232,7 +337,10 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
               children: [
                 IconButton(
                   icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-                  onPressed: widget.onBack,
+                  onPressed: () {
+                    GameAudioManager().playSfx('dock.wav');
+                    widget.onBack();
+                  },
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -247,27 +355,23 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
               ],
             ),
             const Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildMapCard(
-                  context: context,
-                  mapData: MapBriefingData.maps['echo']!,
-                  isRu: isRu,
-                ),
-                const SizedBox(width: 16),
-                _buildMapCard(
-                  context: context,
-                  mapData: MapBriefingData.maps['wind']!,
-                  isRu: isRu,
-                ),
-                const SizedBox(width: 16),
-                _buildMapCard(
-                  context: context,
-                  mapData: MapBriefingData.maps['core']!,
-                  isRu: isRu,
-                ),
-              ],
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: mapKeys.map((key) {
+                  final mapData = MapBriefingData.maps[key]!;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: _buildMapCard(
+                      context: context,
+                      mapData: mapData,
+                      isRu: isRu,
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
             const Spacer(),
           ],
@@ -295,6 +399,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
+          GameAudioManager().playSfx('dock.wav');
           setState(() {
             _previewMapId = mapData.id;
           });
@@ -354,11 +459,15 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 6),
               Text(
                 desc,
                 style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.35),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 10),
               const Divider(color: Colors.white10),
@@ -378,7 +487,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
               _buildCardParamRow(
                 label: isRu ? 'Температура' : 'Thermal',
                 value: thermal,
-                color: mapData.id == 'core' ? GameConfig.colorDanger : Colors.white,
+                color: mapData.id == 'core' ? GameConfig.colorDanger : (mapData.id == 'ice' ? const Color(0xFF00E5FF) : Colors.white),
               ),
               const SizedBox(height: 4),
               _buildCardParamRow(
@@ -410,11 +519,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                         style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
                       ),
                       const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        color: color,
-                        size: 14,
-                      ),
+                      Icon(Icons.arrow_forward_rounded, color: color, size: 14),
                     ],
                   ),
                 ),
@@ -467,7 +572,6 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
     final wind = isRu ? mapData.windRu : mapData.windEn;
     final bountyRange = isRu ? mapData.bountyRangeRu : mapData.bountyRangeEn;
 
-    // Считываем личный рекорд
     int bestDist = 0;
     for (final entry in state.leaderboard) {
       if (entry['map'] == _previewMapId) {
@@ -491,6 +595,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                 IconButton(
                   icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
                   onPressed: () {
+                    GameAudioManager().playSfx('dock.wav');
                     setState(() {
                       _previewMapId = null;
                     });
@@ -520,7 +625,6 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // 1. Header (Location Title)
                           Row(
                             children: [
                               Container(
@@ -545,7 +649,6 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                             ],
                           ),
                           const SizedBox(height: 8),
-                          // Sub-header (Difficulty Tag + Comm Status Badge)
                           Row(
                             children: [
                               Container(
@@ -583,28 +686,24 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                             ],
                           ),
                           const SizedBox(height: 12),
-                          // 2. Scrollable Body
                           Expanded(
                             child: SingleChildScrollView(
                               physics: const BouncingScrollPhysics(),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Story Card
                                   _buildBriefingSubCard(
                                     title: isRu ? 'СВОДКА МИССИИ' : 'MISSION BRIEFING',
                                     themeColor: themeColor,
                                     content: missionStory,
                                   ),
                                   const SizedBox(height: 10),
-                                  // Objective Card
                                   _buildBriefingSubCard(
                                     title: isRu ? 'ОСНОВНАЯ ЗАДАЧА' : 'PRIMARY OBJECTIVE',
                                     themeColor: themeColor,
                                     content: missionObjective,
                                   ),
                                   const SizedBox(height: 10),
-                                  // Environmental Hazard Telemetry Card
                                   _buildBriefingSubCard(
                                     title: isRu ? 'ТЕЛЕМЕТРИЯ СРЕДЫ И АНОМАЛИЙ' : 'ENVIRONMENTAL HAZARD TELEMETRY',
                                     themeColor: themeColor,
@@ -649,7 +748,6 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                                     ),
                                   ),
                                   const SizedBox(height: 10),
-                                  // Mission Rewards Breakdown Card
                                   _buildBriefingSubCard(
                                     title: isRu ? 'НАГРАДЫ И БОНУСЫ ЗА МИССИЮ' : 'MISSION REWARDS & CRITERIA',
                                     themeColor: themeColor,
@@ -702,7 +800,6 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                                     ),
                                   ),
                                   const SizedBox(height: 10),
-                                  // Cavern Diagnostics Card
                                   _buildBriefingSubCard(
                                     title: isRu ? 'ТАКТИЧЕСКИЙ АНАЛИЗ' : 'CAVERN DIAGNOSTICS',
                                     themeColor: themeColor,
@@ -726,7 +823,6 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                                     ),
                                   ),
                                   const SizedBox(height: 10),
-                                  // Record Card
                                   _buildBriefingSubCard(
                                     title: isRu ? 'ВАШ РЕКОРД ДИСТАНЦИИ' : 'YOUR BEST DISTANCE',
                                     themeColor: themeColor,
@@ -752,7 +848,6 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                           const SizedBox(height: 10),
                           const Divider(color: Colors.white10),
                           const SizedBox(height: 6),
-                          // 3. Pinned Bottom Metrics
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -777,16 +872,16 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                             ],
                           ),
                           const SizedBox(height: 12),
-                          // 4. Launch Button
                           ElevatedButton(
-                            onPressed: () => widget.onMapSelected(_previewMapId!),
+                            onPressed: () {
+                              GameAudioManager().playSfx('dock.wav');
+                              widget.onMapSelected(_previewMapId!);
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: themeColor,
                               foregroundColor: Colors.black,
                               minimumSize: const Size.fromHeight(46),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                               elevation: 6,
                               shadowColor: themeColor.withOpacity(0.3),
                               textStyle: const TextStyle(
@@ -889,10 +984,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
           Icon(icon, size: 13, color: color.withOpacity(0.7)),
           const SizedBox(width: 5),
         ],
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white38, fontSize: 10),
-        ),
+        Text(label, style: const TextStyle(color: Colors.white38, fontSize: 10)),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
@@ -917,10 +1009,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
         Icon(icon, size: 13, color: color),
         const SizedBox(width: 6),
         Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(color: Colors.white70, fontSize: 10),
-          ),
+          child: Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10)),
         ),
         const SizedBox(width: 6),
         Text(

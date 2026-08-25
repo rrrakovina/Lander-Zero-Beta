@@ -8,6 +8,10 @@ import '../../game/lander_zero_game.dart';
 import '../widgets/glass_panel.dart';
 import '../widgets/achievement_toast.dart';
 import '../widgets/minimap_widget.dart';
+import '../widgets/cockpit_hud/g_force_gauge.dart';
+import '../widgets/cockpit_hud/artificial_horizon.dart';
+import '../widgets/cockpit_hud/proximity_warning.dart';
+import '../widgets/cockpit_hud/radio_chatter_overlay.dart';
 
 class GameScreen extends StatefulWidget {
   final String mapId;
@@ -105,6 +109,12 @@ class _GameScreenState extends State<GameScreen> {
                     final coins = stats['coins'] as int? ?? 0;
                     final distance = stats['distance'] as double? ?? 0.0;
 
+                    final double gForce = (stats['gForce'] as num?)?.toDouble() ?? 1.0;
+                    final double pitchAngle = (stats['pitchAngle'] as num?)?.toDouble() ?? 0.0;
+                    final double proxDist = (stats['proximityDistance'] as num?)?.toDouble() ?? 99.0;
+                    final bool isProxAlert = stats['isProximityAlert'] as bool? ?? false;
+                    final String radioMsg = stats['radioChatterMessage'] as String? ?? '';
+
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -112,63 +122,78 @@ class _GameScreenState extends State<GameScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Датчик топлива
-                            _buildStatusIndicator(
-                              title: state.translate('fuel'),
-                              value: fuelPercent,
-                              activeColor: GameConfig.colorWarning,
-                              icon: Icons.local_gas_station_rounded,
+                            // Fuel Gauge + G-Force Gauge
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildStatusIndicator(
+                                  title: state.translate('fuel'),
+                                  value: fuelPercent,
+                                  activeColor: GameConfig.colorWarning,
+                                  icon: Icons.local_gas_station_rounded,
+                                ),
+                                const SizedBox(width: 8),
+                                GForceGauge(gForce: gForce),
+                              ],
                             ),
                             
-                            // Метры и монеты по центру + пауза
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: GameConfig.colorPrimary.withOpacity(0.3)),
-                                borderRadius: BorderRadius.circular(20),
-                                color: Colors.black54,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.terrain_rounded, color: GameConfig.colorPrimary, size: 16),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${distance.toInt()} ${state.translate('stats_meters')}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
+                            // Distance, Coins & Pause + Attitude Horizon
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: GameConfig.colorPrimary.withOpacity(0.3)),
+                                    borderRadius: BorderRadius.circular(20),
+                                    color: Colors.black54,
                                   ),
-                                  const SizedBox(width: 16),
-                                  const Icon(Icons.stars_rounded, color: GameConfig.colorWarning, size: 16),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '$coins',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: _togglePause,
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: const Padding(
-                                        padding: EdgeInsets.all(4.0),
-                                        child: Icon(Icons.pause_rounded, color: Colors.white, size: 16),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.terrain_rounded, color: GameConfig.colorPrimary, size: 16),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${distance.toInt()} ${state.translate('stats_meters')}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
                                       ),
-                                    ),
+                                      const SizedBox(width: 16),
+                                      const Icon(Icons.stars_rounded, color: GameConfig.colorWarning, size: 16),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '$coins',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          onTap: _togglePause,
+                                          borderRadius: BorderRadius.circular(10),
+                                          child: const Padding(
+                                            padding: EdgeInsets.all(4.0),
+                                            child: Icon(Icons.pause_rounded, color: Colors.white, size: 16),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(height: 6),
+                                ArtificialHorizon(angleRadians: pitchAngle),
+                              ],
                             ),
 
-                            // Датчик брони/щита + Миникарта
+                            // Shield Gauge + Minimap
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,8 +210,13 @@ class _GameScreenState extends State<GameScreen> {
                             ),
                           ],
                         ),
-                        if (alertText.isNotEmpty) ...[
-                          const SizedBox(height: 12),
+
+                        // Proximity Warning & Alerts
+                        if (isProxAlert) ...[
+                          const SizedBox(height: 8),
+                          ProximityWarningAlarm(isAlert: isProxAlert, distance: proxDist),
+                        ] else if (alertText.isNotEmpty) ...[
+                          const SizedBox(height: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                             decoration: BoxDecoration(
@@ -204,6 +234,12 @@ class _GameScreenState extends State<GameScreen> {
                               ),
                             ),
                           ),
+                        ],
+
+                        // Radio Chatter Overlay
+                        if (radioMsg.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          RadioChatterOverlay(message: radioMsg),
                         ],
                       ],
                     );
@@ -523,7 +559,10 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
   void initState() {
     super.initState();
     final isWon = widget.runState == GameRunState.won;
-    final reward = widget.game.coinsCollected * 10 + (isWon ? 100 : 0);
+    int reward = widget.game.coinsCollected * 10 + (isWon ? 100 : 0);
+    if (widget.game.mapId == 'endless' && widget.game.endlessManager != null) {
+      reward += widget.game.endlessManager!.rescuesCount * 100;
+    }
 
     _counterController = AnimationController(
       vsync: this,
@@ -614,6 +653,13 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
                       _buildStatsRow(state.translate('stats_dist'),
                           '${widget.game.maxDistance.toInt()} ${state.translate('stats_meters')}'),
                       const SizedBox(height: 8),
+                      if (widget.game.mapId == 'endless') ...[
+                        _buildStatsRow(
+                          state.language == 'ru' ? 'Спасенных выживших' : 'Rescued survivors',
+                          '${widget.game.endlessManager?.rescuesCount ?? 0}',
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       _buildStatsRow(state.translate('stats_time'),
                           '${flightSec.toStringAsFixed(1)} ${state.translate('stats_sec')}'),
                       const SizedBox(height: 8),

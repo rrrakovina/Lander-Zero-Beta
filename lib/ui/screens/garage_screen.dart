@@ -400,8 +400,10 @@ class _GarageWidgetState extends State<GarageWidget> with SingleTickerProviderSt
         final double baseShield = (config['baseShield'] as double);
 
         Color cabinColor = GameConfig.colorPrimary;
+        if (rocketId == 'swift') cabinColor = const Color(0xFF00E5FF);
         if (rocketId == 'cyclone') cabinColor = GameConfig.colorWarning;
         if (rocketId == 'needle') cabinColor = const Color(0xFFECEFF1);
+        if (rocketId == 'titan') cabinColor = const Color(0xFFFF9100);
 
         return Expanded(
           child: Padding(
@@ -491,21 +493,27 @@ class _GarageWidgetState extends State<GarageWidget> with SingleTickerProviderSt
                                 ],
                               ),
                               alignment: Alignment.center,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.check_circle_rounded, color: cabinColor, size: 16),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    state.translate('selected').toUpperCase(),
-                                    style: TextStyle(
-                                      color: cabinColor,
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 13,
-                                      letterSpacing: 1.2,
-                                    ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.check_circle_rounded, color: cabinColor, size: 16),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        state.translate('selected').toUpperCase(),
+                                        style: TextStyle(
+                                          color: cabinColor,
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 13,
+                                          letterSpacing: 1.2,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             )
                           : isOwned
@@ -532,21 +540,27 @@ class _GarageWidgetState extends State<GarageWidget> with SingleTickerProviderSt
                                       await state.selectRocket(rocketId);
                                     },
                                     child: Center(
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(Icons.rocket_launch_rounded, color: Color(0xFF0F0F13), size: 16),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            state.translate('select').toUpperCase(),
-                                            style: const TextStyle(
-                                              color: Color(0xFF0F0F13),
-                                              fontWeight: FontWeight.w900,
-                                              fontSize: 13,
-                                              letterSpacing: 1.2,
-                                            ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              const Icon(Icons.rocket_launch_rounded, color: Color(0xFF0F0F13), size: 16),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                state.translate('select').toUpperCase(),
+                                                style: const TextStyle(
+                                                  color: Color(0xFF0F0F13),
+                                                  fontWeight: FontWeight.w900,
+                                                  fontSize: 13,
+                                                  letterSpacing: 1.2,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -575,34 +589,40 @@ class _GarageWidgetState extends State<GarageWidget> with SingleTickerProviderSt
                                           await state.buyRocket(rocketId);
                                         },
                                         child: Center(
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                state.translate('buy').toUpperCase(),
-                                                style: const TextStyle(
-                                                  color: Color(0xFF0F0F13),
-                                                  fontWeight: FontWeight.w900,
-                                                  fontSize: 13,
-                                                  letterSpacing: 1.1,
-                                                ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                                            child: FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    state.translate('buy').toUpperCase(),
+                                                    style: const TextStyle(
+                                                      color: Color(0xFF0F0F13),
+                                                      fontWeight: FontWeight.w900,
+                                                      fontSize: 13,
+                                                      letterSpacing: 1.1,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  const Icon(
+                                                    Icons.stars_rounded,
+                                                    color: Color(0xFF1E1E1E),
+                                                    size: 18,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    '$price',
+                                                    style: const TextStyle(
+                                                      color: Color(0xFF0F0F13),
+                                                      fontWeight: FontWeight.w900,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                              const SizedBox(width: 8),
-                                              const Icon(
-                                                Icons.stars_rounded,
-                                                color: Color(0xFF1E1E1E),
-                                                size: 18,
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                '$price',
-                                                style: const TextStyle(
-                                                  color: Color(0xFF0F0F13),
-                                                  fontWeight: FontWeight.w900,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ],
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -624,34 +644,40 @@ class _GarageWidgetState extends State<GarageWidget> with SingleTickerProviderSt
                                         ],
                                       ),
                                       alignment: Alignment.center,
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            state.translate('buy').toUpperCase(),
-                                            style: const TextStyle(
-                                              color: Color(0xFFF1F5F9),
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 13,
-                                              letterSpacing: 1.1,
-                                            ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                state.translate('buy').toUpperCase(),
+                                                style: const TextStyle(
+                                                  color: Color(0xFFF1F5F9),
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13,
+                                                  letterSpacing: 1.1,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              const Icon(
+                                                Icons.stars_rounded,
+                                                color: Color(0xFFFFD700),
+                                                size: 18,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                '$price',
+                                                style: const TextStyle(
+                                                  color: Color(0xFFFF5252),
+                                                  fontWeight: FontWeight.w900,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(width: 8),
-                                          const Icon(
-                                            Icons.stars_rounded,
-                                            color: Color(0xFFFFD700),
-                                            size: 18,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '$price',
-                                            style: const TextStyle(
-                                              color: Color(0xFFFF5252),
-                                              fontWeight: FontWeight.w900,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ],
+                                        ),
                                       ),
                                     ),
                     ),
@@ -673,12 +699,17 @@ class _GarageWidgetState extends State<GarageWidget> with SingleTickerProviderSt
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: const TextStyle(color: Colors.white30, fontSize: 11)),
-            Text('${(value * 100).toInt()}%', style: TextStyle(color: color.withOpacity(0.8), fontSize: 10, fontWeight: FontWeight.bold)),
-          ],
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(label, style: const TextStyle(color: Colors.white30, fontSize: 11)),
+              const SizedBox(width: 6),
+              Text('${(value * 100).toInt()}%', style: TextStyle(color: color.withOpacity(0.8), fontSize: 10, fontWeight: FontWeight.bold)),
+            ],
+          ),
         ),
         const SizedBox(height: 3),
         ClipRRect(

@@ -27,8 +27,16 @@ class Cave extends BodyComponent {
       startPlatform = Vector2(-26, -8);
       cargoPlatform = Vector2(-2, 10);
       exitPlatform = Vector2(22, -15);
+    } else if (mapId == 'ice') {
+      startPlatform = Vector2(-28, -4);
+      cargoPlatform = Vector2(0, 7);
+      exitPlatform = Vector2(26, -11);
+    } else if (mapId == 'orbit') {
+      startPlatform = Vector2(-25, 0);
+      cargoPlatform = Vector2(0, 0);
+      exitPlatform = Vector2(25, 0);
     } else {
-      // echo / default
+      // echo / endless / default
       startPlatform = Vector2(-28, -5);
       cargoPlatform = Vector2(0, 8);
       exitPlatform = Vector2(25, -12);
@@ -120,6 +128,9 @@ class Cave extends BodyComponent {
       
       _ceilingSoilPaint.color = const Color(0xFF3E1F1A);
       _ceilingTopPaint.color = const Color(0xFFFF7043);
+
+      _spikePaint.color = const Color(0xFF22110D);
+      _spikeBorderPaint.color = const Color(0xFFFF5722);
     } else if (mapId == 'wind') {
       _stoneFillPaint.shader = const LinearGradient(
         colors: [Color(0xFF14242A), Color(0xFF070E10)],
@@ -132,6 +143,39 @@ class Cave extends BodyComponent {
       
       _ceilingSoilPaint.color = const Color(0xFF263238);
       _ceilingTopPaint.color = const Color(0xFF80DEEA);
+
+      _spikePaint.color = const Color(0xFF121E23);
+      _spikeBorderPaint.color = const Color(0xFF00E5FF);
+    } else if (mapId == 'ice') {
+      _stoneFillPaint.shader = const LinearGradient(
+        colors: [Color(0xFF0F1E2E), Color(0xFF060B12)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(const Rect.fromLTRB(-70.0, -35.0, 50.0, 25.0));
+      
+      _soilPaint.color = const Color(0xFF1E394A);
+      _grassPaint.color = const Color(0xFF00E5FF); // Неоновый ледяной циановый ободок
+      
+      _ceilingSoilPaint.color = const Color(0xFF152634);
+      _ceilingTopPaint.color = const Color(0xFF80D8FF);
+
+      _spikePaint.color = const Color(0xFF102634);
+      _spikeBorderPaint.color = const Color(0xFF00E5FF);
+    } else if (mapId == 'orbit') {
+      _stoneFillPaint.shader = const LinearGradient(
+        colors: [Color(0xFF140F24), Color(0xFF07050E)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(const Rect.fromLTRB(-70.0, -35.0, 50.0, 25.0));
+      
+      _soilPaint.color = const Color(0xFF2E1A47);
+      _grassPaint.color = const Color(0xFFE040FB); // Неоново-фиолетовый космический рубеж
+      
+      _ceilingSoilPaint.color = const Color(0xFF221338);
+      _ceilingTopPaint.color = const Color(0xFFEA80FC);
+
+      _spikePaint.color = const Color(0xFF1E1333);
+      _spikeBorderPaint.color = const Color(0xFFE040FB);
     } else {
       // echo / default
       _stoneFillPaint.shader = const LinearGradient(
@@ -145,6 +189,9 @@ class Cave extends BodyComponent {
       
       _ceilingSoilPaint.color = const Color(0xFF4E342E);
       _ceilingTopPaint.color = const Color(0xFFFFD54F);
+
+      _spikePaint.color = const Color(0xFF161A1D);
+      _spikeBorderPaint.color = const Color(0xFF37474F);
     }
   }
 
@@ -159,20 +206,32 @@ class Cave extends BodyComponent {
 
     _generateCaveGeometry();
 
+    // Физические свойства грунта в зависимости от биома
+    double floorFriction = 0.8;
+    double floorRestitution = 0.05;
+
+    if (mapId == 'ice') {
+      floorFriction = 0.08; // Сверхскользкий лед Европы
+      floorRestitution = 0.25;
+    } else if (mapId == 'orbit') {
+      floorFriction = 0.10;
+      floorRestitution = 0.35;
+    }
+
     // Физическая форма пола
     final floorShape = ChainShape()..createChain(floorPoints);
     body.createFixture(
       FixtureDef(floorShape)
-        ..friction = 0.8
-        ..restitution = 0.05,
+        ..friction = floorFriction
+        ..restitution = floorRestitution,
     );
 
     // Физическая форма потолка
     final ceilingShape = ChainShape()..createChain(ceilingPoints);
     body.createFixture(
       FixtureDef(ceilingShape)
-        ..friction = 0.5
-        ..restitution = 0.05,
+        ..friction = (floorFriction * 0.7).clamp(0.05, 0.6)
+        ..restitution = floorRestitution,
     );
 
     // Боковые стенки (левая и правая границы пещеры)
@@ -220,14 +279,22 @@ class Cave extends BodyComponent {
         floorY = exitPlatform.y;
       } else {
         if (mapId == 'wind') {
-          // Более сглаженный, но частый рельеф для ветреного уровня
           final double baseFloor = 2.0 * sin(x * 0.22) + 1.5 * cos(x * 0.15) + 3.0;
           final double noise = (random.nextDouble() - 0.5) * 1.0;
           floorY = baseFloor + noise;
         } else if (mapId == 'core') {
-          // Сложные крутые холмы и впадины для Ядра
           final double baseFloor = 5.5 * sin(x * 0.2) + 3.5 * cos(x * 0.1) - 1.0;
           final double noise = (random.nextDouble() - 0.5) * 2.0;
+          floorY = baseFloor + noise;
+        } else if (mapId == 'ice') {
+          // Скользящие гладкие волны ледников с острыми трещинами
+          final double baseFloor = 3.5 * sin(x * 0.16) + 1.8 * cos(x * 0.24) + 2.5;
+          final double noise = (random.nextDouble() - 0.5) * 0.8;
+          floorY = baseFloor + noise;
+        } else if (mapId == 'orbit') {
+          // Просторные орбитальные пустоты вокруг астероидов
+          final double baseFloor = 4.0 * sin(x * 0.10) + 1.5 * cos(x * 0.08) + 6.0;
+          final double noise = (random.nextDouble() - 0.5) * 1.0;
           floorY = baseFloor + noise;
         } else {
           // echo / default
@@ -248,6 +315,14 @@ class Cave extends BodyComponent {
         } else if (mapId == 'core') {
           final double baseCeiling = -25.0 + 5.0 * sin(x * 0.15) - 3.0 * cos(x * 0.08);
           final double noise = (random.nextDouble() - 0.5) * 2.0;
+          ceilingY = baseCeiling + noise;
+        } else if (mapId == 'ice') {
+          final double baseCeiling = -22.0 + 3.0 * sin(x * 0.14) - 2.0 * cos(x * 0.09);
+          final double noise = (random.nextDouble() - 0.5) * 1.0;
+          ceilingY = baseCeiling + noise;
+        } else if (mapId == 'orbit') {
+          final double baseCeiling = -26.0 + 3.5 * sin(x * 0.08) - 2.0 * cos(x * 0.05);
+          final double noise = (random.nextDouble() - 0.5) * 1.0;
           ceilingY = baseCeiling + noise;
         } else {
           // echo / default
@@ -271,7 +346,7 @@ class Cave extends BodyComponent {
                            (x - cargoPlatform.x).abs() < 7.0 ||
                            (x - exitPlatform.x).abs() < 6.0;
         if (!onPlatform) {
-          final double spawnProb = mapId == 'core' ? 0.25 : (mapId == 'wind' ? 0.15 : 0.10);
+          final double spawnProb = mapId == 'core' ? 0.25 : (mapId == 'ice' ? 0.22 : (mapId == 'wind' ? 0.15 : 0.10));
           if (random.nextDouble() < spawnProb) {
             if (random.nextBool()) {
               stalactiteIndices.add(i);
@@ -301,7 +376,7 @@ class Cave extends BodyComponent {
 
     for (int i = 0; i < floorPoints.length; i++) {
       if (floorPoints[i].x < leftX) {
-        startIdx = i; // Берем одну вершину левее видимой зоны
+        startIdx = i;
       } else {
         break;
       }
@@ -309,7 +384,7 @@ class Cave extends BodyComponent {
 
     for (int i = floorPoints.length - 1; i >= 0; i--) {
       if (floorPoints[i].x > rightX) {
-        endIdx = i; // Берем одну вершину правее видимой зоны
+        endIdx = i;
       } else {
         break;
       }
@@ -350,8 +425,7 @@ class Cave extends BodyComponent {
 
     canvas.drawPath(_closedCeilingPath, _stoneFillPaint);
 
-    // 2. Рисуем только те сталактиты и сталагмиты, которые попадают в видимый диапазон с использованием кэшированных красок
-    // Сталактиты
+    // 2. Рисуем только те сталактиты и сталагмиты, которые попадают в видимый диапазон
     for (final index in stalactiteIndices) {
       final p = ceilingPoints[index];
       if (p.x >= leftX - 2.0 && p.x <= rightX + 2.0) {
@@ -365,7 +439,6 @@ class Cave extends BodyComponent {
       }
     }
 
-    // Сталагмиты
     for (final index in stalagmiteIndices) {
       final p = floorPoints[index];
       if (p.x >= leftX - 2.0 && p.x <= rightX + 2.0) {
@@ -379,7 +452,7 @@ class Cave extends BodyComponent {
       }
     }
 
-    // 3. Красивый текстурированный ободок грунта в стиле HCR (двухслойный)
+    // 3. Текстурированный ободок грунта
     canvas.drawPath(_floorPath, _soilPaint);
     canvas.drawPath(_floorPath, _grassPaint);
 
@@ -387,8 +460,14 @@ class Cave extends BodyComponent {
     canvas.drawPath(_ceilingPath, _ceilingTopPaint);
 
     // 4. Отрисовка платформ, если они видны
+    final platformNeon = mapId == 'ice'
+        ? const Color(0xFF00E5FF)
+        : (mapId == 'orbit'
+            ? const Color(0xFFE040FB)
+            : (mapId == 'core' ? const Color(0xFFFF5722) : Colors.blueAccent));
+
     if (startPlatform.x >= leftX - 6.0 && startPlatform.x <= rightX + 6.0) {
-      _drawPlatformOverlay(canvas, startPlatform, 4.5, Colors.blueAccent);
+      _drawPlatformOverlay(canvas, startPlatform, 4.5, platformNeon);
     }
     if (cargoPlatform.x >= leftX - 7.0 && cargoPlatform.x <= rightX + 7.0) {
       _drawPlatformOverlay(canvas, cargoPlatform, 5.5, Colors.greenAccent);
@@ -439,7 +518,6 @@ class Cave extends BodyComponent {
     if (x <= points.first.x) return points.first.y;
     if (x >= points.last.x) return points.last.y;
 
-    // Бинарный поиск ближайшего сегмента
     int lo = 0, hi = points.length - 1;
     while (lo < hi - 1) {
       final mid = (lo + hi) ~/ 2;
@@ -450,7 +528,6 @@ class Cave extends BodyComponent {
       }
     }
 
-    // Линейная интерполяция между двумя ближайшими точками
     final p0 = points[lo];
     final p1 = points[hi];
     final t = (x - p0.x) / (p1.x - p0.x);

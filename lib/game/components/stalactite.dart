@@ -5,14 +5,15 @@ import 'lander.dart';
 
 class Stalactite extends BodyComponent<LanderZeroGame> with ContactCallbacks {
   final Vector2 initialPosition;
+  final String biome;
   bool isTriggered = false;
   bool isDestroyed = false;
 
-  Stalactite({required this.initialPosition});
+  Stalactite({required this.initialPosition, this.biome = 'echo'});
 
   @override
   Body createBody() {
-    // 1. Создаем полигон в форме острого сталактита (треугольник вершиной вниз)
+    // 1. Создаем полигон в форме острого сталактита / сосульки (треугольник вершиной вниз)
     final vertices = [
       Vector2(-0.4, -0.8), // Левый верхний угол
       Vector2(0.4, -0.8),  // Правый верхний угол
@@ -88,16 +89,33 @@ class Stalactite extends BodyComponent<LanderZeroGame> with ContactCallbacks {
 
   @override
   void render(Canvas canvas) {
-    // Рисуем каменную текстуру сталактита в комикс-стиле
+    List<Color> gradientColors;
+    Color borderColor;
+    Color crackColor;
+
+    if (biome == 'ice') {
+      gradientColors = [const Color(0xFFE0F7FA), const Color(0xFF00E5FF)];
+      borderColor = const Color(0xFF00B8D4);
+      crackColor = const Color(0xFF80DEEA);
+    } else if (biome == 'core') {
+      gradientColors = [const Color(0xFF5D4037), const Color(0xFFFF5722)];
+      borderColor = const Color(0xFFBF360C);
+      crackColor = const Color(0xFFFFAB91);
+    } else {
+      gradientColors = [const Color(0xFF455A64), const Color(0xFF263238)];
+      borderColor = const Color(0xFF121214);
+      crackColor = const Color(0xFF1B262C);
+    }
+
     final paint = Paint()
       ..shader = LinearGradient(
-        colors: [const Color(0xFF455A64), const Color(0xFF263238)],
+        colors: gradientColors,
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ).createShader(Rect.fromLTRB(-0.4, -0.8, 0.4, 0.8));
 
     final border = Paint()
-      ..color = const Color(0xFF121214)
+      ..color = borderColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.08;
 
@@ -110,9 +128,9 @@ class Stalactite extends BodyComponent<LanderZeroGame> with ContactCallbacks {
     canvas.drawPath(path, paint);
     canvas.drawPath(path, border);
 
-    // Внутренние трещины для текстурности камня
+    // Внутренние трещины для текстурности
     final crackPaint = Paint()
-      ..color = const Color(0xFF1B262C)
+      ..color = crackColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.04;
     canvas.drawLine(const Offset(0.0, -0.4), const Offset(-0.15, 0.0), crackPaint);

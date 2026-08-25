@@ -11,7 +11,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Adversarial Challenge 1: RocketPainter Extreme Geometry & Bounds Containment', () {
-    const rocketModels = ['sputnik', 'cyclone', 'needle', 'unknown_model'];
+    const rocketModels = ['sputnik', 'swift', 'titan', 'quasar', 'needle', 'cyclone', 'unknown_model'];
     const extremeSizes = [
       Size(10, 10),
       Size(500, 500),
@@ -41,7 +41,7 @@ void main() {
     ];
 
     test('All rocket models have strictly positive finite bounding boxes', () {
-      for (final model in ['sputnik', 'cyclone', 'needle']) {
+      for (final model in ['sputnik', 'swift', 'titan', 'quasar', 'needle', 'cyclone']) {
         final bounds = RocketPainter.getBounds(model);
         expect(bounds.width, greaterThan(0.0), reason: '$model width must be positive');
         expect(bounds.height, greaterThan(0.0), reason: '$model height must be positive');
@@ -69,7 +69,7 @@ void main() {
     test('Empirical containment: Transformed bounding box stays strictly within canvas bounds', () {
       final validSizes = extremeSizes.where((s) => s.width > 0 && s.height > 0).toList();
 
-      for (final model in ['sputnik', 'cyclone', 'needle']) {
+      for (final model in ['sputnik', 'swift', 'titan', 'quasar', 'needle', 'cyclone']) {
         final bounds = RocketPainter.getBounds(model);
 
         for (final size in validSizes) {
@@ -155,7 +155,7 @@ void main() {
     });
 
     testWidgets('Widget rendering stress test across rapid animations and resizes', (tester) async {
-      for (final model in ['sputnik', 'cyclone', 'needle']) {
+      for (final model in ['sputnik', 'swift', 'titan', 'quasar', 'needle', 'cyclone']) {
         double animTime = 0.0;
         Size currentSize = const Size(120, 120);
 

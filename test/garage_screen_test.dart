@@ -17,8 +17,12 @@ void main() {
   Widget createGarageScreen({VoidCallback? onBack}) {
     return MaterialApp(
       home: Scaffold(
-        body: GarageWidget(
-          onBack: onBack ?? () {},
+        body: SizedBox(
+          width: 1280,
+          height: 800,
+          child: GarageWidget(
+            onBack: onBack ?? () {},
+          ),
         ),
       ),
     );
@@ -89,16 +93,19 @@ void main() {
 
       // Vessel names
       expect(find.text('Спутник-1'), findsOneWidget);
+      expect(find.text('Стриж'), findsOneWidget);
       expect(find.text('Ураган'), findsOneWidget);
       expect(find.text('Игла'), findsOneWidget);
+      expect(find.text('Буран-М'), findsOneWidget);
 
       // Preview cards
-      expect(find.byType(CabinPreviewWidget), findsNWidgets(3));
+      expect(find.byType(CabinPreviewWidget), findsNWidgets(5));
 
-      // Initial state: Sputnik is selected, Cyclone (800) and Needle (1500) are unowned
+      // Initial state: Sputnik and Swift are owned, Cyclone (800), Needle (1500), Titan (2200) are unowned
       expect(find.text('ВЫБРАНО'), findsWidgets);
       expect(find.text('800'), findsOneWidget);
       expect(find.text('1500'), findsOneWidget);
+      expect(find.text('2200'), findsOneWidget);
     });
 
     testWidgets('Purchasing a vessel updates button styling and active vessel', (tester) async {
@@ -126,8 +133,8 @@ void main() {
 
       // Re-select Sputnik-1
       final selectSputnik = find.text('ВЫБРАТЬ');
-      expect(selectSputnik, findsOneWidget);
-      await tester.tap(selectSputnik);
+      expect(selectSputnik, findsWidgets);
+      await tester.tap(selectSputnik.first);
       for (int i = 0; i < 3; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
@@ -150,8 +157,10 @@ void main() {
       await switchToCabinsTab(tester, tabText: 'ROCKETS');
 
       expect(find.text('Sputnik-1'), findsOneWidget);
+      expect(find.text('Swift-02'), findsOneWidget);
       expect(find.text('Cyclone'), findsOneWidget);
       expect(find.text('Needle'), findsOneWidget);
+      expect(find.text('Titan-V'), findsOneWidget);
       expect(find.text('SELECTED'), findsWidgets);
       expect(find.text('BUY'), findsWidgets);
     });

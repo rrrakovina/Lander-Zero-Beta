@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../game/config/game_config.dart';
 import '../../game/state/game_state.dart';
 import '../../game/state/achievements_manager.dart';
+import '../../game/audio/game_audio_manager.dart';
 import '../widgets/menu_background.dart';
 import '../widgets/glass_panel.dart';
 import '../painters/rocket_painter.dart';
@@ -43,7 +44,7 @@ class MainMenuWidget extends StatelessWidget {
 
         return MenuBackground(
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             child: Column(
               children: [
                 // Top Bar
@@ -58,17 +59,17 @@ class MainMenuWidget extends StatelessWidget {
                           state.translate('title'),
                           style: const TextStyle(
                             color: GameConfig.colorPrimary,
-                            fontSize: 32,
+                            fontSize: 30,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 2,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Text(
                           isRu ? 'КОСМИЧЕСКАЯ СПАСАТЕЛЬНАЯ СЛУЖБА' : 'COSMIC RESCUE DIVISION',
                           style: const TextStyle(
-                            color: Colors.white30,
-                            fontSize: 13,
+                            color: Colors.white38,
+                            fontSize: 12,
                             letterSpacing: 1.5,
                           ),
                         ),
@@ -81,18 +82,21 @@ class MainMenuWidget extends StatelessWidget {
                         OutlinedButton(
                           onPressed: () {
                             state.setLanguage(isRu ? 'en' : 'ru');
+                            GameAudioManager().playSfx('coin.wav');
                           },
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: Colors.white24),
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           ),
-                          child: Text(isRu ? 'EN' : 'RU'),
+                          child: Text(isRu ? 'EN' : 'RU', style: const TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         const SizedBox(width: 12),
                         IconButton(
                           icon: const Icon(Icons.settings_rounded, color: Colors.white),
                           onPressed: () {
+                            GameAudioManager().playSfx('dock.wav');
                             showDialog(
                               context: context,
                               builder: (context) => const SettingsDialog(),
@@ -100,18 +104,24 @@ class MainMenuWidget extends StatelessWidget {
                           },
                           style: IconButton.styleFrom(
                             backgroundColor: Colors.white.withOpacity(0.05),
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(10),
                             side: const BorderSide(color: Colors.white24),
                           ),
                         ),
                         const SizedBox(width: 12),
                         // Coins Pill
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: Colors.black38,
+                            color: Colors.black45,
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: GameConfig.colorWarning.withOpacity(0.5)),
+                            border: Border.all(color: GameConfig.colorWarning.withOpacity(0.6)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: GameConfig.colorWarning.withOpacity(0.15),
+                                blurRadius: 10,
+                              ),
+                            ],
                           ),
                           child: Row(
                             children: [
@@ -147,28 +157,38 @@ class MainMenuWidget extends StatelessWidget {
                             title: state.translate('play'),
                             icon: Icons.play_arrow_rounded,
                             color: GameConfig.colorPrimary,
-                            onTap: onPlay,
+                            onTap: () {
+                              GameAudioManager().playSfx('dock.wav');
+                              onPlay();
+                            },
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 14),
                           HoverMenuButton(
                             title: state.translate('garage'),
                             icon: Icons.build_rounded,
                             color: GameConfig.colorWarning,
-                            onTap: onGarage,
+                            onTap: () {
+                              GameAudioManager().playSfx('dock.wav');
+                              onGarage();
+                            },
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 14),
                           HoverMenuButton(
                             title: state.translate('records'),
                             icon: Icons.emoji_events_rounded,
                             color: const Color(0xFFE040FB),
-                            onTap: onLeaderboard,
+                            onTap: () {
+                              GameAudioManager().playSfx('dock.wav');
+                              onLeaderboard();
+                            },
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 14),
                           HoverMenuButton(
                             title: state.language == 'ru' ? 'ДОСТИЖЕНИЯ' : 'ACHIEVEMENTS',
                             icon: Icons.military_tech_rounded,
                             color: const Color(0xFFFFD700),
                             onTap: () {
+                              GameAudioManager().playSfx('coin.wav');
                               showDialog(
                                 context: context,
                                 builder: (context) => const AchievementsDialog(),
@@ -184,17 +204,18 @@ class MainMenuWidget extends StatelessWidget {
                       flex: 5,
                       child: GlassPanel(
                         borderColor: Colors.white10,
+                        padding: 18,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
                                 CircleAvatar(
-                                  radius: 24,
+                                  radius: 22,
                                   backgroundColor: rankInfo.color.withOpacity(0.15),
-                                  child: Icon(Icons.person_outline_rounded, color: rankInfo.color, size: 28),
+                                  child: Icon(Icons.person_outline_rounded, color: rankInfo.color, size: 26),
                                 ),
-                                const SizedBox(width: 14),
+                                const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,15 +227,15 @@ class MainMenuWidget extends StatelessWidget {
                                             state.nickname.isEmpty ? (isRu ? 'Пилот' : 'Pilot') : state.nickname,
                                             style: const TextStyle(
                                               color: Colors.white,
-                                              fontSize: 22,
+                                              fontSize: 20,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                             decoration: BoxDecoration(
                                               color: rankInfo.color.withOpacity(0.15),
-                                              borderRadius: BorderRadius.circular(8),
+                                              borderRadius: BorderRadius.circular(6),
                                               border: Border.all(color: rankInfo.color.withOpacity(0.6)),
                                               boxShadow: [
                                                 BoxShadow(
@@ -228,17 +249,17 @@ class MainMenuWidget extends StatelessWidget {
                                               children: [
                                                 Icon(
                                                   rankInfo.icon,
-                                                  size: 13,
+                                                  size: 12,
                                                   color: rankInfo.color,
                                                 ),
-                                                const SizedBox(width: 5),
+                                                const SizedBox(width: 4),
                                                 Text(
                                                   isRu ? rankInfo.badgeTextRu : rankInfo.badgeTextEn,
                                                   style: TextStyle(
                                                     color: rankInfo.color,
-                                                    fontSize: 10,
+                                                    fontSize: 9,
                                                     fontWeight: FontWeight.bold,
-                                                    letterSpacing: 1.1,
+                                                    letterSpacing: 1.0,
                                                   ),
                                                 ),
                                               ],
@@ -253,9 +274,9 @@ class MainMenuWidget extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 16),
                             const Divider(color: Colors.white10),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 8),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -269,43 +290,43 @@ class MainMenuWidget extends StatelessWidget {
                                         isRu ? 'ВЫБРАННЫЙ КОРАБЛЬ:' : 'SELECTED VESSEL:',
                                         style: const TextStyle(
                                           color: Colors.white30,
-                                          fontSize: 12,
+                                          fontSize: 11,
                                           fontWeight: FontWeight.bold,
                                           letterSpacing: 1.5,
                                         ),
                                       ),
-                                      const SizedBox(height: 8),
+                                      const SizedBox(height: 6),
                                       Text(
                                         isRu ? cabinConfig['nameRu'] : cabinConfig['nameEn'],
                                         style: const TextStyle(
                                           color: GameConfig.colorPrimary,
-                                          fontSize: 24,
+                                          fontSize: 22,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      const SizedBox(height: 6),
+                                      const SizedBox(height: 4),
                                       Text(
                                         isRu ? cabinConfig['descRu'] : cabinConfig['descEn'],
                                         style: const TextStyle(
                                           color: Colors.white70,
-                                          fontSize: 13,
+                                          fontSize: 12,
                                         ),
                                       ),
-                                      const SizedBox(height: 16),
+                                      const SizedBox(height: 14),
                                       _buildSpecBar(
                                         title: state.translate('engine'),
                                         value: (state.engineLevel / 5.0),
                                         displayValue: 'Lvl ${state.engineLevel}',
                                         color: GameConfig.colorPrimary,
                                       ),
-                                      const SizedBox(height: 8),
+                                      const SizedBox(height: 6),
                                       _buildSpecBar(
                                         title: state.translate('fuel'),
                                         value: (state.fuelLevel / 5.0),
                                         displayValue: 'Lvl ${state.fuelLevel}',
                                         color: GameConfig.colorWarning,
                                       ),
-                                      const SizedBox(height: 8),
+                                      const SizedBox(height: 6),
                                       _buildSpecBar(
                                         title: state.translate('shield'),
                                         value: (state.shieldLevel / 5.0),
@@ -315,13 +336,13 @@ class MainMenuWidget extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                                const SizedBox(width: 16),
+                                const SizedBox(width: 14),
                                 // Right rocket visual column
                                 Expanded(
                                   flex: 3,
                                   child: Column(
                                     children: [
-                                      const SizedBox(height: 10),
+                                      const SizedBox(height: 6),
                                       MainMenuRocketPreview(rocketId: selectedCabin),
                                     ],
                                   ),
@@ -335,6 +356,8 @@ class MainMenuWidget extends StatelessWidget {
                   ],
                 ),
                 const Spacer(),
+                // Live Telemetry Ticker Marquee Bar
+                TelemetryTickerMarquee(isRu: isRu),
               ],
             ),
           ),
@@ -345,15 +368,14 @@ class MainMenuWidget extends StatelessWidget {
 
   Widget _buildTelemetryIndicators(GameState state, bool isRu) {
     final totalUpgrades = state.engineLevel + state.fuelLevel + state.shieldLevel;
-    // Compute ship systems readiness percentage: 60% base for level 1 stats, up to 100% at max level 5 stats (15 total levels)
     final readinessPercent = min(100, (60 + ((totalUpgrades - 3) / 12.0) * 40).round());
 
     return Container(
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      margin: const EdgeInsets.only(top: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.35),
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.black.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: Colors.white.withOpacity(0.08)),
       ),
       child: Row(
@@ -364,26 +386,26 @@ class MainMenuWidget extends StatelessWidget {
             isRu ? 'ТЕЛЕМЕТРИЯ: АКТИВНА' : 'TELEMETRY: ACTIVE',
             style: const TextStyle(
               color: Color(0xFF00E676),
-              fontSize: 10,
+              fontSize: 9,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.6,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Container(width: 1, height: 10, color: Colors.white24),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Text(
             isRu ? 'СВЯЗЬ: 99.8%' : 'LINK: 99.8%',
             style: const TextStyle(
               color: Colors.white70,
-              fontSize: 10,
+              fontSize: 9,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Container(width: 1, height: 10, color: Colors.white24),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Expanded(
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -394,15 +416,15 @@ class MainMenuWidget extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: readinessPercent >= 90 ? GameConfig.colorPrimary : GameConfig.colorWarning,
-                      fontSize: 10,
+                      fontSize: 9,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
                     ),
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 SizedBox(
-                  width: 28,
+                  width: 24,
                   height: 4,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(2),
@@ -435,21 +457,93 @@ class MainMenuWidget extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(title, style: const TextStyle(color: Colors.white54, fontSize: 13)),
-            Text(displayValue, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.bold)),
+            Text(title, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+            Text(displayValue, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 3),
         ClipRRect(
           borderRadius: BorderRadius.circular(2),
           child: LinearProgressIndicator(
             value: value,
             backgroundColor: Colors.white10,
             valueColor: AlwaysStoppedAnimation<Color>(color),
-            minHeight: 6,
+            minHeight: 5,
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Live scrolling telemetry ticker marquee banner.
+class TelemetryTickerMarquee extends StatefulWidget {
+  final bool isRu;
+  const TelemetryTickerMarquee({super.key, required this.isRu});
+
+  @override
+  State<TelemetryTickerMarquee> createState() => _TelemetryTickerMarqueeState();
+}
+
+class _TelemetryTickerMarqueeState extends State<TelemetryTickerMarquee> with SingleTickerProviderStateMixin {
+  late final AnimationController _tickerController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tickerController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 22),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _tickerController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = widget.isRu
+        ? 'АНГАРНЫЙ ОТСЕК 04 // СТЫКОВОЧНЫЙ ЗАХВАТ: ЗАБЛОКИРОВАН // ОРБИТАЛЬНЫЙ КАНАЛ: 99.8% // РАДАР ДАЛЬНЕГО ДЕЙСТВИЯ: В НОРМЕ // СОЛНЕЧНЫЙ ИНДЕКС: 2.4 // ЭКИПАЖ: ГОТОВ К ВЫЛЕТУ // LANDER ZERO DIVISION'
+        : 'HANGAR BAY 04 // DOCKING CLAMP: ENGAGED // ORBITAL CHANNEL: 99.8% // DEEP SPACE RADAR: NOMINAL // SOLAR INDEX: 2.4 // CREW: READY FOR SORTIE // LANDER ZERO DIVISION';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.45),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: GameConfig.colorPrimary.withOpacity(0.25)),
+      ),
+      child: ClipRect(
+        child: AnimatedBuilder(
+          animation: _tickerController,
+          builder: (context, _) {
+            final double offset = -_tickerController.value * 400.0;
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const NeverScrollableScrollPhysics(),
+              child: Transform.translate(
+                offset: Offset(offset % 400.0, 0),
+                child: Text(
+                  '$text   +++   $text   +++   $text',
+                  maxLines: 1,
+                  softWrap: false,
+                  style: TextStyle(
+                    color: GameConfig.colorPrimary.withOpacity(0.85),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.5,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -626,7 +720,7 @@ class _MainMenuRocketPreviewState extends State<MainMenuRocketPreview> with Sing
     return AnimatedBuilder(
       animation: _animController,
       builder: (context, child) {
-        final double hoverOffset = sin(_animController.value * 2 * pi) * 6.0; // Плавная левитация на 6 пикселей
+        final double hoverOffset = sin(_animController.value * 2 * pi) * 6.0;
         return Transform.translate(
           offset: Offset(0, hoverOffset),
           child: CustomPaint(
@@ -672,7 +766,7 @@ class _HoverMenuButtonState extends State<HoverMenuButton> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOutCubic,
-        transform: Matrix4.identity()..translate(_isHovered ? 8.0 : 0.0, 0.0), // Смещение вправо при наведении
+        transform: Matrix4.identity()..translate(_isHovered ? 8.0 : 0.0, 0.0),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -684,31 +778,33 @@ class _HoverMenuButtonState extends State<HoverMenuButton> {
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOutCubic,
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: _isHovered ? color : color.withOpacity(0.3),
+                  color: _isHovered ? color : color.withOpacity(0.35),
                   width: _isHovered ? 2.0 : 1.5,
                 ),
-                color: _isHovered ? color.withOpacity(0.08) : color.withOpacity(0.03),
-                boxShadow: _isHovered ? [
-                  BoxShadow(
-                    color: color.withOpacity(0.15),
-                    blurRadius: 15,
-                    spreadRadius: 1,
-                  )
-                ] : [],
+                color: _isHovered ? color.withOpacity(0.10) : color.withOpacity(0.04),
+                boxShadow: _isHovered
+                    ? [
+                        BoxShadow(
+                          color: color.withOpacity(0.2),
+                          blurRadius: 16,
+                          spreadRadius: 1,
+                        )
+                      ]
+                    : [],
               ),
               child: Row(
                 children: [
-                  Icon(widget.icon, color: color, size: 32),
-                  const SizedBox(width: 16),
+                  Icon(widget.icon, color: color, size: 28),
+                  const SizedBox(width: 14),
                   Text(
                     widget.title,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 22,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 2,
                     ),
@@ -717,7 +813,7 @@ class _HoverMenuButtonState extends State<HoverMenuButton> {
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     transform: Matrix4.identity()..translate(_isHovered ? 4.0 : 0.0),
-                    child: Icon(Icons.arrow_forward_ios_rounded, color: _isHovered ? color : color.withOpacity(0.5), size: 18),
+                    child: Icon(Icons.arrow_forward_ios_rounded, color: _isHovered ? color : color.withOpacity(0.5), size: 16),
                   ),
                 ],
               ),

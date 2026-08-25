@@ -23,7 +23,7 @@ void main() {
       expect(state.sfxVolume, equals(0.8));
       expect(state.totalCoins, equals(0));
       expect(state.selectedRocket, equals('sputnik'));
-      expect(state.ownedRockets, equals(['sputnik']));
+      expect(state.ownedRockets, equals(['sputnik', 'swift']));
       expect(state.engineLevel, equals(1));
       expect(state.fuelLevel, equals(1));
       expect(state.shieldLevel, equals(1));

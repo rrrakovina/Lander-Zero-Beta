@@ -57,3 +57,6 @@ chrome_stderr.log
 *.tar.gz
 *.rar
 
+# Subagents
+.agents/
+

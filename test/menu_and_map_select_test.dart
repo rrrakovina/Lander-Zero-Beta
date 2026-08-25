@@ -188,8 +188,8 @@ void main() {
       expect(find.text('LANDER ZERO: СПАСЕНИЕ'), findsOneWidget);
       expect(find.text('КОСМИЧЕСКАЯ СПАСАТЕЛЬНАЯ СЛУЖБА'), findsOneWidget);
 
-      // Check dynamic rank badge (Cadet by default)
-      expect(find.text('РАНГ: КАДЕТ'), findsOneWidget);
+      // Check dynamic rank badge (Officer by default with 2 starter ships)
+      expect(find.text('РАНГ: ОФИЦЕР'), findsOneWidget);
 
       // Check sci-fi telemetry indicators
       expect(find.text('ТЕЛЕМЕТРИЯ: АКТИВНА'), findsOneWidget);
@@ -289,7 +289,7 @@ void main() {
       expect(find.text('GARAGE'), findsOneWidget);
       expect(find.text('HIGHSCORES'), findsOneWidget);
       expect(find.text('ACHIEVEMENTS'), findsOneWidget);
-      expect(find.text('RANK: CADET'), findsOneWidget);
+      expect(find.text('RANK: OFFICER'), findsOneWidget);
       expect(find.text('TELEMETRY: ACTIVE'), findsOneWidget);
       expect(find.text('LINK: 99.8%'), findsOneWidget);
       expect(find.textContaining('SYS READY:'), findsOneWidget);
@@ -301,7 +301,7 @@ void main() {
       expect(find.text('LANDER ZERO: СПАСЕНИЕ'), findsOneWidget);
       expect(find.text('КОСМИЧЕСКАЯ СПАСАТЕЛЬНАЯ СЛУЖБА'), findsOneWidget);
       expect(find.text('ИГРАТЬ'), findsOneWidget);
-      expect(find.text('РАНГ: КАДЕТ'), findsOneWidget);
+      expect(find.text('РАНГ: ОФИЦЕР'), findsOneWidget);
     });
   });
 

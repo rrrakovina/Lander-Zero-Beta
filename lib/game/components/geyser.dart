@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../lander_zero_game.dart';
 
 class Geyser extends PositionComponent with HasGameReference<LanderZeroGame> {
+  final String biome;
   final double activeTime = 2.5; // Время извержения
   final double inactiveTime = 3.0; // Время покоя
   final double forceMagnitude = 32.0; // Сила струи
@@ -26,7 +27,7 @@ class Geyser extends PositionComponent with HasGameReference<LanderZeroGame> {
   late final Path _nozzlePath;
   final Path _flamePath = Path();
 
-  Geyser({required Vector2 position}) {
+  Geyser({required Vector2 position, this.biome = 'echo'}) {
     this.position = position;
     width = rangeWidth;
     height = rangeHeight;
@@ -36,22 +37,32 @@ class Geyser extends PositionComponent with HasGameReference<LanderZeroGame> {
   Future<void> onLoad() async {
     await super.onLoad();
 
+    final isCryo = biome == 'ice';
+
     _nozzlePaint = Paint()
-      ..color = const Color(0xFF263238)
+      ..color = isCryo ? const Color(0xFF1B3A4B) : const Color(0xFF263238)
       ..style = PaintingStyle.fill;
 
     _borderPaint = Paint()
-      ..color = const Color(0xFF121214)
+      ..color = isCryo ? const Color(0xFF00E5FF) : const Color(0xFF121214)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.08;
 
+    final List<Color> plumeColors = isCryo
+        ? [
+            const Color(0xFF00E5FF).withOpacity(0.95),
+            const Color(0xFF80D8FF).withOpacity(0.7),
+            const Color(0xFFE0F7FA).withOpacity(0.0),
+          ]
+        : [
+            Colors.orangeAccent.withOpacity(0.95),
+            Colors.amber.withOpacity(0.7),
+            Colors.redAccent.withOpacity(0.0),
+          ];
+
     _flamePaint = Paint()
       ..shader = LinearGradient(
-        colors: [
-          Colors.orangeAccent.withOpacity(0.95),
-          Colors.amber.withOpacity(0.7),
-          Colors.redAccent.withOpacity(0.0),
-        ],
+        colors: plumeColors,
         begin: Alignment.bottomCenter,
         end: Alignment.topCenter,
       ).createShader(Rect.fromLTRB(-rangeWidth / 2, -rangeHeight, rangeWidth / 2, 0.0));
@@ -107,7 +118,7 @@ class Geyser extends PositionComponent with HasGameReference<LanderZeroGame> {
           final force = Vector2(0.0, -forceMagnitude * distanceFactor * lander.body.mass);
           lander.body.applyForce(force);
 
-          // Наносим периодический тепловой урон щиту Лендера
+          // Наносим периодический урон щиту Лендера
           lander.shield = (lander.shield - 8.0 * dt).clamp(0.0, lander.maxShield);
         }
       }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../audio/game_audio_manager.dart';
 import 'achievements_manager.dart';
+import 'save_security_manager.dart';
 
 class GameState extends ChangeNotifier {
   static final GameState _instance = GameState._internal();
@@ -18,8 +19,8 @@ class GameState extends ChangeNotifier {
   double _musicVolume = 0.7;
   double _sfxVolume = 0.8;
   int _totalCoins = 0;
-  String _selectedRocket = 'sputnik'; // 'sputnik', 'cyclone', 'needle'
-  List<String> _ownedRockets = ['sputnik'];
+  String _selectedRocket = 'sputnik';
+  List<String> _ownedRockets = ['sputnik', 'swift'];
   
   // Уровни прокачки (1-5)
   int _engineLevel = 1;
@@ -43,7 +44,7 @@ class GameState extends ChangeNotifier {
   int get shieldLevel => _shieldLevel;
   List<Map<String, dynamic>> get leaderboard => _leaderboard;
 
-  // Характеристики ракет
+  // Характеристики 5 кораблей флота
   static const Map<String, Map<String, dynamic>> rocketConfigs = {
     'sputnik': {
       'nameRu': 'Спутник-1',
@@ -55,6 +56,17 @@ class GameState extends ChangeNotifier {
       'baseFuel': 150.0,
       'baseShield': 100.0,
       'mass': 1.0,
+    },
+    'swift': {
+      'nameRu': 'Стриж',
+      'nameEn': 'Swift-02',
+      'descRu': 'Скоростной перехватчик. Высокая тяга, легкий корпус, малый щит.',
+      'descEn': 'High-speed interceptor. Agile and lightweight, low shielding.',
+      'price': 0,
+      'baseThrust': 38.0,
+      'baseFuel': 140.0,
+      'baseShield': 70.0,
+      'mass': 0.75,
     },
     'cyclone': {
       'nameRu': 'Ураган',
@@ -70,38 +82,157 @@ class GameState extends ChangeNotifier {
     'needle': {
       'nameRu': 'Игла',
       'nameEn': 'Needle',
-      'descRu': 'Легкий перехватчик. Маневренный и экономичный, но очень хрупкий.',
-      'descEn': 'Sleek speedster. Fast and efficient, but extremely fragile.',
+      'descRu': 'Высокотехнологичный ионный перехватчик «Квазар». Маневренный и экономичный.',
+      'descEn': 'High-tech Quasar ion RCS maneuvering vessel. Sleek and agile.',
       'price': 1500,
-      'baseThrust': 35.0,
-      'baseFuel': 130.0,
-      'baseShield': 60.0,
-      'mass': 0.6,
+      'baseThrust': 38.0,
+      'baseFuel': 150.0,
+      'baseShield': 80.0,
+      'mass': 0.7,
+    },
+    'titan': {
+      'nameRu': 'Буран-М',
+      'nameEn': 'Titan-V',
+      'descRu': 'Тяжелый трехсопловый бронекатер. Максимальный щит и стабильность.',
+      'descEn': 'Heavy triple-thruster armored rescue ship. Maximum shield.',
+      'price': 2200,
+      'baseThrust': 46.0,
+      'baseFuel': 220.0,
+      'baseShield': 250.0,
+      'mass': 2.0,
     },
   };
 
-  // Инициализация загрузки из SharedPreferences
+  // Вспомогательный метод сохранения HMAC сигнатуры
+  Future<void> _saveIntegrity() async {
+    await SaveSecurityManager.saveSignature(
+      _prefs,
+      coins: _totalCoins,
+      ownedRockets: _ownedRockets,
+      engineLevel: _engineLevel,
+      fuelLevel: _fuelLevel,
+      shieldLevel: _shieldLevel,
+      leaderboardJson: jsonEncode(_leaderboard),
+    );
+  }
+
+  // Инициализация загрузки из SharedPreferences с проверкой целостности HMAC
   Future<void> init({bool force = false}) async {
     if (_initialized && !force) return;
     _prefs = await SharedPreferences.getInstance();
 
-    _nickname = _prefs.getString('nickname') ?? '';
+    final storedNick = _prefs.getString('nickname');
+    _nickname = storedNick != null ? SaveSecurityManager.sanitizeNickname(storedNick) : '';
     _language = _prefs.getString('language') ?? 'ru';
     _musicVolume = _prefs.getDouble('musicVolume') ?? 0.7;
     _sfxVolume = _prefs.getDouble('sfxVolume') ?? 0.8;
-    _totalCoins = _prefs.getInt('totalCoins') ?? 0;
-    _selectedRocket = _prefs.getString('selectedRocket') ?? 'sputnik';
-    _ownedRockets = _prefs.getStringList('ownedRockets') ?? ['sputnik'];
-    _engineLevel = _prefs.getInt('engineLevel') ?? 1;
-    _fuelLevel = _prefs.getInt('fuelLevel') ?? 1;
-    _shieldLevel = _prefs.getInt('shieldLevel') ?? 1;
 
-    final lbString = _prefs.getString('leaderboard') ?? '[]';
-    try {
-      final List<dynamic> decoded = jsonDecode(lbString);
-      _leaderboard = decoded.map((e) => Map<String, dynamic>.from(e)).toList();
-    } catch (e) {
+    final storedCoins = _prefs.getInt('totalCoins');
+    final storedFleet = _prefs.getStringList('ownedRockets');
+    final storedEngine = _prefs.getInt('engineLevel');
+    final storedFuel = _prefs.getInt('fuelLevel');
+    final storedShield = _prefs.getInt('shieldLevel');
+    final storedLb = _prefs.getString('leaderboard') ?? '[]';
+    final storedSig = _prefs.getString(SaveSecurityManager.saveSignatureKey);
+
+    if (storedCoins == null && storedFleet == null && storedSig == null) {
+      // 1. Fresh install baseline
+      _totalCoins = 0;
+      _ownedRockets = ['sputnik', 'swift'];
+      _selectedRocket = 'sputnik';
+      _engineLevel = 1;
+      _fuelLevel = 1;
+      _shieldLevel = 1;
       _leaderboard = [];
+
+      await _prefs.setInt('totalCoins', _totalCoins);
+      await _prefs.setStringList('ownedRockets', _ownedRockets);
+      await _prefs.setString('selectedRocket', _selectedRocket);
+      await _prefs.setInt('engineLevel', _engineLevel);
+      await _prefs.setInt('fuelLevel', _fuelLevel);
+      await _prefs.setInt('shieldLevel', _shieldLevel);
+      await _prefs.setString('leaderboard', '[]');
+      await _saveIntegrity();
+    } else if (storedSig == null) {
+      // 2. Migration from legacy save without signature
+      _totalCoins = storedCoins ?? 0;
+      _ownedRockets = List<String>.from(storedFleet ?? ['sputnik', 'swift']);
+      if (!_ownedRockets.contains('sputnik')) _ownedRockets.add('sputnik');
+      if (!_ownedRockets.contains('swift')) _ownedRockets.add('swift');
+
+      _selectedRocket = _prefs.getString('selectedRocket') ?? 'sputnik';
+      if (!_ownedRockets.contains(_selectedRocket)) _selectedRocket = 'sputnik';
+
+      _engineLevel = (storedEngine ?? 1).clamp(1, 5);
+      _fuelLevel = (storedFuel ?? 1).clamp(1, 5);
+      _shieldLevel = (storedShield ?? 1).clamp(1, 5);
+
+      try {
+        final List<dynamic> decoded = jsonDecode(storedLb);
+        _leaderboard = decoded.map((e) => Map<String, dynamic>.from(e)).toList();
+      } catch (e) {
+        _leaderboard = [];
+      }
+
+      await _saveIntegrity();
+    } else {
+      // 3. Existing save with HMAC signature -> verify cryptographic integrity
+      final loadedCoins = storedCoins ?? 0;
+      final loadedFleet = storedFleet ?? ['sputnik', 'swift'];
+      final loadedEngine = storedEngine ?? 1;
+      final loadedFuel = storedFuel ?? 1;
+      final loadedShield = storedShield ?? 1;
+
+      final isValid = SaveSecurityManager.verifySignature(
+        coins: loadedCoins,
+        ownedRockets: loadedFleet,
+        engineLevel: loadedEngine,
+        fuelLevel: loadedFuel,
+        shieldLevel: loadedShield,
+        leaderboardJson: storedLb,
+        signature: storedSig,
+      );
+
+      if (isValid) {
+        // Legitimate save
+        _totalCoins = loadedCoins;
+        _ownedRockets = List<String>.from(loadedFleet);
+        if (!_ownedRockets.contains('sputnik')) _ownedRockets.add('sputnik');
+        if (!_ownedRockets.contains('swift')) _ownedRockets.add('swift');
+
+        _selectedRocket = _prefs.getString('selectedRocket') ?? 'sputnik';
+        if (!_ownedRockets.contains(_selectedRocket)) _selectedRocket = 'sputnik';
+
+        _engineLevel = loadedEngine.clamp(1, 5);
+        _fuelLevel = loadedFuel.clamp(1, 5);
+        _shieldLevel = loadedShield.clamp(1, 5);
+
+        try {
+          final List<dynamic> decoded = jsonDecode(storedLb);
+          _leaderboard = decoded.map((e) => Map<String, dynamic>.from(e)).toList();
+        } catch (e) {
+          _leaderboard = [];
+        }
+      } else {
+        // Tamper / corruption detected -> Graceful recovery to safe baseline
+        debugPrint('[SaveSecurityManager] Save data tampering or corruption detected. Resetting to legitimate baseline.');
+        _totalCoins = 0;
+        _ownedRockets = ['sputnik', 'swift'];
+        _selectedRocket = 'sputnik';
+        _engineLevel = 1;
+        _fuelLevel = 1;
+        _shieldLevel = 1;
+        _leaderboard = [];
+
+        await _prefs.setInt('totalCoins', _totalCoins);
+        await _prefs.setStringList('ownedRockets', _ownedRockets);
+        await _prefs.setString('selectedRocket', _selectedRocket);
+        await _prefs.setInt('engineLevel', _engineLevel);
+        await _prefs.setInt('fuelLevel', _fuelLevel);
+        await _prefs.setInt('shieldLevel', _shieldLevel);
+        await _prefs.setString('leaderboard', '[]');
+        await _saveIntegrity();
+      }
     }
 
     await AchievementsManager().load(_prefs);
@@ -110,9 +241,9 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Запись ника
+  // Запись ника с санитизацией
   Future<void> setNickname(String name) async {
-    _nickname = name.trim();
+    _nickname = SaveSecurityManager.sanitizeNickname(name);
     await _prefs.setString('nickname', _nickname);
     notifyListeners();
   }
@@ -137,7 +268,6 @@ class GameState extends ChangeNotifier {
     _sfxVolume = vol.clamp(0.0, 1.0);
     await _prefs.setDouble('sfxVolume', _sfxVolume);
     notifyListeners();
-    // Если эффекты были заглушены, принудительно гасим цикличный звук двигателя
     if (_sfxVolume == 0.0) {
       GameAudioManager().stopThrustLoop();
     }
@@ -147,7 +277,9 @@ class GameState extends ChangeNotifier {
   Future<void> addCoins(int amount) async {
     _totalCoins += amount;
     await _prefs.setInt('totalCoins', _totalCoins);
+    await _saveIntegrity();
     notifyListeners();
+    AchievementsManager().checkCoins(_totalCoins, _prefs);
   }
 
   // Списание монет (проверка баланса)
@@ -166,10 +298,25 @@ class GameState extends ChangeNotifier {
       await _prefs.setInt('totalCoins', _totalCoins);
       await _prefs.setStringList('ownedRockets', _ownedRockets);
       await _prefs.setString('selectedRocket', _selectedRocket);
+      await _saveIntegrity();
       notifyListeners();
+      AchievementsManager().checkFleetAdmiral(this, _prefs);
       return true;
     }
     return false;
+  }
+
+  // Разблокировка ракеты (без списания монет, напр. по достижению)
+  Future<bool> unlockRocket(String rocketId) async {
+    if (!_ownedRockets.contains(rocketId)) {
+      _ownedRockets.add(rocketId);
+      await _prefs.setStringList('ownedRockets', _ownedRockets);
+      await _saveIntegrity();
+      notifyListeners();
+      AchievementsManager().checkFleetAdmiral(this, _prefs);
+      return true;
+    }
+    return true;
   }
 
   // Смена выбранной ракеты
@@ -183,6 +330,10 @@ class GameState extends ChangeNotifier {
 
   // Прокачка параметров
   Future<bool> upgradeStat(String stat) async {
+    if (stat != 'engine' && stat != 'fuel' && stat != 'shield') {
+      return false;
+    }
+
     int currentLvl = 1;
     if (stat == 'engine') currentLvl = _engineLevel;
     if (stat == 'fuel') currentLvl = _fuelLevel;
@@ -208,7 +359,9 @@ class GameState extends ChangeNotifier {
         await _prefs.setInt('shieldLevel', _shieldLevel);
       }
 
+      await _saveIntegrity();
       notifyListeners();
+      AchievementsManager().checkFleetAdmiral(this, _prefs);
       return true;
     }
     return false;
@@ -226,7 +379,7 @@ class GameState extends ChangeNotifier {
     
     _leaderboard.add(record);
     // Сортировка по дистанции (по убыванию)
-    _leaderboard.sort((a, b) => b['distance'].compareTo(a['distance']));
+    _leaderboard.sort((a, b) => (b['distance'] as int).compareTo(a['distance'] as int));
     
     // Оставляем только топ-10
     if (_leaderboard.length > 10) {
@@ -234,6 +387,7 @@ class GameState extends ChangeNotifier {
     }
 
     await _prefs.setString('leaderboard', jsonEncode(_leaderboard));
+    await _saveIntegrity();
     notifyListeners();
   }
 
