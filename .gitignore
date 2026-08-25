@@ -60,3 +60,8 @@ chrome_stderr.log
 # Subagents
 .agents/
 
+
+PROJECT.md
+TEST_INFRA.md
+ORIGINAL_REQUEST.md
+

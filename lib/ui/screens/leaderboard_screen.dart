@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../game/config/game_config.dart';
 import '../../game/state/game_state.dart';
+import '../../game/audio/game_audio_manager.dart';
 import '../widgets/menu_background.dart';
 import '../widgets/glass_panel.dart';
 
@@ -24,7 +25,10 @@ class LeaderboardWidget extends StatelessWidget {
               children: [
                 IconButton(
                   icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-                  onPressed: onBack,
+                  onPressed: () {
+                    GameAudioManager().playTap();
+                    onBack();
+                  },
                 ),
                 const SizedBox(width: 8),
                 Text(

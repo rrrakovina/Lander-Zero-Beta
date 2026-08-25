@@ -19,6 +19,7 @@ import 'components/geyser.dart';
 import 'components/stalactite.dart';
 import 'components/magma_bubble.dart';
 import 'components/wind_effect.dart';
+import 'components/rotating_debris.dart';
 import 'components/endless_cave_manager.dart';
 import 'config/game_config.dart';
 import 'state/game_state.dart';
@@ -110,7 +111,10 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
     world.add(lander);
 
     // 4. Спавним капсулу
-    cargoCapsule = CargoCapsule(initialPosition: Vector2(cave.cargoPlatform.x, cave.cargoPlatform.y - 0.9));
+    cargoCapsule = CargoCapsule(
+      initialPosition: Vector2(cave.cargoPlatform.x, cave.cargoPlatform.y - 0.9),
+      type: CargoType.fromMapId(mapId),
+    );
     world.add(cargoCapsule);
 
     // 5. Распределяем подбираемые предметы вдоль пещеры
@@ -131,24 +135,61 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
 
   void _spawnPickups() {
     final random = Random(888);
-    // Расставляем монеты с интервалом в 3 метра
+
+    if (mapId == 'core') {
+      // Pickups along surface plateaus and down the vertical volcanic chimney
+      for (double x = -30.0; x <= -18.0; x += 3.5) {
+        final floorY = cave.getFloorY(x);
+        world.add(Coin(position: Vector2(x, floorY - 3.5)));
+      }
+      for (double y = -8.0; y <= 10.0; y += 3.5) {
+        world.add(Coin(position: Vector2(0.0 + (random.nextDouble() - 0.5) * 1.5, y)));
+        if (random.nextDouble() < 0.35) {
+          world.add(FuelPickup(position: Vector2(1.5, y + 1.0)));
+        }
+      }
+      for (double x = 18.0; x <= 30.0; x += 3.5) {
+        final floorY = cave.getFloorY(x);
+        world.add(Coin(position: Vector2(x, floorY - 3.5)));
+      }
+      return;
+    }
+
+    if (mapId == 'orbit') {
+      // Floating pickups scattered through 360-degree open space
+      final pickupCoords = [
+        Vector2(-18.0, -10.0),
+        Vector2(-15.0, 8.0),
+        Vector2(-7.0, -3.0),
+        Vector2(7.0, 4.0),
+        Vector2(15.0, -8.0),
+        Vector2(18.0, 10.0),
+        Vector2(-10.0, 12.0),
+        Vector2(10.0, -12.0),
+      ];
+      for (final p in pickupCoords) {
+        world.add(Coin(position: p));
+      }
+      world.add(FuelPickup(position: Vector2(-8.0, -12.0)));
+      world.add(FuelPickup(position: Vector2(8.0, 12.0)));
+      world.add(RepairPickup(position: Vector2(0.0, -10.0)));
+      return;
+    }
+
+    // Standard horizontal / stepped / branching layout distribution
     for (double x = -38.0; x <= 38.0; x += 3.5) {
-      // Исключаем непосредственные зоны стартовой, грузовой и выходной платформ
-      final onStart = (x - cave.startPlatform.x).abs() < 5.0;
-      final onCargo = (x - cave.cargoPlatform.x).abs() < 6.0;
-      final onExit = (x - cave.exitPlatform.x).abs() < 5.0;
+      final onStart = (x - cave.startPlatform.x).abs() < 4.5;
+      final onCargo = (x - cave.cargoPlatform.x).abs() < 5.0;
+      final onExit = (x - cave.exitPlatform.x).abs() < 4.5;
 
       if (onStart || onCargo || onExit) continue;
 
-      // Вычисляем высоту пещеры в этой точке из сгенерированной геометрии Cave
       final double floorY = cave.getFloorY(x);
       final double ceilingY = cave.getCeilingY(x);
 
-      // Спавним монету посередине высоты прохода
       final middleY = (floorY + ceilingY) / 2.0 + (random.nextDouble() - 0.5) * 1.5;
       world.add(Coin(position: Vector2(x, middleY)));
 
-      // С некоторой вероятностью спавним топливо или щит
       if (random.nextDouble() < 0.18) {
         final pickupY = floorY - 1.0 - random.nextDouble() * 2.0;
         if (random.nextBool()) {
@@ -158,26 +199,86 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
         }
       }
     }
+
+    // Additional branch pickups for Europa Ice Rift upper ledge
+    if (mapId == 'ice' && cave.branchPoints.isNotEmpty) {
+      world.add(Coin(position: Vector2(-15.0, -3.5)));
+      world.add(Coin(position: Vector2(-9.0, -3.5)));
+      world.add(FuelPickup(position: Vector2(-12.0, -2.5)));
+    }
   }
 
   void _spawnObstacles() {
-    // Спавним гейзеры на полу
-    final double g1x = -13.0;
-    world.add(Geyser(position: Vector2(g1x, cave.getFloorY(g1x)), biome: mapId));
-
-    final double g2x = 11.0;
-    world.add(Geyser(position: Vector2(g2x, cave.getFloorY(g2x)), biome: mapId));
-
-    // Спавним сталактиты на потолке
-    final stalactiteXs = [-20.0, -7.0, 7.0, 17.0];
-    for (final sx in stalactiteXs) {
-      final cy = cave.getCeilingY(sx);
-      world.add(Stalactite(initialPosition: Vector2(sx, cy + 0.8), biome: mapId));
+    if (mapId == 'orbit') {
+      // Spawn rotating solar panel debris obstacles and wreckage
+      world.add(RotatingDebris(
+        initialPosition: Vector2(-12.0, -7.0),
+        width: 1.4,
+        height: 6.5,
+        angularSpeed: 0.5,
+        debrisType: 'solar_panel',
+      ));
+      world.add(RotatingDebris(
+        initialPosition: Vector2(8.0, -6.5),
+        width: 1.4,
+        height: 6.5,
+        angularSpeed: -0.45,
+        debrisType: 'solar_panel',
+      ));
+      world.add(RotatingDebris(
+        initialPosition: Vector2(-8.0, 7.0),
+        width: 5.5,
+        height: 1.5,
+        angularSpeed: 0.3,
+        debrisType: 'truss',
+      ));
+      world.add(RotatingDebris(
+        initialPosition: Vector2(12.0, 7.0),
+        width: 3.0,
+        height: 3.0,
+        angularSpeed: -0.35,
+        debrisType: 'module',
+      ));
+      return;
     }
 
     if (mapId == 'core') {
-      world.add(MagmaBubble(minX: -22.0, maxX: 22.0));
-      world.add(MagmaBubble(minX: -15.0, maxX: 15.0, speed: 2.8));
+      // Erupting magma bubbles rising inside the central volcanic chimney
+      world.add(MagmaBubble(minX: -4.0, maxX: 4.0, speed: 2.5));
+      world.add(MagmaBubble(minX: -3.0, maxX: 3.0, speed: 3.2, radius: 0.7));
+      world.add(MagmaBubble(minX: -2.0, maxX: 2.0, speed: 2.0, radius: 0.5));
+
+      // Volcanic stalactites at chimney entrance
+      world.add(Stalactite(initialPosition: Vector2(-6.0, cave.getCeilingY(-6.0) + 0.8), biome: mapId));
+      world.add(Stalactite(initialPosition: Vector2(6.0, cave.getCeilingY(6.0) + 0.8), biome: mapId));
+      return;
+    }
+
+    if (mapId == 'ice') {
+      // Cryo geysers along lower ramp
+      world.add(Geyser(position: Vector2(-16.0, cave.getFloorY(-16.0)), biome: mapId));
+      world.add(Geyser(position: Vector2(-8.0, cave.getFloorY(-8.0)), biome: mapId));
+
+      // Cryo icicles on upper ceiling
+      final icicleXs = [-18.0, -12.0, -6.0, 12.0];
+      for (final sx in icicleXs) {
+        final cy = cave.getCeilingY(sx);
+        world.add(Stalactite(initialPosition: Vector2(sx, cy + 0.8), biome: mapId));
+      }
+      return;
+    }
+
+    // Default / Echo / Wind / Endless
+    final double g1x = -14.0;
+    world.add(Geyser(position: Vector2(g1x, cave.getFloorY(g1x)), biome: mapId));
+
+    final double g2x = 12.0;
+    world.add(Geyser(position: Vector2(g2x, cave.getFloorY(g2x)), biome: mapId));
+
+    final stalactiteXs = [-20.0, -8.0, 8.0, 18.0];
+    for (final sx in stalactiteXs) {
+      final cy = cave.getCeilingY(sx);
+      world.add(Stalactite(initialPosition: Vector2(sx, cy + 0.8), biome: mapId));
     }
   }
 
@@ -338,10 +439,12 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
       }
     }
 
-    // Симуляция ветра на карте ветров (динамический снос влево с турбулентностью)
+    // Симуляция ветра на карте ветров (динамический снос влево с турбулентностью и ветрозащитными зонами)
     if (mapId == 'wind') {
-      final double windFactor = -4.0 + 1.2 * sin(flightTime * 1.8) + 0.6 * sin(flightTime * 3.5);
-      final windForce = Vector2(windFactor * lander.body.mass, 0);
+      final double baseWindFactor = -4.0 + 1.2 * sin(flightTime * 1.8) + 0.6 * sin(flightTime * 3.5);
+      final isSheltered = cave.isSheltered(lander.body.position);
+      final double effectiveWindFactor = isSheltered ? baseWindFactor * 0.15 : baseWindFactor;
+      final windForce = Vector2(effectiveWindFactor * lander.body.mass, 0);
       lander.body.applyForce(windForce);
     }
 

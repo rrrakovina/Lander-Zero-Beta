@@ -5,6 +5,7 @@ import 'package:flame/game.dart';
 import '../../game/config/game_config.dart';
 import '../../game/state/game_state.dart';
 import '../../game/lander_zero_game.dart';
+import '../../game/audio/game_audio_manager.dart';
 import '../widgets/glass_panel.dart';
 import '../widgets/achievement_toast.dart';
 import '../widgets/minimap_widget.dart';
@@ -45,6 +46,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _togglePause() {
+    GameAudioManager().playTap();
     setState(() {
       _isPaused = !_isPaused;
       if (_isPaused) {
@@ -56,6 +58,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _restartGame() {
+    GameAudioManager().playTap();
     _initNewGame();
   }
 
@@ -403,7 +406,10 @@ class _GameScreenState extends State<GameScreen> {
                                 ),
                                 const SizedBox(height: 12),
                                 OutlinedButton(
-                                  onPressed: widget.onExit,
+                                  onPressed: () {
+                                    GameAudioManager().playTap();
+                                    widget.onExit();
+                                  },
                                   style: OutlinedButton.styleFrom(
                                     side: BorderSide(color: GameConfig.colorDanger.withOpacity(0.5)),
                                     foregroundColor: GameConfig.colorDanger,
@@ -702,7 +708,10 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
                         children: [
                           Expanded(
                             child: OutlinedButton(
-                              onPressed: widget.onExit,
+                              onPressed: () {
+                                GameAudioManager().playTap();
+                                widget.onExit();
+                              },
                               style: OutlinedButton.styleFrom(
                                 side: const BorderSide(color: Colors.white24),
                                 foregroundColor: Colors.white,
@@ -718,7 +727,10 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
                           const SizedBox(width: 12),
                           Expanded(
                             child: ElevatedButton(
-                              onPressed: widget.onRestart,
+                              onPressed: () {
+                                GameAudioManager().playTap();
+                                widget.onRestart();
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: accentColor,
                                 foregroundColor: Colors.black,

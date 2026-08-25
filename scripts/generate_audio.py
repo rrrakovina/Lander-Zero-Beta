@@ -20,7 +20,8 @@ def generate_wav(filename, duration, sample_rate, wave_func):
             wav_file.writeframes(struct.pack('<h', int_value))
 
 def generate_assets():
-    out_dir = "../assets/audio"
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    out_dir = os.path.join(base_dir, "..", "assets", "audio")
     os.makedirs(out_dir, exist_ok=True)
     sample_rate = 22050
 
@@ -101,6 +102,53 @@ def generate_assets():
         
         return (wave1 * 0.5 + wave2 * 0.3 + wave3 * 0.2) * lfo * 0.4
 
+    # 8. ui_tap.wav: 45 ms, 280 Hz -> 120 Hz damped acoustic thud
+    def ui_tap_func(t, i):
+        dur = 0.045
+        if t >= dur:
+            return 0.0
+        attack = min(1.0, t / 0.003)
+        decay = math.exp(-45.0 * t)
+        freq = 280.0 - 160.0 * (t / dur)
+        tone = 0.7 * math.sin(2 * math.pi * freq * t) + 0.3 * math.sin(4 * math.pi * freq * t)
+        return tone * attack * decay * 0.60
+
+    # 9. ui_purchase.wav: 220 ms, E5 (659.25 Hz) -> C6 (1046.5 Hz) warm harmonic confirmation chime
+    def ui_purchase_func(t, i):
+        dur = 0.22
+        if t >= dur:
+            return 0.0
+        if t < 0.08:
+            env = math.exp(-6.0 * t)
+            tone = 0.6 * math.sin(2 * math.pi * 659.25 * t) + 0.3 * math.sin(2 * math.pi * 1318.5 * t)
+            return tone * env * 0.70
+        else:
+            t2 = t - 0.08
+            env = math.exp(-12.0 * t2)
+            tone = 0.6 * math.sin(2 * math.pi * 1046.5 * t2) + 0.25 * math.sin(2 * math.pi * 2093.0 * t2)
+            return tone * env * 0.75
+
+    # 10. ui_decline.wav: 160 ms, 90 Hz modulated low-frequency subtle hum
+    def ui_decline_func(t, i):
+        dur = 0.16
+        if t >= dur:
+            return 0.0
+        freq = 90.0 - 20.0 * (t / dur)
+        mod = 0.7 + 0.3 * math.cos(2 * math.pi * 24.0 * t)
+        decay = math.exp(-10.0 * t)
+        return math.sin(2 * math.pi * freq * t) * mod * decay * 0.50
+
+    # 11. ui_swoosh.wav: 90 ms, soft pneumatic filtered air rush
+    def ui_swoosh_func(t, i):
+        dur = 0.09
+        if t >= dur:
+            return 0.0
+        freq = 600.0 - 400.0 * (t / dur)
+        tone = math.sin(2 * math.pi * freq * t) * 0.3
+        noise = random.uniform(-0.4, 0.4)
+        env = math.sin(math.pi * t / dur) * math.exp(-8.0 * t)
+        return (tone + noise) * env * 0.45
+
     generate_wav(os.path.join(out_dir, "thrust.wav"), 1.0, sample_rate, thrust_func)
     generate_wav(os.path.join(out_dir, "coin.wav"), 0.15, sample_rate, coin_func)
     generate_wav(os.path.join(out_dir, "collision.wav"), 0.8, sample_rate, collision_func)
@@ -108,6 +156,10 @@ def generate_assets():
     generate_wav(os.path.join(out_dir, "victory.wav"), 1.5, sample_rate, victory_func)
     generate_wav(os.path.join(out_dir, "defeat.wav"), 1.2, sample_rate, defeat_func)
     generate_wav(os.path.join(out_dir, "bg_music.wav"), 8.0, sample_rate, bg_music_func)
+    generate_wav(os.path.join(out_dir, "ui_tap.wav"), 0.045, sample_rate, ui_tap_func)
+    generate_wav(os.path.join(out_dir, "ui_purchase.wav"), 0.22, sample_rate, ui_purchase_func)
+    generate_wav(os.path.join(out_dir, "ui_decline.wav"), 0.16, sample_rate, ui_decline_func)
+    generate_wav(os.path.join(out_dir, "ui_swoosh.wav"), 0.09, sample_rate, ui_swoosh_func)
     
     print("Audio assets generated successfully!")
 

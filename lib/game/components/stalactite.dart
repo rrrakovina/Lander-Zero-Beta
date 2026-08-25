@@ -41,23 +41,28 @@ class Stalactite extends BodyComponent<LanderZeroGame> with ContactCallbacks {
     if (isDestroyed) return;
 
     // Если сталактит еще не упал, проверяем дистанцию до Лендера
-    if (!isTriggered && game.isLoaded) {
-      final lander = game.lander;
-      if (lander.isMounted) {
+    if (!isTriggered) {
+      try {
+        final lander = game.lander;
         final landerPos = lander.body.position;
         final myPos = body.position;
         
         final xDiff = (landerPos.x - myPos.x).abs();
         final yDiff = landerPos.y - myPos.y; // Разность по высоте (Лендер должен быть ниже)
 
-        // Триггерим падение, если Лендер пролетает прямо под сталактитом на расстоянии до 7.5 метров
-        if (xDiff < 1.6 && yDiff > 0 && yDiff < 7.5) {
+        // Engine vibration sensitivity: acoustic vibration from active thrusters expands trigger radius
+        final isThrusting = lander.leftThrustActive || lander.rightThrustActive;
+        final maxTriggerX = isThrusting ? 3.0 : 1.6;
+        final maxTriggerY = isThrusting ? 10.0 : 7.5;
+
+        // Триггерим падение, если Лендер пролетает прямо под сталактитом
+        if (xDiff < maxTriggerX && yDiff > 0 && yDiff < maxTriggerY) {
           isTriggered = true;
           body.setType(BodyType.dynamic);
           // Даем импульс вниз для более резкого старта
           body.applyLinearImpulse(Vector2(0.0, 4.0));
         }
-      }
+      } catch (_) {}
     }
   }
 

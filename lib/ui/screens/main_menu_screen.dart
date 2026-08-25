@@ -82,7 +82,7 @@ class MainMenuWidget extends StatelessWidget {
                         OutlinedButton(
                           onPressed: () {
                             state.setLanguage(isRu ? 'en' : 'ru');
-                            GameAudioManager().playSfx('coin.wav');
+                            GameAudioManager().playTap();
                           },
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: Colors.white24),
@@ -96,7 +96,7 @@ class MainMenuWidget extends StatelessWidget {
                         IconButton(
                           icon: const Icon(Icons.settings_rounded, color: Colors.white),
                           onPressed: () {
-                            GameAudioManager().playSfx('dock.wav');
+                            GameAudioManager().playTap();
                             showDialog(
                               context: context,
                               builder: (context) => const SettingsDialog(),
@@ -158,7 +158,7 @@ class MainMenuWidget extends StatelessWidget {
                             icon: Icons.play_arrow_rounded,
                             color: GameConfig.colorPrimary,
                             onTap: () {
-                              GameAudioManager().playSfx('dock.wav');
+                              GameAudioManager().playTap();
                               onPlay();
                             },
                           ),
@@ -168,7 +168,7 @@ class MainMenuWidget extends StatelessWidget {
                             icon: Icons.build_rounded,
                             color: GameConfig.colorWarning,
                             onTap: () {
-                              GameAudioManager().playSfx('dock.wav');
+                              GameAudioManager().playTap();
                               onGarage();
                             },
                           ),
@@ -178,7 +178,7 @@ class MainMenuWidget extends StatelessWidget {
                             icon: Icons.emoji_events_rounded,
                             color: const Color(0xFFE040FB),
                             onTap: () {
-                              GameAudioManager().playSfx('dock.wav');
+                              GameAudioManager().playTap();
                               onLeaderboard();
                             },
                           ),
@@ -188,7 +188,7 @@ class MainMenuWidget extends StatelessWidget {
                             icon: Icons.military_tech_rounded,
                             color: const Color(0xFFFFD700),
                             onTap: () {
-                              GameAudioManager().playSfx('coin.wav');
+                              GameAudioManager().playTap();
                               showDialog(
                                 context: context,
                                 builder: (context) => const AchievementsDialog(),

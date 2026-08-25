@@ -79,7 +79,7 @@ class AchievementsDialog extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.close_rounded, color: Colors.white70),
                     onPressed: () {
-                      GameAudioManager().playSfx('dock.wav');
+                      GameAudioManager().playTap();
                       Navigator.of(context).pop();
                     },
                   ),

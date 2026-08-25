@@ -47,6 +47,7 @@ class _NickEntryWidgetState extends State<NickEntryWidget> with SingleTickerProv
   void _submit() async {
     final rawText = _controller.text;
     if (rawText.trim().isEmpty) {
+      GameAudioManager().playDecline();
       setState(() {
         _error = GameState().translate('error_empty_nick');
       });
@@ -56,7 +57,7 @@ class _NickEntryWidgetState extends State<NickEntryWidget> with SingleTickerProv
     final state = GameState();
     await state.setNickname(sanitizedName);
     await state.selectRocket(_selectedStarter);
-    GameAudioManager().playSfx('dock.wav');
+    GameAudioManager().playPurchase();
     widget.onFinished();
   }
 
@@ -67,7 +68,7 @@ class _NickEntryWidgetState extends State<NickEntryWidget> with SingleTickerProv
     setState(() {
       _error = '';
     });
-    GameAudioManager().playSfx('coin.wav');
+    GameAudioManager().playTap();
   }
 
   String _generateCadetBadgeId(String name) {
@@ -96,42 +97,49 @@ class _NickEntryWidgetState extends State<NickEntryWidget> with SingleTickerProv
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: GameConfig.colorPrimary.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: GameConfig.colorPrimary.withOpacity(0.5)),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: GameConfig.colorPrimary.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: GameConfig.colorPrimary.withOpacity(0.5)),
+                            ),
+                            child: const Icon(Icons.terminal_rounded, color: GameConfig.colorPrimary, size: 20),
                           ),
-                          child: const Icon(Icons.terminal_rounded, color: GameConfig.colorPrimary, size: 20),
-                        ),
-                        const SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              isRu ? 'ТЕРМИНАЛ РЕГИСТРАЦИИ КАДЕТА' : 'FLIGHT CADET TERMINAL',
-                              style: const TextStyle(
-                                color: GameConfig.colorPrimary,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 2.0,
-                              ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  isRu ? 'ТЕРМИНАЛ РЕГИСТРАЦИИ КАДЕТА' : 'FLIGHT CADET TERMINAL',
+                                  style: const TextStyle(
+                                    color: GameConfig.colorPrimary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 2.0,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  isRu ? 'СПАСАТЕЛЬНЫЙ ДИВИЗИОН // LZ-2026' : 'RESCUE DIVISION // LZ-2026',
+                                  style: const TextStyle(
+                                    color: Colors.white38,
+                                    fontSize: 10,
+                                    letterSpacing: 1.2,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
-                            Text(
-                              isRu ? 'СПАСАТЕЛЬНЫЙ ДИВИЗИОН // LZ-2026' : 'RESCUE DIVISION // LZ-2026',
-                              style: const TextStyle(
-                                color: Colors.white38,
-                                fontSize: 10,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     OutlinedButton.icon(
                       onPressed: _toggleLanguage,
                       icon: const Icon(Icons.language, size: 16),
@@ -449,7 +457,7 @@ class _NickEntryWidgetState extends State<NickEntryWidget> with SingleTickerProv
           setState(() {
             _selectedStarter = shipId;
           });
-          GameAudioManager().playSfx('dock.wav');
+          GameAudioManager().playTap();
         },
         borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(

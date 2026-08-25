@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../game/config/game_config.dart';
 import '../../game/state/game_state.dart';
+import '../../game/audio/game_audio_manager.dart';
 import '../widgets/glass_panel.dart';
 
 class SettingsDialog extends StatelessWidget {
@@ -46,7 +47,10 @@ class SettingsDialog extends StatelessWidget {
                       ),
                       IconButton(
                         icon: const Icon(Icons.close_rounded, color: Colors.white60),
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () {
+                          GameAudioManager().playTap();
+                          Navigator.of(context).pop();
+                        },
                       ),
                     ],
                   ),
@@ -138,6 +142,7 @@ class SettingsDialog extends StatelessWidget {
                         isSelected: [!isRu, isRu],
                         onPressed: (index) {
                           state.setLanguage(index == 1 ? 'ru' : 'en');
+                          GameAudioManager().playTap();
                         },
                         borderRadius: BorderRadius.circular(8),
                         borderColor: Colors.white24,
@@ -157,7 +162,10 @@ class SettingsDialog extends StatelessWidget {
 
                   // Кнопка закрытия
                   ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () {
+                      GameAudioManager().playTap();
+                      Navigator.of(context).pop();
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: GameConfig.colorPrimary,
                       foregroundColor: Colors.black,

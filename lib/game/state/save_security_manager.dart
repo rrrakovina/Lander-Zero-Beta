@@ -18,9 +18,16 @@ class SaveSecurityManager {
     int fuelLevel = 1,
     int shieldLevel = 1,
     String leaderboardJson = '[]',
+    String suitColor = 'classic_orange',
+    String selectedHelmet = 'sphere1',
+    List<String> ownedHelmets = const ['sphere1'],
+    String selectedSuit = 'sk1_cadet',
+    List<String> ownedSuits = const ['sk1_cadet'],
   }) {
     final normalizedFleet = [...ownedRockets]..sort();
-    return 'v1|coins:$coins|fleet:${normalizedFleet.join(",")}|upgrades:$engineLevel,$fuelLevel,$shieldLevel|lb:$leaderboardJson';
+    final normalizedHelmets = [...ownedHelmets]..sort();
+    final normalizedSuits = [...ownedSuits]..sort();
+    return 'v1|coins:$coins|fleet:${normalizedFleet.join(",")}|upgrades:$engineLevel,$fuelLevel,$shieldLevel|lb:$leaderboardJson|wardrobe:$suitColor,$selectedHelmet,${normalizedHelmets.join(",")},$selectedSuit,${normalizedSuits.join(",")}';
   }
 
   /// Computes HMAC-SHA256 signature for given save data
@@ -31,6 +38,11 @@ class SaveSecurityManager {
     int fuelLevel = 1,
     int shieldLevel = 1,
     String leaderboardJson = '[]',
+    String suitColor = 'classic_orange',
+    String selectedHelmet = 'sphere1',
+    List<String> ownedHelmets = const ['sphere1'],
+    String selectedSuit = 'sk1_cadet',
+    List<String> ownedSuits = const ['sk1_cadet'],
   }) {
     final payload = buildSavePayload(
       coins: coins,
@@ -39,6 +51,11 @@ class SaveSecurityManager {
       fuelLevel: fuelLevel,
       shieldLevel: shieldLevel,
       leaderboardJson: leaderboardJson,
+      suitColor: suitColor,
+      selectedHelmet: selectedHelmet,
+      ownedHelmets: ownedHelmets,
+      selectedSuit: selectedSuit,
+      ownedSuits: ownedSuits,
     );
     final keyBytes = utf8.encode(_masterSecretKey);
     final hmac = Hmac(sha256, keyBytes);
@@ -54,6 +71,11 @@ class SaveSecurityManager {
     int engineLevel = 1,
     int fuelLevel = 1,
     int shieldLevel = 1,
+    String suitColor = 'classic_orange',
+    String selectedHelmet = 'sphere1',
+    List<String> ownedHelmets = const ['sphere1'],
+    String selectedSuit = 'sk1_cadet',
+    List<String> ownedSuits = const ['sk1_cadet'],
   }) {
     return computeSignature(
       coins: coins,
@@ -62,6 +84,11 @@ class SaveSecurityManager {
       fuelLevel: fuelLevel,
       shieldLevel: shieldLevel,
       leaderboardJson: leaderboardJson,
+      suitColor: suitColor,
+      selectedHelmet: selectedHelmet,
+      ownedHelmets: ownedHelmets,
+      selectedSuit: selectedSuit,
+      ownedSuits: ownedSuits,
     );
   }
 
@@ -73,6 +100,11 @@ class SaveSecurityManager {
     int fuelLevel = 1,
     int shieldLevel = 1,
     String leaderboardJson = '[]',
+    String suitColor = 'classic_orange',
+    String selectedHelmet = 'sphere1',
+    List<String> ownedHelmets = const ['sphere1'],
+    String selectedSuit = 'sk1_cadet',
+    List<String> ownedSuits = const ['sk1_cadet'],
     required String? signature,
   }) {
     if (signature == null || signature.isEmpty) return false;
@@ -83,6 +115,11 @@ class SaveSecurityManager {
       fuelLevel: fuelLevel,
       shieldLevel: shieldLevel,
       leaderboardJson: leaderboardJson,
+      suitColor: suitColor,
+      selectedHelmet: selectedHelmet,
+      ownedHelmets: ownedHelmets,
+      selectedSuit: selectedSuit,
+      ownedSuits: ownedSuits,
     );
     return expected == signature;
   }
@@ -96,6 +133,11 @@ class SaveSecurityManager {
     int engineLevel = 1,
     int fuelLevel = 1,
     int shieldLevel = 1,
+    String suitColor = 'classic_orange',
+    String selectedHelmet = 'sphere1',
+    List<String> ownedHelmets = const ['sphere1'],
+    String selectedSuit = 'sk1_cadet',
+    List<String> ownedSuits = const ['sk1_cadet'],
   }) {
     return verifySignature(
       coins: coins,
@@ -104,6 +146,11 @@ class SaveSecurityManager {
       fuelLevel: fuelLevel,
       shieldLevel: shieldLevel,
       leaderboardJson: leaderboardJson,
+      suitColor: suitColor,
+      selectedHelmet: selectedHelmet,
+      ownedHelmets: ownedHelmets,
+      selectedSuit: selectedSuit,
+      ownedSuits: ownedSuits,
       signature: signature,
     );
   }
@@ -156,6 +203,11 @@ class SaveSecurityManager {
     required int fuelLevel,
     required int shieldLevel,
     required String leaderboardJson,
+    String suitColor = 'classic_orange',
+    String selectedHelmet = 'sphere1',
+    List<String> ownedHelmets = const ['sphere1'],
+    String selectedSuit = 'sk1_cadet',
+    List<String> ownedSuits = const ['sk1_cadet'],
   }) async {
     final sig = computeSignature(
       coins: coins,
@@ -164,6 +216,11 @@ class SaveSecurityManager {
       fuelLevel: fuelLevel,
       shieldLevel: shieldLevel,
       leaderboardJson: leaderboardJson,
+      suitColor: suitColor,
+      selectedHelmet: selectedHelmet,
+      ownedHelmets: ownedHelmets,
+      selectedSuit: selectedSuit,
+      ownedSuits: ownedSuits,
     );
     await prefs.setString(saveSignatureKey, sig);
   }

@@ -212,14 +212,14 @@ void main() {
 
     test('Minimap projection exact linearity verification across all Y coordinates', () {
       const deltaY = MinimapWidget.maxWorldY - MinimapWidget.minWorldY;
-      expect(deltaY, equals(46.0));
+      expect(deltaY, equals(54.0));
 
       // Test 1000 equidistant sample points across [-60.0, 40.0]
       for (int i = 0; i <= 1000; i++) {
         final worldY = -60.0 + (100.0 * i / 1000);
         final projected = MinimapWidget.projectY(worldY, height);
 
-        final expected = ((worldY - (-30.0)) / 46.0) * height;
+        final expected = ((worldY - (-30.0)) / 54.0) * height;
         expect(projected, closeTo(expected, 1e-10));
       }
     });
@@ -231,14 +231,14 @@ void main() {
       expect(MinimapWidget.projectX(36.0, width), equals(width));
       // Top boundary Y = -30.0 -> 0
       expect(MinimapWidget.projectY(-30.0, height), equals(0.0));
-      // Bottom boundary Y = +16.0 -> height
-      expect(MinimapWidget.projectY(16.0, height), equals(height));
+      // Bottom boundary Y = +24.0 -> height
+      expect(MinimapWidget.projectY(24.0, height), equals(height));
 
       // Out of bounds values extrapolate linearly without clamping bugs
       expect(MinimapWidget.projectX(-72.0, width), equals(-width * 0.5));
       expect(MinimapWidget.projectX(72.0, width), equals(width * 1.5));
-      expect(MinimapWidget.projectY(-76.0, height), equals(-height));
-      expect(MinimapWidget.projectY(62.0, height), equals(height * 2.0));
+      expect(MinimapWidget.projectY(-84.0, height), equals(-height));
+      expect(MinimapWidget.projectY(78.0, height), equals(height * 2.0));
     });
 
     test('Lander heading trigonometry vector invariant norm test across full circle & extremes', () {
@@ -285,13 +285,13 @@ void main() {
 
       final origin = MinimapWidget.projectOffset(Vector2(0, 0), size);
       expect(origin.dx, closeTo((36.0 / 72.0) * 200.0, 1e-9)); // 100.0
-      expect(origin.dy, closeTo((30.0 / 46.0) * 100.0, 1e-9)); // ~65.217
+      expect(origin.dy, closeTo((30.0 / 54.0) * 100.0, 1e-9)); // ~55.555
 
       final cornerMin = MinimapWidget.projectOffset(Vector2(-36.0, -30.0), size);
       expect(cornerMin.dx, equals(0.0));
       expect(cornerMin.dy, equals(0.0));
 
-      final cornerMax = MinimapWidget.projectOffset(Vector2(36.0, 16.0), size);
+      final cornerMax = MinimapWidget.projectOffset(Vector2(36.0, 24.0), size);
       expect(cornerMax.dx, equals(200.0));
       expect(cornerMax.dy, equals(100.0));
     });

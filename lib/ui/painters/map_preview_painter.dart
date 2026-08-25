@@ -33,10 +33,7 @@ class MapPreviewPainter extends CustomPainter {
     ..strokeWidth = 6.0
     ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.0);
 
-  static final Paint _spikePaint = Paint()..style = PaintingStyle.fill;
-  static final Paint _spikeBorder = Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 1.0;
+
 
   static final Paint _platformPaint = Paint()
     ..color = const Color(0xFF263238)
@@ -104,6 +101,14 @@ class MapPreviewPainter extends CustomPainter {
     ..style = PaintingStyle.stroke
     ..strokeWidth = 1.2;
 
+  static final Paint _branchLedgePaint = Paint()
+    ..color = const Color(0xFF00E5FF)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 2.5
+    ..strokeCap = StrokeCap.round;
+
+  static final Paint _magmaPoolPaint = Paint()..style = PaintingStyle.fill;
+
   static final Path _starPath = Path()
     ..moveTo(0, -2)
     ..lineTo(0.5, -0.5)
@@ -123,7 +128,7 @@ class MapPreviewPainter extends CustomPainter {
   final Path _floorPath = Path();
   final Path _ceilingCrustPath = Path();
   final Path _floorCrustPath = Path();
-  final Path _spikePathTemp = Path();
+  final Path _branchPath = Path();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -205,73 +210,96 @@ class MapPreviewPainter extends CustomPainter {
       canvas.drawCircle(Offset(px, py), pSize, _particlePaint);
     }
 
-    // 5. Parallax Hills
-    if (mapId == 'ice') {
-      _hillsPaint.color = const Color(0xFF0B212D);
-    } else if (mapId == 'orbit') {
-      _hillsPaint.color = const Color(0xFF180E24);
-    } else if (mapId == 'endless') {
-      _hillsPaint.color = const Color(0xFF1E1A0E);
-    } else if (mapId == 'core') {
-      _hillsPaint.color = const Color(0xFF1B1111);
-    } else if (mapId == 'wind') {
-      _hillsPaint.color = const Color(0xFF1E1712);
-    } else {
-      _hillsPaint.color = const Color(0xFF12121E);
+    // 5. Parallax Hills (for terrestrial maps)
+    if (mapId != 'orbit') {
+      if (mapId == 'ice') {
+        _hillsPaint.color = const Color(0xFF0B212D);
+      } else if (mapId == 'core') {
+        _hillsPaint.color = const Color(0xFF1B1111);
+      } else if (mapId == 'wind') {
+        _hillsPaint.color = const Color(0xFF1E1712);
+      } else {
+        _hillsPaint.color = const Color(0xFF12121E);
+      }
+
+      _hillsPath1.reset();
+      _hillsPath1
+        ..moveTo(0, size.height)
+        ..lineTo(0, size.height * 0.72)
+        ..quadraticBezierTo(size.width * 0.25, size.height * 0.58 + sin(animationTime * 0.2) * 5, size.width * 0.5, size.height * 0.76)
+        ..quadraticBezierTo(size.width * 0.75, size.height * 0.88, size.width, size.height * 0.68)
+        ..lineTo(size.width, size.height)
+        ..close();
+      canvas.drawPath(_hillsPath1, _hillsPaint);
+
+      final hillsPaint2 = Paint()..color = _hillsPaint.color.withOpacity(0.5);
+      _hillsPath2.reset();
+      _hillsPath2
+        ..moveTo(0, size.height)
+        ..lineTo(0, size.height * 0.82)
+        ..quadraticBezierTo(size.width * 0.35, size.height * 0.68 - cos(animationTime * 0.2) * 5, size.width * 0.6, size.height * 0.86)
+        ..quadraticBezierTo(size.width * 0.8, size.height * 0.78, size.width, size.height * 0.92)
+        ..lineTo(size.width, size.height)
+        ..close();
+      canvas.drawPath(_hillsPath2, hillsPaint2);
     }
 
-    _hillsPath1.reset();
-    _hillsPath1
-      ..moveTo(0, size.height)
-      ..lineTo(0, size.height * 0.72)
-      ..quadraticBezierTo(size.width * 0.25, size.height * 0.58 + sin(animationTime * 0.2) * 5, size.width * 0.5, size.height * 0.76)
-      ..quadraticBezierTo(size.width * 0.75, size.height * 0.88, size.width, size.height * 0.68)
-      ..lineTo(size.width, size.height)
-      ..close();
-    canvas.drawPath(_hillsPath1, _hillsPaint);
-
-    final hillsPaint2 = Paint()..color = _hillsPaint.color.withOpacity(0.5);
-    _hillsPath2.reset();
-    _hillsPath2
-      ..moveTo(0, size.height)
-      ..lineTo(0, size.height * 0.82)
-      ..quadraticBezierTo(size.width * 0.35, size.height * 0.68 - cos(animationTime * 0.2) * 5, size.width * 0.6, size.height * 0.86)
-      ..quadraticBezierTo(size.width * 0.8, size.height * 0.78, size.width, size.height * 0.92)
-      ..lineTo(size.width, size.height)
-      ..close();
-    canvas.drawPath(_hillsPath2, hillsPaint2);
-
-    // 6. Cave Geometry (Floor & Ceiling)
+    // 6. Distinct Map Topology Construction
     Color neonCrustColor = const Color(0xFF00E676);
+    double startPadX = size.width * 0.24;
+    double startPadY = size.height * 0.76;
+    double cargoPadX = size.width * 0.50;
+    double cargoPadY = size.height * 0.88;
+    double exitPadX = size.width * 0.80;
+    double exitPadY = size.height * 0.62;
 
-    if (mapId == 'ice') {
-      neonCrustColor = const Color(0xFF00E5FF);
-      _wallPaint.shader = const LinearGradient(
-        colors: [Color(0xFF0E2533), Color(0xFF051017)],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(rect);
-    } else if (mapId == 'orbit') {
-      neonCrustColor = const Color(0xFFE040FB);
-      _wallPaint.shader = const LinearGradient(
-        colors: [Color(0xFF221133), Color(0xFF09040F)],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(rect);
-    } else if (mapId == 'endless') {
-      neonCrustColor = const Color(0xFFFFD700);
-      _wallPaint.shader = const LinearGradient(
-        colors: [Color(0xFF2B210F), Color(0xFF0E0B05)],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(rect);
-    } else if (mapId == 'core') {
+    _floorPath.reset();
+    _ceilingPath.reset();
+    _floorCrustPath.reset();
+    _ceilingCrustPath.reset();
+
+    if (mapId == 'core') {
       neonCrustColor = const Color(0xFFFF1744);
       _wallPaint.shader = const LinearGradient(
         colors: [Color(0xFF281313), Color(0xFF0F0707)],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ).createShader(rect);
+
+      startPadX = size.width * 0.22;
+      startPadY = size.height * 0.38;
+      cargoPadX = size.width * 0.50;
+      cargoPadY = size.height * 0.90;
+      exitPadX = size.width * 0.78;
+      exitPadY = size.height * 0.38;
+
+      // Deep vertical volcanic shaft geometry
+      _floorPath.moveTo(0, size.height);
+      _floorPath.lineTo(0, size.height * 0.38);
+      _floorPath.lineTo(size.width * 0.38, size.height * 0.38);
+      _floorPath.lineTo(size.width * 0.44, size.height * 0.90);
+      _floorPath.lineTo(size.width * 0.56, size.height * 0.90);
+      _floorPath.lineTo(size.width * 0.62, size.height * 0.38);
+      _floorPath.lineTo(size.width, size.height * 0.38);
+      _floorPath.lineTo(size.width, size.height);
+      _floorPath.close();
+
+      _ceilingPath.moveTo(0, 0);
+      _ceilingPath.lineTo(0, size.height * 0.12);
+      _ceilingPath.lineTo(size.width, size.height * 0.12);
+      _ceilingPath.lineTo(size.width, 0);
+      _ceilingPath.close();
+
+      _floorCrustPath.moveTo(0, size.height * 0.38);
+      _floorCrustPath.lineTo(size.width * 0.38, size.height * 0.38);
+      _floorCrustPath.lineTo(size.width * 0.44, size.height * 0.90);
+      _floorCrustPath.lineTo(size.width * 0.56, size.height * 0.90);
+      _floorCrustPath.lineTo(size.width * 0.62, size.height * 0.38);
+      _floorCrustPath.lineTo(size.width, size.height * 0.38);
+
+      _ceilingCrustPath.moveTo(0, size.height * 0.12);
+      _ceilingCrustPath.lineTo(size.width, size.height * 0.12);
+
     } else if (mapId == 'wind') {
       neonCrustColor = const Color(0xFFFFB300);
       _wallPaint.shader = const LinearGradient(
@@ -279,137 +307,272 @@ class MapPreviewPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ).createShader(rect);
+
+      startPadX = size.width * 0.18;
+      startPadY = size.height * 0.38;
+      cargoPadX = size.width * 0.50;
+      cargoPadY = size.height * 0.90;
+      exitPadX = size.width * 0.82;
+      exitPadY = size.height * 0.38;
+
+      // Stepped zig-zag terraces descending to deep trench
+      _floorPath.moveTo(0, size.height);
+      _floorPath.lineTo(0, size.height * 0.38);
+      _floorPath.lineTo(size.width * 0.24, size.height * 0.38);
+      _floorPath.lineTo(size.width * 0.28, size.height * 0.55);
+      _floorPath.lineTo(size.width * 0.38, size.height * 0.55);
+      _floorPath.lineTo(size.width * 0.42, size.height * 0.90);
+      _floorPath.lineTo(size.width * 0.56, size.height * 0.90);
+      _floorPath.lineTo(size.width * 0.60, size.height * 0.65);
+      _floorPath.lineTo(size.width * 0.70, size.height * 0.65);
+      _floorPath.lineTo(size.width * 0.74, size.height * 0.38);
+      _floorPath.lineTo(size.width, size.height * 0.38);
+      _floorPath.lineTo(size.width, size.height);
+      _floorPath.close();
+
+      _ceilingPath.moveTo(0, 0);
+      _ceilingPath.lineTo(0, size.height * 0.14);
+      _ceilingPath.lineTo(size.width * 0.28, size.height * 0.14);
+      _ceilingPath.lineTo(size.width * 0.34, size.height * 0.32);
+      _ceilingPath.lineTo(size.width * 0.40, size.height * 0.14);
+      _ceilingPath.lineTo(size.width * 0.46, size.height * 0.45);
+      _ceilingPath.lineTo(size.width * 0.54, size.height * 0.14);
+      _ceilingPath.lineTo(size.width, size.height * 0.14);
+      _ceilingPath.lineTo(size.width, 0);
+      _ceilingPath.close();
+
+      _floorCrustPath.moveTo(0, size.height * 0.38);
+      _floorCrustPath.lineTo(size.width * 0.24, size.height * 0.38);
+      _floorCrustPath.lineTo(size.width * 0.28, size.height * 0.55);
+      _floorCrustPath.lineTo(size.width * 0.38, size.height * 0.55);
+      _floorCrustPath.lineTo(size.width * 0.42, size.height * 0.90);
+      _floorCrustPath.lineTo(size.width * 0.56, size.height * 0.90);
+      _floorCrustPath.lineTo(size.width * 0.60, size.height * 0.65);
+      _floorCrustPath.lineTo(size.width * 0.70, size.height * 0.65);
+      _floorCrustPath.lineTo(size.width * 0.74, size.height * 0.38);
+      _floorCrustPath.lineTo(size.width, size.height * 0.38);
+
+      _ceilingCrustPath.moveTo(0, size.height * 0.14);
+      _ceilingCrustPath.lineTo(size.width * 0.28, size.height * 0.14);
+      _ceilingCrustPath.lineTo(size.width * 0.34, size.height * 0.32);
+      _ceilingCrustPath.lineTo(size.width * 0.40, size.height * 0.14);
+      _ceilingCrustPath.lineTo(size.width * 0.46, size.height * 0.45);
+      _ceilingCrustPath.lineTo(size.width * 0.54, size.height * 0.14);
+      _ceilingCrustPath.lineTo(size.width, size.height * 0.14);
+
+    } else if (mapId == 'ice') {
+      neonCrustColor = const Color(0xFF00E5FF);
+      _wallPaint.shader = const LinearGradient(
+        colors: [Color(0xFF0E2533), Color(0xFF051017)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(rect);
+
+      startPadX = size.width * 0.18;
+      startPadY = size.height * 0.50;
+      cargoPadX = size.width * 0.50;
+      cargoPadY = size.height * 0.86;
+      exitPadX = size.width * 0.80;
+      exitPadY = size.height * 0.40;
+
+      // Sliding lower ramp descending to sunken cargo cavern
+      _floorPath.moveTo(0, size.height);
+      _floorPath.lineTo(0, size.height * 0.50);
+      _floorPath.lineTo(size.width * 0.24, size.height * 0.50);
+      _floorPath.lineTo(size.width * 0.44, size.height * 0.86);
+      _floorPath.lineTo(size.width * 0.56, size.height * 0.86);
+      _floorPath.lineTo(size.width * 0.74, size.height * 0.40);
+      _floorPath.lineTo(size.width, size.height * 0.40);
+      _floorPath.lineTo(size.width, size.height);
+      _floorPath.close();
+
+      _ceilingPath.moveTo(0, 0);
+      _ceilingPath.lineTo(0, size.height * 0.24);
+      _ceilingPath.lineTo(size.width * 0.22, size.height * 0.24);
+      _ceilingPath.lineTo(size.width * 0.44, size.height * 0.24);
+      _ceilingPath.lineTo(size.width * 0.50, size.height * 0.10);
+      _ceilingPath.lineTo(size.width * 0.56, size.height * 0.24);
+      _ceilingPath.lineTo(size.width, size.height * 0.24);
+      _ceilingPath.lineTo(size.width, 0);
+      _ceilingPath.close();
+
+      _floorCrustPath.moveTo(0, size.height * 0.50);
+      _floorCrustPath.lineTo(size.width * 0.24, size.height * 0.50);
+      _floorCrustPath.lineTo(size.width * 0.44, size.height * 0.86);
+      _floorCrustPath.lineTo(size.width * 0.56, size.height * 0.86);
+      _floorCrustPath.lineTo(size.width * 0.74, size.height * 0.40);
+      _floorCrustPath.lineTo(size.width, size.height * 0.40);
+
+      _ceilingCrustPath.moveTo(0, size.height * 0.24);
+      _ceilingCrustPath.lineTo(size.width * 0.44, size.height * 0.24);
+      _ceilingCrustPath.lineTo(size.width * 0.50, size.height * 0.10);
+      _ceilingCrustPath.lineTo(size.width * 0.56, size.height * 0.24);
+      _ceilingCrustPath.lineTo(size.width, size.height * 0.24);
+
+    } else if (mapId == 'orbit') {
+      neonCrustColor = const Color(0xFFE040FB);
+      startPadX = size.width * 0.20;
+      startPadY = size.height * 0.50;
+      cargoPadX = size.width * 0.50;
+      cargoPadY = size.height * 0.50;
+      exitPadX = size.width * 0.80;
+      exitPadY = size.height * 0.50;
+
     } else {
+      // Echo Canyon / default
       neonCrustColor = const Color(0xFF00E676);
       _wallPaint.shader = const LinearGradient(
         colors: [Color(0xFF1D262F), Color(0xFF0E1318)],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ).createShader(rect);
+
+      startPadX = size.width * 0.24;
+      startPadY = size.height * 0.76;
+      cargoPadX = size.width * 0.50;
+      cargoPadY = size.height * 0.88;
+      exitPadX = size.width * 0.80;
+      exitPadY = size.height * 0.62;
+
+      _floorPath.moveTo(0, size.height);
+      _floorPath.lineTo(0, size.height * 0.76);
+      _floorPath.lineTo(size.width * 0.30, size.height * 0.76);
+      _floorPath.quadraticBezierTo(size.width * 0.38, size.height * 0.70, size.width * 0.44, size.height * 0.88);
+      _floorPath.lineTo(size.width * 0.56, size.height * 0.88);
+      _floorPath.quadraticBezierTo(size.width * 0.64, size.height * 0.82, size.width * 0.74, size.height * 0.62);
+      _floorPath.lineTo(size.width, size.height * 0.62);
+      _floorPath.lineTo(size.width, size.height);
+      _floorPath.close();
+
+      _ceilingPath.moveTo(0, 0);
+      _ceilingPath.lineTo(0, size.height * 0.20);
+      _ceilingPath.lineTo(size.width * 0.40, size.height * 0.18);
+      _ceilingPath.lineTo(size.width * 0.65, size.height * 0.22);
+      _ceilingPath.lineTo(size.width * 0.75, size.height * 0.10);
+      _ceilingPath.lineTo(size.width, size.height * 0.10);
+      _ceilingPath.lineTo(size.width, 0);
+      _ceilingPath.close();
+
+      _floorCrustPath.moveTo(0, size.height * 0.76);
+      _floorCrustPath.lineTo(size.width * 0.30, size.height * 0.76);
+      _floorCrustPath.quadraticBezierTo(size.width * 0.38, size.height * 0.70, size.width * 0.44, size.height * 0.88);
+      _floorCrustPath.lineTo(size.width * 0.56, size.height * 0.88);
+      _floorCrustPath.quadraticBezierTo(size.width * 0.64, size.height * 0.82, size.width * 0.74, size.height * 0.62);
+      _floorCrustPath.lineTo(size.width, size.height * 0.62);
+
+      _ceilingCrustPath.moveTo(0, size.height * 0.20);
+      _ceilingCrustPath.lineTo(size.width * 0.40, size.height * 0.18);
+      _ceilingCrustPath.lineTo(size.width * 0.65, size.height * 0.22);
+      _ceilingCrustPath.lineTo(size.width * 0.75, size.height * 0.10);
+      _ceilingCrustPath.lineTo(size.width, size.height * 0.10);
     }
 
-    _ceilingPath.reset();
-    _ceilingPath
-      ..moveTo(0, 0)
-      ..lineTo(0, size.height * 0.22)
-      ..lineTo(size.width * 0.1, size.height * 0.1)
-      ..lineTo(size.width * 0.2, size.height * 0.28)
-      ..lineTo(size.width * 0.3, size.height * 0.14)
-      ..lineTo(size.width * 0.45, size.height * 0.3)
-      ..lineTo(size.width * 0.6, size.height * 0.1)
-      ..lineTo(size.width * 0.75, size.height * 0.26)
-      ..lineTo(size.width * 0.9, size.height * 0.1)
-      ..lineTo(size.width, size.height * 0.2)
-      ..lineTo(size.width, 0)
-      ..close();
-    canvas.drawPath(_ceilingPath, _wallPaint);
+    // 7. Paint Wall and Glowing Crust
+    if (mapId != 'orbit') {
+      canvas.drawPath(_floorPath, _wallPaint);
+      canvas.drawPath(_ceilingPath, _wallPaint);
 
-    _floorPath.reset();
-    _floorPath
-      ..moveTo(0, size.height)
-      ..lineTo(0, size.height * 0.92)
-      ..lineTo(size.width * 0.12, size.height * 0.88)
-      ..lineTo(size.width * 0.18, size.height * 0.86)
-      ..lineTo(size.width * 0.32, size.height * 0.86)
-      ..lineTo(size.width * 0.38, size.height * 0.9)
-      ..lineTo(size.width * 0.44, size.height * 0.8)
-      ..lineTo(size.width * 0.56, size.height * 0.8)
-      ..lineTo(size.width * 0.62, size.height * 0.92)
-      ..lineTo(size.width * 0.74, size.height * 0.83)
-      ..lineTo(size.width * 0.86, size.height * 0.83)
-      ..lineTo(size.width * 0.92, size.height * 0.94)
-      ..lineTo(size.width, size.height * 0.92)
-      ..lineTo(size.width, size.height)
-      ..close();
-    canvas.drawPath(_floorPath, _wallPaint);
+      _crustPaint.color = neonCrustColor;
+      _crustGlow.color = neonCrustColor.withOpacity(0.35);
 
-    // 7. Glowing Neon Crust
-    _crustPaint.color = neonCrustColor;
-    _crustGlow.color = neonCrustColor.withOpacity(0.35);
+      canvas.drawPath(_floorCrustPath, _crustGlow);
+      canvas.drawPath(_floorCrustPath, _crustPaint);
 
-    _ceilingCrustPath.reset();
-    _ceilingCrustPath
-      ..moveTo(0, size.height * 0.22)
-      ..lineTo(size.width * 0.1, size.height * 0.1)
-      ..lineTo(size.width * 0.2, size.height * 0.28)
-      ..lineTo(size.width * 0.3, size.height * 0.14)
-      ..lineTo(size.width * 0.45, size.height * 0.3)
-      ..lineTo(size.width * 0.6, size.height * 0.1)
-      ..lineTo(size.width * 0.75, size.height * 0.26)
-      ..lineTo(size.width * 0.9, size.height * 0.1)
-      ..lineTo(size.width, size.height * 0.2);
-
-    canvas.drawPath(_ceilingCrustPath, _crustGlow);
-    canvas.drawPath(_ceilingCrustPath, _crustPaint);
-
-    _floorCrustPath.reset();
-    _floorCrustPath
-      ..moveTo(0, size.height * 0.92)
-      ..lineTo(size.width * 0.12, size.height * 0.88)
-      ..lineTo(size.width * 0.18, size.height * 0.86)
-      ..lineTo(size.width * 0.32, size.height * 0.86)
-      ..lineTo(size.width * 0.38, size.height * 0.9)
-      ..lineTo(size.width * 0.44, size.height * 0.8)
-      ..lineTo(size.width * 0.56, size.height * 0.8)
-      ..lineTo(size.width * 0.62, size.height * 0.92)
-      ..lineTo(size.width * 0.74, size.height * 0.83)
-      ..lineTo(size.width * 0.86, size.height * 0.83)
-      ..lineTo(size.width * 0.92, size.height * 0.94)
-      ..lineTo(size.width, size.height * 0.92);
-
-    canvas.drawPath(_floorCrustPath, _crustGlow);
-    canvas.drawPath(_floorCrustPath, _crustPaint);
-
-    // 8. Stalactites & Stalagmites
-    _spikeBorder.color = neonCrustColor.withOpacity(0.5);
-    _spikePaint.color = neonCrustColor.withOpacity(0.2);
-
-    final List<Offset> stalactites = [
-      Offset(size.width * 0.15, size.height * 0.18),
-      Offset(size.width * 0.68, size.height * 0.16),
-    ];
-    for (final st in stalactites) {
-      _spikePathTemp.reset();
-      _spikePathTemp
-        ..moveTo(st.dx - 12, st.dy - 10)
-        ..lineTo(st.dx + 12, st.dy - 10)
-        ..lineTo(st.dx, st.dy + 25)
-        ..close();
-      canvas.drawPath(_spikePathTemp, _spikePaint);
-      canvas.drawPath(_spikePathTemp, _spikeBorder);
+      canvas.drawPath(_ceilingCrustPath, _crustGlow);
+      canvas.drawPath(_ceilingCrustPath, _crustPaint);
     }
 
-    final List<Offset> stalagmites = [
-      Offset(size.width * 0.35, size.height * 0.88),
-      Offset(size.width * 0.68, size.height * 0.91),
-    ];
-    for (final sm in stalagmites) {
-      _spikePathTemp.reset();
-      _spikePathTemp
-        ..moveTo(sm.dx - 12, sm.dy + 10)
-        ..lineTo(sm.dx + 12, sm.dy + 10)
-        ..lineTo(sm.dx, sm.dy - 25)
-        ..close();
-      canvas.drawPath(_spikePathTemp, _spikePaint);
-      canvas.drawPath(_spikePathTemp, _spikeBorder);
+    // 8. Draw Magma Pool Glow for Core
+    if (mapId == 'core') {
+      _magmaPoolPaint.shader = const LinearGradient(
+        colors: [Color(0xFFFFD54F), Color(0xFFFF5722), Color(0xFFD50000)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTRB(size.width * 0.44, size.height * 0.89, size.width * 0.56, size.height * 0.94));
+      canvas.drawRect(Rect.fromLTRB(size.width * 0.44, size.height * 0.89, size.width * 0.56, size.height * 0.94), _magmaPoolPaint);
     }
 
-    // 9. Platforms
-    _drawPreviewPlatform(canvas, size, size.width * 0.18, size.width * 0.32, size.height * 0.86, Colors.blueAccent);
-    _drawPreviewPlatform(canvas, size, size.width * 0.44, size.width * 0.56, size.height * 0.8, Colors.greenAccent);
-    _drawPreviewPlatform(canvas, size, size.width * 0.74, size.width * 0.86, size.height * 0.83, Colors.orangeAccent);
+    // 9. Draw Upper Ice Branch Ledge for Europa Ice Rift
+    if (mapId == 'ice') {
+      _branchPath.reset();
+      _branchPath.moveTo(size.width * 0.18, size.height * 0.58);
+      _branchPath.lineTo(size.width * 0.46, size.height * 0.58);
+      canvas.drawPath(_branchPath, _branchLedgePaint);
 
-    // 10. Cargo Capsule
-    _drawPreviewCargo(canvas, Offset(size.width * 0.5, size.height * 0.8 - 14));
+      final branchGlow = Paint()
+        ..color = const Color(0x6600E5FF)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6.0
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
+      canvas.drawPath(_branchPath, branchGlow);
+    }
 
-    // 11. Pickups (Coin & Fuel)
-    _drawPreviewCoin(canvas, Offset(size.width * 0.38, size.height * 0.5), animationTime);
-    _drawPreviewFuel(canvas, Offset(size.width * 0.65, size.height * 0.6));
+    // 10. Draw Orbital Debris 360 Open Space Perimeter Beacons & Debris
+    if (mapId == 'orbit') {
+      final beaconPaint = Paint()
+        ..color = const Color(0xFFE040FB)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2;
+      final beaconDot = Paint()
+        ..color = const Color(0xFFE040FB)
+        ..style = PaintingStyle.fill;
+      final forcefieldBorder = Paint()
+        ..color = const Color(0x33E040FB)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0;
 
-    // 12. Rocket
+      final pTL = Offset(size.width * 0.08, size.height * 0.14);
+      final pTR = Offset(size.width * 0.92, size.height * 0.14);
+      final pBL = Offset(size.width * 0.08, size.height * 0.86);
+      final pBR = Offset(size.width * 0.92, size.height * 0.86);
+
+      canvas.drawRect(Rect.fromLTRB(pTL.dx, pTL.dy, pBR.dx, pBR.dy), forcefieldBorder);
+
+      for (final p in [pTL, pTR, pBL, pBR]) {
+        canvas.drawCircle(p, 2.5, beaconDot);
+        canvas.drawCircle(p, 5.0, beaconPaint);
+      }
+
+      // Rotating solar panel wireframes
+      final debrisRot = animationTime * 0.6;
+      canvas.save();
+      canvas.translate(size.width * 0.35, size.height * 0.35);
+      canvas.rotate(debrisRot);
+      final panelRect = Rect.fromCenter(center: Offset.zero, width: 28, height: 8);
+      canvas.drawRect(panelRect, Paint()..color = const Color(0xFF0D47A1));
+      canvas.drawRect(panelRect, Paint()..color = const Color(0xFFFFD54F)..style = PaintingStyle.stroke..strokeWidth = 1.0);
+      canvas.restore();
+
+      canvas.save();
+      canvas.translate(size.width * 0.65, size.height * 0.65);
+      canvas.rotate(-debrisRot * 0.8);
+      final panelRect2 = Rect.fromCenter(center: Offset.zero, width: 28, height: 8);
+      canvas.drawRect(panelRect2, Paint()..color = const Color(0xFF0D47A1));
+      canvas.drawRect(panelRect2, Paint()..color = const Color(0xFFFFD54F)..style = PaintingStyle.stroke..strokeWidth = 1.0);
+      canvas.restore();
+    }
+
+    // 11. Platforms
+    _drawPreviewPlatform(canvas, size, startPadX - 18, startPadX + 18, startPadY, Colors.blueAccent);
+    _drawPreviewPlatform(canvas, size, cargoPadX - 20, cargoPadX + 20, cargoPadY, Colors.greenAccent);
+    _drawPreviewPlatform(canvas, size, exitPadX - 18, exitPadX + 18, exitPadY, Colors.orangeAccent);
+
+    // 12. Cargo Capsule
+    _drawPreviewCargo(canvas, Offset(cargoPadX, cargoPadY - 14));
+
+    // 13. Pickups (Coin & Fuel)
+    if (mapId == 'core') {
+      _drawPreviewCoin(canvas, Offset(size.width * 0.50, size.height * 0.55), animationTime);
+      _drawPreviewFuel(canvas, Offset(size.width * 0.50, size.height * 0.72));
+    } else {
+      _drawPreviewCoin(canvas, Offset(size.width * 0.38, size.height * 0.50), animationTime);
+      _drawPreviewFuel(canvas, Offset(size.width * 0.65, size.height * 0.55));
+    }
+
+    // 14. Rocket on Start Platform
     final double hoverOffset = sin(animationTime * 2) * 2.5 - 2.5;
     canvas.save();
-    canvas.translate(size.width * 0.25, size.height * 0.86 - 22 + hoverOffset);
+    canvas.translate(startPadX, startPadY - 22 + hoverOffset);
 
     canvas.drawCircle(const Offset(-8, 14), 4 + sin(animationTime * 10) * 1.5, _flamePaint);
     canvas.drawCircle(const Offset(8, 14), 4 + sin(animationTime * 10) * 1.5, _flamePaint);
@@ -419,7 +582,7 @@ class MapPreviewPainter extends CustomPainter {
     _drawRocket(canvas, rocketId);
     canvas.restore();
 
-    // 13. Dynamic Biome Visual Effects
+    // 15. Dynamic Biome Visual Effects
     if (mapId == 'wind') {
       _effectPaint.color = Colors.white.withOpacity(0.18);
       final double phase = (animationTime * 30) % size.width;
@@ -436,14 +599,13 @@ class MapPreviewPainter extends CustomPainter {
       }
     } else if (mapId == 'core') {
       _effectPaint.color = Colors.redAccent.withOpacity(0.25 + 0.15 * sin(animationTime * 5.0).abs());
-      for (double x = size.width * 0.32; x < size.width * 0.95; x += 60) {
-        final double yStart = size.height * 0.35 + (x % 50);
+      for (double x = size.width * 0.44; x <= size.width * 0.56; x += 15) {
+        final double yStart = size.height * 0.50 + ((x * 7) % 50);
         canvas.drawLine(Offset(x, yStart), Offset(x, yStart + 25), _effectPaint);
         canvas.drawLine(Offset(x, yStart + 25), Offset(x - 4, yStart + 20), _effectPaint);
         canvas.drawLine(Offset(x, yStart + 25), Offset(x + 4, yStart + 20), _effectPaint);
       }
     } else if (mapId == 'ice') {
-      // Cryo Geyser Steam Jet
       final geyserPaint = Paint()
         ..shader = LinearGradient(
           begin: Alignment.bottomCenter,
@@ -452,11 +614,11 @@ class MapPreviewPainter extends CustomPainter {
             const Color(0xFF00E5FF).withOpacity(0.4),
             Colors.transparent,
           ],
-        ).createShader(Rect.fromLTWH(size.width * 0.62, size.height * 0.45, 20, 90));
-      canvas.drawRect(Rect.fromLTWH(size.width * 0.62, size.height * 0.45, 20, 90), geyserPaint);
+        ).createShader(Rect.fromLTWH(size.width * 0.35, size.height * 0.45, 20, 90));
+      canvas.drawRect(Rect.fromLTWH(size.width * 0.35, size.height * 0.45, 20, 90), geyserPaint);
     }
 
-    // 14. CRT Holographic Scanline Overlay
+    // 16. CRT Holographic Scanline Overlay
     final scanlinePaint = Paint()
       ..color = Colors.black.withOpacity(0.08)
       ..strokeWidth = 1.0;
@@ -464,7 +626,7 @@ class MapPreviewPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), scanlinePaint);
     }
 
-    // 15. Vignette
+    // 17. Vignette
     final vignetteShader = RadialGradient(
       colors: [Colors.transparent, Colors.black.withOpacity(0.65)],
       stops: const [0.75, 1.0],

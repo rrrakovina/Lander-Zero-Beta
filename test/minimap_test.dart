@@ -17,9 +17,9 @@ void main() {
       expect(MinimapWidget.minWorldX, equals(-36.0));
       expect(MinimapWidget.maxWorldX, equals(36.0));
       expect(MinimapWidget.minWorldY, equals(-30.0));
-      expect(MinimapWidget.maxWorldY, equals(16.0));
+      expect(MinimapWidget.maxWorldY, equals(24.0));
       expect(MinimapWidget.maxWorldX - MinimapWidget.minWorldX, equals(72.0));
-      expect(MinimapWidget.maxWorldY - MinimapWidget.minWorldY, equals(46.0));
+      expect(MinimapWidget.maxWorldY - MinimapWidget.minWorldY, equals(54.0));
     });
 
     test('projectX accurately maps boundary and intermediate horizontal coordinates', () {
@@ -40,37 +40,39 @@ void main() {
       expect(MinimapWidget.projectX(25.0, width), closeTo((61.0 / 72.0) * width, 0.001));
       // Wind exit platform (28.0)
       expect(MinimapWidget.projectX(28.0, width), closeTo((64.0 / 72.0) * width, 0.001));
-      // Core start platform (-26.0)
-      expect(MinimapWidget.projectX(-26.0, width), closeTo((10.0 / 72.0) * width, 0.001));
+      // Core start platform (-14.0)
+      expect(MinimapWidget.projectX(-14.0, width), closeTo((22.0 / 72.0) * width, 0.001));
+      // Core exit platform (14.0)
+      expect(MinimapWidget.projectX(14.0, width), closeTo((50.0 / 72.0) * width, 0.001));
     });
 
     test('projectY accurately maps boundary, platforms, and ceiling peaks without clipping', () {
       // Top boundary (deepest ceiling headroom)
       expect(MinimapWidget.projectY(-30.0, height), closeTo(0.0, 0.001));
       // Bottom boundary (deepest floor)
-      expect(MinimapWidget.projectY(16.0, height), closeTo(height, 0.001));
+      expect(MinimapWidget.projectY(24.0, height), closeTo(height, 0.001));
       // Midpoint
-      expect(MinimapWidget.projectY(-7.0, height), closeTo(height / 2, 0.001));
+      expect(MinimapWidget.projectY(-3.0, height), closeTo(height / 2, 0.001));
 
-      // Core exit platform ceiling (peaking at y = -27.0) must be inside canvas without clipping
-      final coreCeilingY = MinimapWidget.projectY(-27.0, height);
+      // Core ceiling (peaking at y = -26.0) must be inside canvas without clipping
+      final coreCeilingY = MinimapWidget.projectY(-26.0, height);
       expect(coreCeilingY, greaterThan(0.0));
-      expect(coreCeilingY, closeTo((3.0 / 46.0) * height, 0.001));
+      expect(coreCeilingY, closeTo((4.0 / 54.0) * height, 0.001));
 
       // Echo cargo platform (y = 8.0)
       final cargoPlatformY = MinimapWidget.projectY(8.0, height);
       expect(cargoPlatformY, lessThan(height));
-      expect(cargoPlatformY, closeTo((38.0 / 46.0) * height, 0.001));
+      expect(cargoPlatformY, closeTo((38.0 / 54.0) * height, 0.001));
 
-      // Deepest floor depression (y = 14.0)
-      final floorDepressionY = MinimapWidget.projectY(14.0, height);
-      expect(floorDepressionY, lessThan(height));
-      expect(floorDepressionY, closeTo((44.0 / 46.0) * height, 0.001));
+      // Deep Core cargo platform (y = 14.0)
+      final coreCargoY = MinimapWidget.projectY(14.0, height);
+      expect(coreCargoY, lessThan(height));
+      expect(coreCargoY, closeTo((44.0 / 54.0) * height, 0.001));
     });
 
     test('projectOffset transforms Vector2 to Offset correctly', () {
       const size = Size(width, height);
-      final originOffset = MinimapWidget.projectOffset(Vector2(0.0, -7.0), size);
+      final originOffset = MinimapWidget.projectOffset(Vector2(0.0, -3.0), size);
       expect(originOffset.dx, closeTo(72.0, 0.001));
       expect(originOffset.dy, closeTo(46.0, 0.001));
 
@@ -78,7 +80,7 @@ void main() {
       expect(cornerOffset.dx, closeTo(0.0, 0.001));
       expect(cornerOffset.dy, closeTo(0.0, 0.001));
 
-      final maxCornerOffset = MinimapWidget.projectOffset(Vector2(36.0, 16.0), size);
+      final maxCornerOffset = MinimapWidget.projectOffset(Vector2(36.0, 24.0), size);
       expect(maxCornerOffset.dx, closeTo(width, 0.001));
       expect(maxCornerOffset.dy, closeTo(height, 0.001));
     });
@@ -92,8 +94,8 @@ void main() {
       expect(MinimapWidget.projectX(0.0, customWidth), closeTo(150.0, 0.001));
 
       expect(MinimapWidget.projectY(-30.0, customHeight), closeTo(0.0, 0.001));
-      expect(MinimapWidget.projectY(16.0, customHeight), closeTo(customHeight, 0.001));
-      expect(MinimapWidget.projectY(-7.0, customHeight), closeTo(100.0, 0.001));
+      expect(MinimapWidget.projectY(24.0, customHeight), closeTo(customHeight, 0.001));
+      expect(MinimapWidget.projectY(-3.0, customHeight), closeTo(100.0, 0.001));
     });
   });
 
@@ -136,33 +138,59 @@ void main() {
     });
   });
 
-  group('Minimap Tether and Platform Logic Tests', () {
+  group('Minimap Tether and Platform Logic Tests across all 5 Maps', () {
     test('isTethered accurately reflects game.rope state', () {
       final game = LanderZeroGame(mapId: 'echo');
       expect(MinimapWidget.isTethered(game), isFalse);
     });
 
-    test('Platforms for Echo, Wind, and Core fall within minimap bounds', () {
-      for (final mapId in ['echo', 'wind', 'core']) {
+    test('Platforms for all 5 maps fall strictly within minimap bounds', () {
+      for (final mapId in ['echo', 'core', 'wind', 'ice', 'orbit']) {
         final cave = Cave(mapId: mapId);
 
         // Start platform
-        expect(cave.startPlatform.x, greaterThanOrEqualTo(MinimapWidget.minWorldX));
-        expect(cave.startPlatform.x, lessThanOrEqualTo(MinimapWidget.maxWorldX));
-        expect(cave.startPlatform.y, greaterThanOrEqualTo(MinimapWidget.minWorldY));
-        expect(cave.startPlatform.y, lessThanOrEqualTo(MinimapWidget.maxWorldY));
+        expect(cave.startPlatform.x, greaterThanOrEqualTo(MinimapWidget.minWorldX), reason: '$mapId startPlatform.x');
+        expect(cave.startPlatform.x, lessThanOrEqualTo(MinimapWidget.maxWorldX), reason: '$mapId startPlatform.x');
+        expect(cave.startPlatform.y, greaterThanOrEqualTo(MinimapWidget.minWorldY), reason: '$mapId startPlatform.y');
+        expect(cave.startPlatform.y, lessThanOrEqualTo(MinimapWidget.maxWorldY), reason: '$mapId startPlatform.y');
 
         // Cargo platform
-        expect(cave.cargoPlatform.x, greaterThanOrEqualTo(MinimapWidget.minWorldX));
-        expect(cave.cargoPlatform.x, lessThanOrEqualTo(MinimapWidget.maxWorldX));
-        expect(cave.cargoPlatform.y, greaterThanOrEqualTo(MinimapWidget.minWorldY));
-        expect(cave.cargoPlatform.y, lessThanOrEqualTo(MinimapWidget.maxWorldY));
+        expect(cave.cargoPlatform.x, greaterThanOrEqualTo(MinimapWidget.minWorldX), reason: '$mapId cargoPlatform.x');
+        expect(cave.cargoPlatform.x, lessThanOrEqualTo(MinimapWidget.maxWorldX), reason: '$mapId cargoPlatform.x');
+        expect(cave.cargoPlatform.y, greaterThanOrEqualTo(MinimapWidget.minWorldY), reason: '$mapId cargoPlatform.y');
+        expect(cave.cargoPlatform.y, lessThanOrEqualTo(MinimapWidget.maxWorldY), reason: '$mapId cargoPlatform.y');
 
         // Exit platform
-        expect(cave.exitPlatform.x, greaterThanOrEqualTo(MinimapWidget.minWorldX));
-        expect(cave.exitPlatform.x, lessThanOrEqualTo(MinimapWidget.maxWorldX));
-        expect(cave.exitPlatform.y, greaterThanOrEqualTo(MinimapWidget.minWorldY));
-        expect(cave.exitPlatform.y, lessThanOrEqualTo(MinimapWidget.maxWorldY));
+        expect(cave.exitPlatform.x, greaterThanOrEqualTo(MinimapWidget.minWorldX), reason: '$mapId exitPlatform.x');
+        expect(cave.exitPlatform.x, lessThanOrEqualTo(MinimapWidget.maxWorldX), reason: '$mapId exitPlatform.x');
+        expect(cave.exitPlatform.y, greaterThanOrEqualTo(MinimapWidget.minWorldY), reason: '$mapId exitPlatform.y');
+        expect(cave.exitPlatform.y, lessThanOrEqualTo(MinimapWidget.maxWorldY), reason: '$mapId exitPlatform.y');
+      }
+    });
+
+    test('Europa Ice Rift branchPoints fall within minimap bounds', () {
+      final caveIce = Cave(mapId: 'ice');
+      final world = Forge2DWorld();
+      caveIce.world = world;
+      caveIce.createBody();
+
+      expect(caveIce.branchPoints.isNotEmpty, isTrue);
+      for (final bp in caveIce.branchPoints) {
+        expect(bp.x, greaterThanOrEqualTo(MinimapWidget.minWorldX));
+        expect(bp.x, lessThanOrEqualTo(MinimapWidget.maxWorldX));
+        expect(bp.y, greaterThanOrEqualTo(MinimapWidget.minWorldY));
+        expect(bp.y, lessThanOrEqualTo(MinimapWidget.maxWorldY));
+      }
+    });
+
+    test('Orbital Debris perimeter beacons fall within minimap bounds', () {
+      final caveOrbit = Cave(mapId: 'orbit');
+      expect(caveOrbit.perimeterBeacons.length, equals(4));
+      for (final beacon in caveOrbit.perimeterBeacons) {
+        expect(beacon.x, greaterThanOrEqualTo(MinimapWidget.minWorldX));
+        expect(beacon.x, lessThanOrEqualTo(MinimapWidget.maxWorldX));
+        expect(beacon.y, greaterThanOrEqualTo(MinimapWidget.minWorldY));
+        expect(beacon.y, lessThanOrEqualTo(MinimapWidget.maxWorldY));
       }
     });
   });
@@ -253,6 +281,26 @@ void main() {
       await tester.pump();
 
       expect(find.byType(MinimapWidget), findsOneWidget);
+    });
+
+    testWidgets('MinimapWidget mounts across all 5 map designs without exceptions', (tester) async {
+      for (final mapId in ['echo', 'core', 'wind', 'ice', 'orbit']) {
+        final game = LanderZeroGame(mapId: mapId);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: MinimapWidget(
+                game: game,
+                width: 144.0,
+                height: 92.0,
+              ),
+            ),
+          ),
+        );
+
+        expect(find.byType(MinimapWidget), findsOneWidget);
+      }
     });
   });
 }

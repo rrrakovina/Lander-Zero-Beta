@@ -22,6 +22,10 @@ class GameAudioManager {
         'victory.wav',
         'defeat.wav',
         'thrust.wav',
+        'ui_tap.wav',
+        'ui_purchase.wav',
+        'ui_decline.wav',
+        'ui_swoosh.wav',
       ]);
     } catch (e) {
       // Игнорируем в случае сбоев
@@ -33,7 +37,7 @@ class GameAudioManager {
     try {
       final state = GameState();
       if (state.musicVolume > 0) {
-        FlameAudio.bgm.play('bg_music.wav', volume: state.musicVolume);
+        FlameAudio.bgm.play('bg_music.wav', volume: state.musicVolume).catchError((_) {});
       }
     } catch (e) {
       // Игнорируем
@@ -43,7 +47,7 @@ class GameAudioManager {
   void stopBgm() {
     if (isTesting) return;
     try {
-      FlameAudio.bgm.stop();
+      FlameAudio.bgm.stop().catchError((_) {});
     } catch (e) {
       // Игнорируем
     }
@@ -55,13 +59,13 @@ class GameAudioManager {
       final state = GameState();
       if (state.musicVolume > 0) {
         if (FlameAudio.bgm.isPlaying) {
-          FlameAudio.bgm.audioPlayer.setVolume(state.musicVolume);
+          FlameAudio.bgm.audioPlayer.setVolume(state.musicVolume).catchError((_) {});
         } else {
-          FlameAudio.bgm.play('bg_music.wav', volume: state.musicVolume);
+          FlameAudio.bgm.play('bg_music.wav', volume: state.musicVolume).catchError((_) {});
         }
       } else {
         if (FlameAudio.bgm.isPlaying) {
-          FlameAudio.bgm.stop();
+          FlameAudio.bgm.stop().catchError((_) {});
         }
       }
     } catch (e) {
@@ -69,17 +73,30 @@ class GameAudioManager {
     }
   }
 
-  void playSfx(String name) {
+  void playSfx(String name, {double volumeMultiplier = 1.0}) {
     if (isTesting) return;
     try {
       final state = GameState();
-      if (state.sfxVolume > 0) {
-        FlameAudio.play(name, volume: state.sfxVolume);
+      final volume = (state.sfxVolume * volumeMultiplier).clamp(0.0, 1.0);
+      if (volume > 0) {
+        FlameAudio.play(name, volume: volume).catchError((_) => AudioPlayer());
       }
     } catch (e) {
       // Игнорируем
     }
   }
+
+  /// 1. Стандартное нажатие на кнопку (мягкий демпфированный акустический щелчок)
+  void playTap({double volumeMultiplier = 1.0}) => playSfx('ui_tap.wav', volumeMultiplier: volumeMultiplier);
+
+  /// 2. Подтверждение покупки / апгрейда / выбора (теплый гармонический перезвон)
+  void playPurchase({double volumeMultiplier = 1.0}) => playSfx('ui_purchase.wav', volumeMultiplier: volumeMultiplier);
+
+  /// 3. Отклонение / ошибка валидации / нехватка монет (низкочастотный приглушенный гул)
+  void playDecline({double volumeMultiplier = 1.0}) => playSfx('ui_decline.wav', volumeMultiplier: volumeMultiplier);
+
+  /// 4. Переключение вкладок / навигация (мягкий пневматический шелест воздуха)
+  void playSwoosh({double volumeMultiplier = 1.0}) => playSfx('ui_swoosh.wav', volumeMultiplier: volumeMultiplier);
 
   bool _isThrustPlaying = false;
 

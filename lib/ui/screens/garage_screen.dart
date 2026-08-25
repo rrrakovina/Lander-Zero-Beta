@@ -5,6 +5,7 @@ import '../../game/state/game_state.dart';
 import '../widgets/menu_background.dart';
 import '../widgets/glass_panel.dart';
 import '../painters/rocket_painter.dart';
+import '../painters/ship_mesh_renderer.dart';
 
 class GarageWidget extends StatefulWidget {
   final VoidCallback onBack;
@@ -20,7 +21,7 @@ class _GarageWidgetState extends State<GarageWidget> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -100,6 +101,7 @@ class _GarageWidgetState extends State<GarageWidget> with SingleTickerProviderSt
                   tabs: [
                     Tab(text: state.translate('tab_upgrades')),
                     Tab(text: state.translate('tab_cabins')),
+                    Tab(text: state.translate('tab_pilot')),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -112,6 +114,8 @@ class _GarageWidgetState extends State<GarageWidget> with SingleTickerProviderSt
                       _buildUpgradesTab(state, isRu),
                       // Cabins View
                       _buildCabinsTab(state, isRu),
+                      // Pilot Wardrobe View
+                      _buildPilotTab(state, isRu),
                     ],
                   ),
                 ),
@@ -724,6 +728,517 @@ class _GarageWidgetState extends State<GarageWidget> with SingleTickerProviderSt
       ],
     );
   }
+
+  // =========================================================================
+  // Pilot Wardrobe Customization Tab
+  // =========================================================================
+  Widget _buildPilotTab(GameState state, bool isRu) {
+    return ListView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 24.0),
+      children: [
+        // 1. Live Astronaut Wardrobe Preview Card
+        _buildPilotPreviewCard(state, isRu),
+        const SizedBox(height: 20),
+
+        // 2. Suit Color Palette Section (100% Free)
+        _buildSectionHeader(
+          title: state.translate('suit_color'),
+          badgeText: state.translate('free_color'),
+          badgeColor: const Color(0xFF00E676),
+          icon: Icons.palette_rounded,
+        ),
+        const SizedBox(height: 12),
+        _buildSuitColorPalette(state, isRu),
+        const SizedBox(height: 24),
+
+        // 3. Helmet Type Selection Section
+        _buildSectionHeader(
+          title: state.translate('helmet_type'),
+          icon: Icons.military_tech_rounded,
+        ),
+        const SizedBox(height: 12),
+        _buildHelmetGrid(state, isRu),
+        const SizedBox(height: 24),
+
+        // 4. Suit Model / Decals Section
+        _buildSectionHeader(
+          title: state.translate('suit_model'),
+          icon: Icons.shield_rounded,
+        ),
+        const SizedBox(height: 12),
+        _buildSuitModelGrid(state, isRu),
+      ],
+    );
+  }
+
+  Widget _buildPilotPreviewCard(GameState state, bool isRu) {
+    final callsign = state.nickname.isEmpty ? (isRu ? 'КУРСАНТ-01' : 'CADET-01') : state.nickname;
+    final colorName = state.translate('color_${state.suitColor}');
+    final helmetName = state.translate('helmet_${state.selectedHelmet}');
+    final suitName = state.translate('suit_${state.selectedSuit}');
+
+    return GlassPanel(
+      borderColor: GameConfig.colorPrimary.withOpacity(0.35),
+      padding: 16,
+      child: Row(
+        children: [
+          // Large Astronaut Dynamic Bust Viewport
+          Container(
+            width: 130,
+            height: 130,
+            decoration: BoxDecoration(
+              color: Colors.black54,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: GameConfig.colorPrimary.withOpacity(0.45),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: GameConfig.colorPrimary.withOpacity(0.15),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: AstronautPreviewWidget(
+                suitColor: state.suitColor,
+                helmetType: state.selectedHelmet,
+                suitModel: state.selectedSuit,
+              ),
+            ),
+          ),
+          const SizedBox(width: 18),
+          // Callsign & Wardrobe Telemetry Badges
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Callsign Pill
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: GameConfig.colorPrimary.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: GameConfig.colorPrimary.withOpacity(0.5)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.badge_rounded, color: GameConfig.colorPrimary, size: 14),
+                      const SizedBox(width: 6),
+                      Text(
+                        callsign.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _buildTelemetryBadge(Icons.palette_rounded, colorName, Colors.cyanAccent),
+                const SizedBox(height: 6),
+                _buildTelemetryBadge(Icons.military_tech_rounded, helmetName, Colors.amberAccent),
+                const SizedBox(height: 6),
+                _buildTelemetryBadge(Icons.shield_rounded, suitName, Colors.lightGreenAccent),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTelemetryBadge(IconData icon, String label, Color color) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 14),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader({
+    required String title,
+    required IconData icon,
+    String? badgeText,
+    Color? badgeColor,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: GameConfig.colorPrimary, size: 20),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.1,
+          ),
+        ),
+        if (badgeText != null) ...[
+          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: (badgeColor ?? GameConfig.colorPrimary).withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: (badgeColor ?? GameConfig.colorPrimary).withOpacity(0.8)),
+            ),
+            child: Text(
+              badgeText,
+              style: TextStyle(
+                color: badgeColor ?? GameConfig.colorPrimary,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSuitColorPalette(GameState state, bool isRu) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: GameState.suitColors.map((colorItem) {
+        final id = colorItem['id'] as String;
+        final name = state.translate(colorItem['nameKey'] as String);
+        final color = colorItem['color'] as Color;
+        final accent = colorItem['accent'] as Color;
+        final isSelected = state.suitColor == id;
+
+        return InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () async {
+            await state.setSuitColor(id);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: isSelected ? color.withOpacity(0.22) : Colors.black38,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isSelected ? color : Colors.white12,
+                width: isSelected ? 2.0 : 1.0,
+              ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: color.withOpacity(0.35),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: accent, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withOpacity(0.5),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: isSelected
+                      ? const Icon(Icons.check, size: 13, color: Colors.black)
+                      : null,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  name,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.white70,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildHelmetGrid(GameState state, bool isRu) {
+    const helmetKeys = ['sphere1', 'cyber_visor', 'miner_helmet', 'swift_aero'];
+    return Column(
+      children: helmetKeys.map((id) {
+        final price = (GameState.helmetConfigs[id]?['price'] as int?) ?? 0;
+        final title = state.translate('helmet_$id');
+        final desc = state.translate('helmet_${id}_desc');
+        final isOwned = state.ownedHelmets.contains(id);
+        final isSelected = state.selectedHelmet == id;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10.0),
+          child: _buildWardrobeCard(
+            state: state,
+            id: id,
+            title: title,
+            desc: desc,
+            price: price,
+            isOwned: isOwned,
+            isSelected: isSelected,
+            icon: Icons.military_tech_rounded,
+            accentColor: Colors.amberAccent,
+            onSelect: () async {
+              await state.selectHelmet(id);
+            },
+            onBuy: () async {
+              await state.buyHelmet(id, price);
+            },
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildSuitModelGrid(GameState state, bool isRu) {
+    const suitKeys = ['sk1_cadet', 'exo_frame', 'cryo_suit'];
+    return Column(
+      children: suitKeys.map((id) {
+        final price = (GameState.suitConfigs[id]?['price'] as int?) ?? 0;
+        final title = state.translate('suit_$id');
+        final desc = state.translate('suit_${id}_desc');
+        final isOwned = state.ownedSuits.contains(id);
+        final isSelected = state.selectedSuit == id;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10.0),
+          child: _buildWardrobeCard(
+            state: state,
+            id: id,
+            title: title,
+            desc: desc,
+            price: price,
+            isOwned: isOwned,
+            isSelected: isSelected,
+            icon: Icons.shield_rounded,
+            accentColor: Colors.lightGreenAccent,
+            onSelect: () async {
+              await state.selectSuit(id);
+            },
+            onBuy: () async {
+              await state.buySuit(id, price);
+            },
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildWardrobeCard({
+    required GameState state,
+    required String id,
+    required String title,
+    required String desc,
+    required int price,
+    required bool isOwned,
+    required bool isSelected,
+    required IconData icon,
+    required Color accentColor,
+    required VoidCallback onSelect,
+    required VoidCallback onBuy,
+  }) {
+    final bool canAfford = state.canAfford(price);
+
+    return GlassPanel(
+      borderColor: isSelected ? accentColor.withOpacity(0.6) : Colors.white10,
+      padding: 14,
+      child: Row(
+        children: [
+          // Icon Box
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: isSelected ? accentColor.withOpacity(0.2) : Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isSelected ? accentColor : Colors.white12,
+              ),
+            ),
+            child: Icon(icon, color: isSelected ? accentColor : Colors.white70, size: 24),
+          ),
+          const SizedBox(width: 14),
+          // Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    if (price == 0) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF00E676).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          state.translate('free_color'),
+                          style: const TextStyle(
+                            color: Color(0xFF00E676),
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  desc,
+                  style: const TextStyle(
+                    color: Colors.white38,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 14),
+          // Action Button
+          SizedBox(
+            width: 128,
+            height: 44,
+            child: isSelected
+                ? Container(
+                    decoration: BoxDecoration(
+                      color: accentColor.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: accentColor.withOpacity(0.8)),
+                    ),
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle_rounded, color: accentColor, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          state.translate('equipped'),
+                          style: TextStyle(
+                            color: accentColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : isOwned
+                    ? ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white12,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: const BorderSide(color: Colors.white24),
+                          ),
+                          padding: EdgeInsets.zero,
+                        ),
+                        onPressed: onSelect,
+                        child: Text(
+                          state.translate('equip'),
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                      )
+                    : canAfford
+                        ? ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: GameConfig.colorWarning,
+                              foregroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: EdgeInsets.zero,
+                            ),
+                            onPressed: onBuy,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.stars_rounded, color: Colors.black, size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '$price ${state.translate('buy')}',
+                                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          )
+                        : Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF161B26),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFFFF5252).withOpacity(0.6)),
+                            ),
+                            alignment: Alignment.center,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.lock_rounded, color: Color(0xFFFF5252), size: 14),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '$price 🪙',
+                                  style: const TextStyle(
+                                    color: Color(0xFFFF5252),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class CabinPreviewWidget extends StatefulWidget {
@@ -852,5 +1367,92 @@ class _CabinPreviewWidgetState extends State<CabinPreviewWidget> with SingleTick
         );
       },
     );
+  }
+}
+
+class AstronautPreviewWidget extends StatefulWidget {
+  final String suitColor;
+  final String helmetType;
+  final String suitModel;
+
+  const AstronautPreviewWidget({
+    super.key,
+    required this.suitColor,
+    required this.helmetType,
+    required this.suitModel,
+  });
+
+  @override
+  State<AstronautPreviewWidget> createState() => _AstronautPreviewWidgetState();
+}
+
+class _AstronautPreviewWidgetState extends State<AstronautPreviewWidget> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return CustomPaint(
+          size: Size.infinite,
+          painter: _AstronautPreviewPainter(
+            suitColor: widget.suitColor,
+            helmetType: widget.helmetType,
+            suitModel: widget.suitModel,
+            animationTime: _controller.value * 2 * pi,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _AstronautPreviewPainter extends CustomPainter {
+  final String suitColor;
+  final String helmetType;
+  final String suitModel;
+  final double animationTime;
+
+  _AstronautPreviewPainter({
+    required this.suitColor,
+    required this.helmetType,
+    required this.suitModel,
+    this.animationTime = 0.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    ShipMeshRenderer.renderPilotPreview(
+      canvas: canvas,
+      size: size,
+      suitColor: suitColor,
+      helmetType: helmetType,
+      suitModel: suitModel,
+      animationTime: animationTime,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _AstronautPreviewPainter oldDelegate) {
+    return oldDelegate.suitColor != suitColor ||
+        oldDelegate.helmetType != helmetType ||
+        oldDelegate.suitModel != suitModel ||
+        oldDelegate.animationTime != animationTime;
   }
 }

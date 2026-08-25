@@ -338,7 +338,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                 IconButton(
                   icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
                   onPressed: () {
-                    GameAudioManager().playSfx('dock.wav');
+                    GameAudioManager().playTap();
                     widget.onBack();
                   },
                 ),
@@ -399,7 +399,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          GameAudioManager().playSfx('dock.wav');
+          GameAudioManager().playTap();
           setState(() {
             _previewMapId = mapData.id;
           });
@@ -595,7 +595,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                 IconButton(
                   icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
                   onPressed: () {
-                    GameAudioManager().playSfx('dock.wav');
+                    GameAudioManager().playTap();
                     setState(() {
                       _previewMapId = null;
                     });
@@ -874,7 +874,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                           const SizedBox(height: 12),
                           ElevatedButton(
                             onPressed: () {
-                              GameAudioManager().playSfx('dock.wav');
+                              GameAudioManager().playTap();
                               widget.onMapSelected(_previewMapId!);
                             },
                             style: ElevatedButton.styleFrom(

@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flame_forge2d/flame_forge2d.dart' show Vector2;
 import 'package:flutter/material.dart';
+import '../../game/state/game_state.dart';
 
 /// Unified vector rendering engine for all 5 Lander Zero ships:
 /// 1. `sputnik` («Спутник-1», USSR-01, balanced spherical capsule)
@@ -396,6 +397,12 @@ class ShipMeshRenderer {
     double animationTime = 0.0,
     double legsCompression = 0.0,
     bool showDecals = true,
+    String? suitColor,
+    String? helmetType,
+    String? suitModel,
+    String? customSuitColor,
+    String? customHelmetType,
+    String? customSuitModel,
   }) {
     canvas.save();
     if (scale != 1.0) {
@@ -403,6 +410,9 @@ class ShipMeshRenderer {
     }
 
     final normalizedId = _normalizeShipId(shipId);
+    final String resSuitColor = customSuitColor ?? suitColor ?? 'classic_orange';
+    final String resHelmetType = customHelmetType ?? helmetType ?? 'sphere1';
+    final String resSuitModel = customSuitModel ?? suitModel ?? 'sk1_cadet';
 
     switch (normalizedId) {
       case 'swift':
@@ -418,6 +428,9 @@ class ShipMeshRenderer {
           legsCompression: legsCompression,
           showDecals: showDecals,
           engineThrust: engineThrust,
+          suitColor: resSuitColor,
+          helmetType: resHelmetType,
+          suitModel: resSuitModel,
         );
         break;
 
@@ -434,6 +447,9 @@ class ShipMeshRenderer {
           legsCompression: legsCompression,
           showDecals: showDecals,
           engineThrust: engineThrust,
+          suitColor: resSuitColor,
+          helmetType: resHelmetType,
+          suitModel: resSuitModel,
         );
         break;
 
@@ -451,6 +467,9 @@ class ShipMeshRenderer {
           legsCompression: legsCompression,
           showDecals: showDecals,
           rcsThrust: rcsThrust,
+          suitColor: resSuitColor,
+          helmetType: resHelmetType,
+          suitModel: resSuitModel,
         );
         break;
 
@@ -467,6 +486,9 @@ class ShipMeshRenderer {
           legsCompression: legsCompression,
           showDecals: showDecals,
           engineThrust: engineThrust,
+          suitColor: resSuitColor,
+          helmetType: resHelmetType,
+          suitModel: resSuitModel,
         );
         break;
 
@@ -483,6 +505,9 @@ class ShipMeshRenderer {
           animationTime: animationTime,
           legsCompression: legsCompression,
           showDecals: showDecals,
+          suitColor: resSuitColor,
+          helmetType: resHelmetType,
+          suitModel: resSuitModel,
         );
         break;
     }
@@ -513,6 +538,9 @@ class ShipMeshRenderer {
     double animationTime = 0.0,
     double legsCompression = 0.0,
     bool showDecals = true,
+    String? suitColor,
+    String? helmetType,
+    String? suitModel,
   }) {
     // 4 Stabilization Antennas (Background Layer)
     _renderAntenna(canvas, const Offset(-1.0, -0.6), const Offset(-1.55, -1.25));
@@ -559,6 +587,9 @@ class ShipMeshRenderer {
       isPanicking: isPanicking,
       isBlinking: isBlinking,
       animationTime: animationTime,
+      suitColor: suitColor,
+      helmetType: helmetType,
+      suitModel: suitModel,
     );
 
     // Landing Gear (Dual Hydraulic Struts)
@@ -601,6 +632,9 @@ class ShipMeshRenderer {
     double legsCompression = 0.0,
     bool showDecals = true,
     double engineThrust = 0.0,
+    String? suitColor,
+    String? helmetType,
+    String? suitModel,
   }) {
     // Delta Wings & Body
     canvas.drawPath(_swiftWingsPath, _swiftWingPaint);
@@ -656,6 +690,9 @@ class ShipMeshRenderer {
       isPanicking: isPanicking,
       isBlinking: isBlinking,
       animationTime: animationTime,
+      suitColor: suitColor,
+      helmetType: helmetType,
+      suitModel: suitModel,
     );
 
     // Landing Skis
@@ -694,6 +731,9 @@ class ShipMeshRenderer {
     double legsCompression = 0.0,
     bool showDecals = true,
     double engineThrust = 0.0,
+    String? suitColor,
+    String? helmetType,
+    String? suitModel,
   }) {
     // Heavy Hull Structure
     canvas.drawPath(_titanPath, _titanBodyPaint);
@@ -737,6 +777,9 @@ class ShipMeshRenderer {
       isPanicking: isPanicking,
       isBlinking: isBlinking,
       animationTime: animationTime,
+      suitColor: suitColor,
+      helmetType: helmetType,
+      suitModel: suitModel,
     );
 
     // Reinforced Heavy Landing Struts
@@ -779,6 +822,9 @@ class ShipMeshRenderer {
     double legsCompression = 0.0,
     bool showDecals = true,
     double rcsThrust = 0.0,
+    String? suitColor,
+    String? helmetType,
+    String? suitModel,
   }) {
     // Diamond Cybernetic Hull & Facets
     canvas.drawPath(_quasarPath, _quasarBodyPaint);
@@ -839,6 +885,9 @@ class ShipMeshRenderer {
       isPanicking: isPanicking,
       isBlinking: isBlinking,
       animationTime: animationTime,
+      suitColor: suitColor,
+      helmetType: helmetType,
+      suitModel: suitModel,
     );
 
     // Ion Levitation Landing Skids
@@ -877,6 +926,9 @@ class ShipMeshRenderer {
     double legsCompression = 0.0,
     bool showDecals = true,
     double engineThrust = 0.0,
+    String? suitColor,
+    String? helmetType,
+    String? suitModel,
   }) {
     // Rugged Industrial Hull
     canvas.drawPath(_cyclonePath, _cycloneBodyPaint);
@@ -923,6 +975,9 @@ class ShipMeshRenderer {
       isPanicking: isPanicking,
       isBlinking: isBlinking,
       animationTime: animationTime,
+      suitColor: suitColor,
+      helmetType: helmetType,
+      suitModel: suitModel,
     );
 
     // Heavy Hydraulic Landing Gear
@@ -948,6 +1003,40 @@ class ShipMeshRenderer {
   }
 
   // =========================================================================
+  // Standalone Pilot Bust Preview Renderer (For Pilot Wardrobe Tab)
+  // =========================================================================
+  static void renderPilotPreview({
+    required Canvas canvas,
+    required Size size,
+    String suitColor = 'classic_orange',
+    String helmetType = 'sphere1',
+    String suitModel = 'sk1_cadet',
+    double animationTime = 0.0,
+    bool isPanicking = false,
+    bool isBlinking = false,
+    Vector2? lookDirection,
+  }) {
+    if (size.width <= 0 || size.height <= 0) return;
+    final double minDim = min(size.width, size.height);
+    final double radius = minDim * 0.36;
+    final Offset center = Offset(size.width / 2, size.height * 0.46);
+
+    _renderPilot(
+      canvas: canvas,
+      cabinCenter: center,
+      radius: radius,
+      shipId: 'sputnik',
+      customSuitColor: suitColor,
+      customHelmetType: helmetType,
+      customSuitModel: suitModel,
+      pilotLookDirection: lookDirection,
+      isPanicking: isPanicking,
+      isBlinking: isBlinking,
+      animationTime: animationTime,
+    );
+  }
+
+  // =========================================================================
   // Live Dynamic Astronaut Simulator
   // =========================================================================
   static void _renderPilot({
@@ -961,6 +1050,12 @@ class ShipMeshRenderer {
     bool isPanicking = false,
     bool isBlinking = false,
     double animationTime = 0.0,
+    String? suitColor,
+    String? helmetType,
+    String? suitModel,
+    String? customSuitColor,
+    String? customHelmetType,
+    String? customSuitModel,
   }) {
     // 1. Dark Cabin Background
     canvas.drawCircle(cabinCenter, radius, _pilotBgPaint);
@@ -985,44 +1080,43 @@ class ShipMeshRenderer {
     final double headScaleY = 1.0 - gCompression;
     final double headScaleX = 1.0 + gCompression * 0.12;
 
-    // Suit Colors & Helmet Details Per Ship Class
-    Color suitColor = Colors.deepOrangeAccent;
-    Color helmetColor = Colors.white;
-    Color visorColor = const Color(0xFF102027);
+    // Resolve Pilot Wardrobe properties
+    final String resolvedSuitColor = customSuitColor ?? suitColor ?? (GameState().initialized ? GameState().suitColor : 'classic_orange');
+    final String resolvedHelmet = customHelmetType ?? helmetType ?? (GameState().initialized ? GameState().selectedHelmet : 'sphere1');
+    final String resolvedSuitModel = customSuitModel ?? suitModel ?? (GameState().initialized ? GameState().selectedSuit : 'sk1_cadet');
 
-    switch (shipId) {
-      case 'swift':
-        suitColor = const Color(0xFF1A237E); // Midnight Blue G-Suit
-        helmetColor = const Color(0xFF37474F); // Jet Fighter Helmet
-        visorColor = const Color(0xFF006064); // Cyan Visor
+    Color baseSuitColor = const Color(0xFFFF5722);
+    Color accentSuitColor = const Color(0xFFE64A19);
+
+    switch (resolvedSuitColor) {
+      case 'nasa_white':
+        baseSuitColor = const Color(0xFFECEFF1);
+        accentSuitColor = const Color(0xFFFFFFFF);
         break;
-      case 'titan':
-        suitColor = const Color(0xFFFFB300); // Hazard Yellow Armored Exo-Suit
-        helmetColor = const Color(0xFF455A64); // Titanium Reinforced Dome
-        visorColor = const Color(0xFF212121);
+      case 'cyber_cyan':
+        baseSuitColor = const Color(0xFF00E5FF);
+        accentSuitColor = const Color(0xFF00838F);
         break;
-      case 'quasar':
-      case 'needle':
-        suitColor = const Color(0xFF1E1E24); // Dark Synthetic Vacuum Suit
-        helmetColor = const Color(0xFF121214); // Cybernetic Helmet
-        visorColor = const Color(0xFF0D47A1); // Deep Blue Ion Visor
+      case 'carbon_black':
+        baseSuitColor = const Color(0xFF212121);
+        accentSuitColor = const Color(0xFF37474F);
         break;
-      case 'cyclone':
-        suitColor = const Color(0xFF757575); // Heavy Grey/Amber Suit
-        helmetColor = const Color(0xFFCFD8DC); // Panoramic Dome
-        visorColor = const Color(0xFF263238);
+      case 'hazmat_yellow':
+        baseSuitColor = const Color(0xFFFFD600);
+        accentSuitColor = const Color(0xFFFF8F00);
         break;
-      case 'sputnik':
+      case 'crimson_interceptor':
+        baseSuitColor = const Color(0xFFD50000);
+        accentSuitColor = const Color(0xFF8B0000);
+        break;
+      case 'classic_orange':
       default:
-        suitColor = Colors.deepOrange; // Classic Sokol-KV2 Orange
-        helmetColor = Colors.white;
-        visorColor = const Color(0xFF102027);
+        baseSuitColor = const Color(0xFFFF5722);
+        accentSuitColor = const Color(0xFFE64A19);
         break;
     }
 
-    final suitPaint = Paint()..color = suitColor;
-    final helmetPaint = Paint()..color = helmetColor;
-    final visorPaint = Paint()..color = visorColor;
+    final suitPaint = Paint()..color = baseSuitColor;
 
     // Astronaut Shoulders / Suit Base
     canvas.drawOval(
@@ -1034,15 +1128,77 @@ class ShipMeshRenderer {
       suitPaint,
     );
 
-    // Class-specific suit chest accents
-    if (shipId == 'swift') {
-      // Oxygen regulator chest harness
-      final harnessPaint = Paint()..color = const Color(0xFF00E5FF)..style = PaintingStyle.stroke..strokeWidth = 0.03;
-      canvas.drawLine(Offset(cabinCenter.dx - 0.15, cabinCenter.dy + 0.4), Offset(cabinCenter.dx + 0.15, cabinCenter.dy + 0.4), harnessPaint);
-    } else if (shipId == 'sputnik') {
-      // Blue ribbing
-      final ribPaint = Paint()..color = const Color(0xFF1E88E5)..style = PaintingStyle.stroke..strokeWidth = 0.025;
-      canvas.drawLine(Offset(cabinCenter.dx - 0.2, cabinCenter.dy + 0.5), Offset(cabinCenter.dx + 0.2, cabinCenter.dy + 0.5), ribPaint);
+    // Suit Model Details & Pauldrons / Harness / Piping
+    switch (resolvedSuitModel) {
+      case 'exo_frame':
+        // Carbon-composite shoulder pauldrons
+        final pauldronPaint = Paint()..color = const Color(0xFF263238)..style = PaintingStyle.fill;
+        final pauldronBorder = Paint()..color = accentSuitColor..style = PaintingStyle.stroke..strokeWidth = 0.02;
+        final leftPauldron = RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset(cabinCenter.dx - radius * 0.46, cabinCenter.dy + radius * 0.52),
+            width: radius * 0.36,
+            height: radius * 0.28,
+          ),
+          const Radius.circular(0.04),
+        );
+        final rightPauldron = RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset(cabinCenter.dx + radius * 0.46, cabinCenter.dy + radius * 0.52),
+            width: radius * 0.36,
+            height: radius * 0.28,
+          ),
+          const Radius.circular(0.04),
+        );
+        canvas.drawRRect(leftPauldron, pauldronPaint);
+        canvas.drawRRect(leftPauldron, pauldronBorder);
+        canvas.drawRRect(rightPauldron, pauldronPaint);
+        canvas.drawRRect(rightPauldron, pauldronBorder);
+
+        // Crossed heavy harness straps
+        final harnessPaint = Paint()..color = const Color(0xFF37474F)..style = PaintingStyle.stroke..strokeWidth = 0.035..strokeCap = StrokeCap.round;
+        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.38, cabinCenter.dy + radius * 0.38), Offset(cabinCenter.dx + radius * 0.22, cabinCenter.dy + radius * 0.78), harnessPaint);
+        canvas.drawLine(Offset(cabinCenter.dx + radius * 0.38, cabinCenter.dy + radius * 0.38), Offset(cabinCenter.dx - radius * 0.22, cabinCenter.dy + radius * 0.78), harnessPaint);
+
+        // Center buckle
+        final bucklePaint = Paint()..color = const Color(0xFFFFB300);
+        canvas.drawCircle(Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.58), radius * 0.08, bucklePaint);
+        break;
+
+      case 'cryo_suit':
+        // Horizontal thermal insulation ribs
+        final ribPaint = Paint()..color = accentSuitColor..style = PaintingStyle.stroke..strokeWidth = 0.025;
+        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.35, cabinCenter.dy + radius * 0.48), Offset(cabinCenter.dx + radius * 0.35, cabinCenter.dy + radius * 0.48), ribPaint);
+        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.30, cabinCenter.dy + radius * 0.62), Offset(cabinCenter.dx + radius * 0.30, cabinCenter.dy + radius * 0.62), ribPaint);
+
+        // Illuminated cryo coolant piping
+        final cryoPipePaint = Paint()..color = const Color(0xFF00E5FF)..style = PaintingStyle.stroke..strokeWidth = 0.03..strokeCap = StrokeCap.round;
+        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.42, cabinCenter.dy + radius * 0.42), Offset(cabinCenter.dx - radius * 0.18, cabinCenter.dy + radius * 0.72), cryoPipePaint);
+        canvas.drawLine(Offset(cabinCenter.dx + radius * 0.42, cabinCenter.dy + radius * 0.42), Offset(cabinCenter.dx + radius * 0.18, cabinCenter.dy + radius * 0.72), cryoPipePaint);
+
+        // Cryo pressure gauge dial
+        final gaugePaint = Paint()..color = const Color(0xFFE0F7FA);
+        final gaugeBorder = Paint()..color = const Color(0xFF00B0FF)..style = PaintingStyle.stroke..strokeWidth = 0.015;
+        final gaugeCenter = Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.55);
+        canvas.drawCircle(gaugeCenter, radius * 0.07, gaugePaint);
+        canvas.drawCircle(gaugeCenter, radius * 0.07, gaugeBorder);
+        break;
+
+      case 'sk1_cadet':
+      default:
+        // Clean collar ring
+        final collarPaint = Paint()..color = accentSuitColor..style = PaintingStyle.stroke..strokeWidth = 0.025;
+        canvas.drawArc(
+          Rect.fromCenter(center: Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.36), width: radius * 0.65, height: radius * 0.25),
+          0,
+          pi,
+          false,
+          collarPaint,
+        );
+
+        // Left-chest mission patch (Cadet star patch)
+        _renderSovietStar(canvas, Offset(cabinCenter.dx - radius * 0.26, cabinCenter.dy + radius * 0.56), radius * 0.09);
+        break;
     }
 
     // Transform Canvas for Head G-Strain Deformation
@@ -1050,23 +1206,85 @@ class ShipMeshRenderer {
     canvas.translate(headPos.dx, headPos.dy);
     canvas.scale(headScaleX, headScaleY);
 
-    // Helmet Outer Shell
-    canvas.drawCircle(Offset.zero, radius * 0.42, helmetPaint);
+    // Helmet Outer Shell & Visor per Helmet Type
+    switch (resolvedHelmet) {
+      case 'cyber_visor':
+        // Hexagonal / angular cybernetic helmet shell
+        final cyberHelmetPaint = Paint()..color = const Color(0xFF1E262B);
+        final cyberBorderPaint = Paint()..color = const Color(0xFF00E5FF)..style = PaintingStyle.stroke..strokeWidth = 0.02;
+        final cyberPath = Path()
+          ..moveTo(-radius * 0.38, -radius * 0.24)
+          ..lineTo(0.0, -radius * 0.43)
+          ..lineTo(radius * 0.38, -radius * 0.24)
+          ..lineTo(radius * 0.42, radius * 0.16)
+          ..lineTo(0.0, radius * 0.38)
+          ..lineTo(-radius * 0.42, radius * 0.16)
+          ..close();
+        canvas.drawPath(cyberPath, cyberHelmetPaint);
+        canvas.drawPath(cyberPath, cyberBorderPaint);
 
-    // Sputnik Red Star on Helmet Forehead
-    if (shipId == 'sputnik') {
-      _renderSovietStar(canvas, Offset(0.0, -radius * 0.28), 0.05);
-    }
+        // Cyber Visor slit
+        final slitRect = Rect.fromCenter(center: const Offset(0.0, -0.02), width: radius * 0.60, height: radius * 0.16);
+        final cyberVisorBg = Paint()..color = const Color(0xFF0D1B2A);
+        canvas.drawRRect(RRect.fromRectAndRadius(slitRect, const Radius.circular(0.03)), cyberVisorBg);
+        canvas.drawRRect(RRect.fromRectAndRadius(slitRect, const Radius.circular(0.03)), Paint()..color = const Color(0xFF00E5FF).withOpacity(0.35));
+        break;
 
-    // Visor Glass (Inner Mask)
-    canvas.drawCircle(const Offset(0.0, -0.02), radius * 0.28, visorPaint);
+      case 'miner_helmet':
+        // Armored reinforced shell
+        final minerShellPaint = Paint()..color = const Color(0xFF546E7A);
+        final minerReinforcePaint = Paint()..color = const Color(0xFF37474F);
+        canvas.drawCircle(Offset.zero, radius * 0.42, minerShellPaint);
+        canvas.drawRect(Rect.fromCenter(center: Offset(0.0, -radius * 0.34), width: radius * 0.48, height: radius * 0.10), minerReinforcePaint);
 
-    // Titan Protective Titanium Cage Grill
-    if (shipId == 'titan') {
-      final grillPaint = Paint()..color = const Color(0xFF78909C)..style = PaintingStyle.stroke..strokeWidth = 0.03;
-      canvas.drawLine(Offset(-radius * 0.22, -0.02), Offset(radius * 0.22, -0.02), grillPaint);
-      canvas.drawLine(Offset(-radius * 0.15, -radius * 0.15), Offset(-radius * 0.15, radius * 0.12), grillPaint);
-      canvas.drawLine(Offset(radius * 0.15, -radius * 0.15), Offset(radius * 0.15, radius * 0.12), grillPaint);
+        // Top mining beacon/headlamp
+        final lampPaint = Paint()..color = const Color(0xFFFFEB3B);
+        final lampGlow = Paint()..color = const Color(0xFFFFD54F).withOpacity(0.5)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.08);
+        canvas.drawCircle(Offset(0.0, -radius * 0.42), radius * 0.12, lampGlow);
+        canvas.drawCircle(Offset(0.0, -radius * 0.42), radius * 0.07, lampPaint);
+
+        // Visor mask
+        canvas.drawCircle(const Offset(0.0, -0.02), radius * 0.28, Paint()..color = const Color(0xFF1B262C));
+
+        // Blast cage wire grate over visor
+        final grillPaint = Paint()..color = const Color(0xFFB0BEC5)..style = PaintingStyle.stroke..strokeWidth = 0.025;
+        canvas.drawLine(Offset(-radius * 0.24, -0.02), Offset(radius * 0.24, -0.02), grillPaint);
+        canvas.drawLine(Offset(-radius * 0.16, -radius * 0.15), Offset(-radius * 0.16, radius * 0.12), grillPaint);
+        canvas.drawLine(Offset(radius * 0.16, -radius * 0.15), Offset(radius * 0.16, radius * 0.12), grillPaint);
+        break;
+
+      case 'swift_aero':
+        // Streamlined aerodynamic teardrop helmet
+        final aeroShellPaint = Paint()..color = const Color(0xFFECEFF1);
+        final aeroFinPaint = Paint()..color = const Color(0xFF00BCD4)..style = PaintingStyle.stroke..strokeWidth = 0.035..strokeCap = StrokeCap.round;
+        final aeroPath = Path()
+          ..moveTo(0.0, -radius * 0.44)
+          ..quadraticBezierTo(radius * 0.44, -radius * 0.18, radius * 0.38, radius * 0.24)
+          ..quadraticBezierTo(0.0, radius * 0.40, -radius * 0.38, radius * 0.24)
+          ..quadraticBezierTo(-radius * 0.44, -radius * 0.18, 0.0, -radius * 0.44)
+          ..close();
+        canvas.drawPath(aeroPath, aeroShellPaint);
+
+        // Side aerodynamic ear fins
+        canvas.drawLine(Offset(-radius * 0.38, -radius * 0.08), Offset(-radius * 0.46, radius * 0.18), aeroFinPaint);
+        canvas.drawLine(Offset(radius * 0.38, -radius * 0.08), Offset(radius * 0.46, radius * 0.18), aeroFinPaint);
+
+        // Tinted amber/gold visor
+        final goldVisorInner = Paint()..color = const Color(0xFF3E2723);
+        canvas.drawOval(Rect.fromCenter(center: const Offset(0.0, -0.02), width: radius * 0.54, height: radius * 0.30), goldVisorInner);
+        canvas.drawOval(Rect.fromCenter(center: const Offset(0.0, -0.02), width: radius * 0.54, height: radius * 0.30), Paint()..color = const Color(0xFFFFB300).withOpacity(0.45));
+        break;
+
+      case 'sphere1':
+      default:
+        // Retro circular bubble helmet shell
+        final helmetPaint = Paint()..color = Colors.white;
+        canvas.drawCircle(Offset.zero, radius * 0.42, helmetPaint);
+
+        // Visor Glass Inner Mask
+        final visorPaint = Paint()..color = const Color(0xFF102027);
+        canvas.drawCircle(const Offset(0.0, -0.02), radius * 0.28, visorPaint);
+        break;
     }
 
     // 3. Dynamic Eye / Pupil Tracking Along Ship Velocity & Threat Vectors

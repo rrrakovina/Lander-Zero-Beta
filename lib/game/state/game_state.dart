@@ -27,6 +27,13 @@ class GameState extends ChangeNotifier {
   int _fuelLevel = 1;
   int _shieldLevel = 1;
 
+  // Гардероб космонавта
+  String _suitColor = 'classic_orange';
+  String _selectedHelmet = 'sphere1';
+  List<String> _ownedHelmets = ['sphere1'];
+  String _selectedSuit = 'sk1_cadet';
+  List<String> _ownedSuits = ['sk1_cadet'];
+
   // Таблица рекордов: список заездов. Каждый элемент: {'name': name, 'map': map, 'distance': d, 'coins': c}
   List<Map<String, dynamic>> _leaderboard = [];
 
@@ -42,7 +49,95 @@ class GameState extends ChangeNotifier {
   int get engineLevel => _engineLevel;
   int get fuelLevel => _fuelLevel;
   int get shieldLevel => _shieldLevel;
+  String get suitColor => _suitColor;
+  String get selectedHelmet => _selectedHelmet;
+  List<String> get ownedHelmets => _ownedHelmets;
+  String get selectedSuit => _selectedSuit;
+  List<String> get ownedSuits => _ownedSuits;
   List<Map<String, dynamic>> get leaderboard => _leaderboard;
+
+  // Каталог 6 цветов скафандра (100% бесплатно)
+  static const List<Map<String, dynamic>> suitColors = [
+    {
+      'id': 'classic_orange',
+      'nameKey': 'color_classic_orange',
+      'color': Color(0xFFFF5722),
+      'accent': Color(0xFFE64A19),
+    },
+    {
+      'id': 'nasa_white',
+      'nameKey': 'color_nasa_white',
+      'color': Color(0xFFECEFF1),
+      'accent': Color(0xFFFFFFFF),
+    },
+    {
+      'id': 'cyber_cyan',
+      'nameKey': 'color_cyber_cyan',
+      'color': Color(0xFF00E5FF),
+      'accent': Color(0xFF00B0FF),
+    },
+    {
+      'id': 'carbon_black',
+      'nameKey': 'color_carbon_black',
+      'color': Color(0xFF212121),
+      'accent': Color(0xFF37474F),
+    },
+    {
+      'id': 'hazmat_yellow',
+      'nameKey': 'color_hazmat_yellow',
+      'color': Color(0xFFFFD600),
+      'accent': Color(0xFFFFAB00),
+    },
+    {
+      'id': 'crimson_interceptor',
+      'nameKey': 'color_crimson_interceptor',
+      'color': Color(0xFFD50000),
+      'accent': Color(0xFFC62828),
+    },
+  ];
+
+  // Каталог 4 типов шлемов (50-100 монет)
+  static const Map<String, Map<String, dynamic>> helmetConfigs = {
+    'sphere1': {
+      'price': 0,
+      'nameKey': 'helmet_sphere1',
+      'descKey': 'helmet_sphere1_desc',
+    },
+    'cyber_visor': {
+      'price': 60,
+      'nameKey': 'helmet_cyber_visor',
+      'descKey': 'helmet_cyber_visor_desc',
+    },
+    'miner_helmet': {
+      'price': 80,
+      'nameKey': 'helmet_miner_helmet',
+      'descKey': 'helmet_miner_helmet_desc',
+    },
+    'swift_aero': {
+      'price': 100,
+      'nameKey': 'helmet_swift_aero',
+      'descKey': 'helmet_swift_aero_desc',
+    },
+  };
+
+  // Каталог 3 моделей костюмов (70-120 монет)
+  static const Map<String, Map<String, dynamic>> suitConfigs = {
+    'sk1_cadet': {
+      'price': 0,
+      'nameKey': 'suit_sk1_cadet',
+      'descKey': 'suit_sk1_cadet_desc',
+    },
+    'exo_frame': {
+      'price': 90,
+      'nameKey': 'suit_exo_frame',
+      'descKey': 'suit_exo_frame_desc',
+    },
+    'cryo_suit': {
+      'price': 120,
+      'nameKey': 'suit_cryo_suit',
+      'descKey': 'suit_cryo_suit_desc',
+    },
+  };
 
   // Характеристики 5 кораблей флота
   static const Map<String, Map<String, dynamic>> rocketConfigs = {
@@ -113,6 +208,11 @@ class GameState extends ChangeNotifier {
       fuelLevel: _fuelLevel,
       shieldLevel: _shieldLevel,
       leaderboardJson: jsonEncode(_leaderboard),
+      suitColor: _suitColor,
+      selectedHelmet: _selectedHelmet,
+      ownedHelmets: _ownedHelmets,
+      selectedSuit: _selectedSuit,
+      ownedSuits: _ownedSuits,
     );
   }
 
@@ -133,6 +233,11 @@ class GameState extends ChangeNotifier {
     final storedFuel = _prefs.getInt('fuelLevel');
     final storedShield = _prefs.getInt('shieldLevel');
     final storedLb = _prefs.getString('leaderboard') ?? '[]';
+    final storedSuitColor = _prefs.getString('suitColor') ?? 'classic_orange';
+    final storedHelmet = _prefs.getString('selectedHelmet') ?? 'sphere1';
+    final storedOwnedHelmets = _prefs.getStringList('ownedHelmets') ?? ['sphere1'];
+    final storedSuit = _prefs.getString('selectedSuit') ?? 'sk1_cadet';
+    final storedOwnedSuits = _prefs.getStringList('ownedSuits') ?? ['sk1_cadet'];
     final storedSig = _prefs.getString(SaveSecurityManager.saveSignatureKey);
 
     if (storedCoins == null && storedFleet == null && storedSig == null) {
@@ -144,6 +249,11 @@ class GameState extends ChangeNotifier {
       _fuelLevel = 1;
       _shieldLevel = 1;
       _leaderboard = [];
+      _suitColor = 'classic_orange';
+      _selectedHelmet = 'sphere1';
+      _ownedHelmets = ['sphere1'];
+      _selectedSuit = 'sk1_cadet';
+      _ownedSuits = ['sk1_cadet'];
 
       await _prefs.setInt('totalCoins', _totalCoins);
       await _prefs.setStringList('ownedRockets', _ownedRockets);
@@ -152,6 +262,11 @@ class GameState extends ChangeNotifier {
       await _prefs.setInt('fuelLevel', _fuelLevel);
       await _prefs.setInt('shieldLevel', _shieldLevel);
       await _prefs.setString('leaderboard', '[]');
+      await _prefs.setString('suitColor', _suitColor);
+      await _prefs.setString('selectedHelmet', _selectedHelmet);
+      await _prefs.setStringList('ownedHelmets', _ownedHelmets);
+      await _prefs.setString('selectedSuit', _selectedSuit);
+      await _prefs.setStringList('ownedSuits', _ownedSuits);
       await _saveIntegrity();
     } else if (storedSig == null) {
       // 2. Migration from legacy save without signature
@@ -166,6 +281,17 @@ class GameState extends ChangeNotifier {
       _engineLevel = (storedEngine ?? 1).clamp(1, 5);
       _fuelLevel = (storedFuel ?? 1).clamp(1, 5);
       _shieldLevel = (storedShield ?? 1).clamp(1, 5);
+
+      _suitColor = storedSuitColor;
+      _selectedHelmet = storedHelmet;
+      _ownedHelmets = List<String>.from(storedOwnedHelmets);
+      if (!_ownedHelmets.contains('sphere1')) _ownedHelmets.add('sphere1');
+      if (!_ownedHelmets.contains(_selectedHelmet)) _selectedHelmet = 'sphere1';
+
+      _selectedSuit = storedSuit;
+      _ownedSuits = List<String>.from(storedOwnedSuits);
+      if (!_ownedSuits.contains('sk1_cadet')) _ownedSuits.add('sk1_cadet');
+      if (!_ownedSuits.contains(_selectedSuit)) _selectedSuit = 'sk1_cadet';
 
       try {
         final List<dynamic> decoded = jsonDecode(storedLb);
@@ -182,6 +308,11 @@ class GameState extends ChangeNotifier {
       final loadedEngine = storedEngine ?? 1;
       final loadedFuel = storedFuel ?? 1;
       final loadedShield = storedShield ?? 1;
+      final loadedSuitColor = storedSuitColor;
+      final loadedHelmet = storedHelmet;
+      final loadedOwnedHelmets = List<String>.from(storedOwnedHelmets);
+      final loadedSuit = storedSuit;
+      final loadedOwnedSuits = List<String>.from(storedOwnedSuits);
 
       final isValid = SaveSecurityManager.verifySignature(
         coins: loadedCoins,
@@ -190,6 +321,11 @@ class GameState extends ChangeNotifier {
         fuelLevel: loadedFuel,
         shieldLevel: loadedShield,
         leaderboardJson: storedLb,
+        suitColor: loadedSuitColor,
+        selectedHelmet: loadedHelmet,
+        ownedHelmets: loadedOwnedHelmets,
+        selectedSuit: loadedSuit,
+        ownedSuits: loadedOwnedSuits,
         signature: storedSig,
       );
 
@@ -207,6 +343,17 @@ class GameState extends ChangeNotifier {
         _fuelLevel = loadedFuel.clamp(1, 5);
         _shieldLevel = loadedShield.clamp(1, 5);
 
+        _suitColor = loadedSuitColor;
+        _selectedHelmet = loadedHelmet;
+        _ownedHelmets = loadedOwnedHelmets;
+        if (!_ownedHelmets.contains('sphere1')) _ownedHelmets.add('sphere1');
+        if (!_ownedHelmets.contains(_selectedHelmet)) _selectedHelmet = 'sphere1';
+
+        _selectedSuit = loadedSuit;
+        _ownedSuits = loadedOwnedSuits;
+        if (!_ownedSuits.contains('sk1_cadet')) _ownedSuits.add('sk1_cadet');
+        if (!_ownedSuits.contains(_selectedSuit)) _selectedSuit = 'sk1_cadet';
+
         try {
           final List<dynamic> decoded = jsonDecode(storedLb);
           _leaderboard = decoded.map((e) => Map<String, dynamic>.from(e)).toList();
@@ -223,6 +370,11 @@ class GameState extends ChangeNotifier {
         _fuelLevel = 1;
         _shieldLevel = 1;
         _leaderboard = [];
+        _suitColor = 'classic_orange';
+        _selectedHelmet = 'sphere1';
+        _ownedHelmets = ['sphere1'];
+        _selectedSuit = 'sk1_cadet';
+        _ownedSuits = ['sk1_cadet'];
 
         await _prefs.setInt('totalCoins', _totalCoins);
         await _prefs.setStringList('ownedRockets', _ownedRockets);
@@ -231,6 +383,11 @@ class GameState extends ChangeNotifier {
         await _prefs.setInt('fuelLevel', _fuelLevel);
         await _prefs.setInt('shieldLevel', _shieldLevel);
         await _prefs.setString('leaderboard', '[]');
+        await _prefs.setString('suitColor', _suitColor);
+        await _prefs.setString('selectedHelmet', _selectedHelmet);
+        await _prefs.setStringList('ownedHelmets', _ownedHelmets);
+        await _prefs.setString('selectedSuit', _selectedSuit);
+        await _prefs.setStringList('ownedSuits', _ownedSuits);
         await _saveIntegrity();
       }
     }
@@ -391,6 +548,87 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // =========================================================================
+  // Гардероб космонавта (Wardrobe Management)
+  // =========================================================================
+
+  /// Установка цвета скафандра (100% бесплатно в любое время)
+  Future<void> setSuitColor(String color) async {
+    _suitColor = color;
+    await _prefs.setString('suitColor', _suitColor);
+    await _saveIntegrity();
+    notifyListeners();
+  }
+
+  /// Псевдоним для выбора цвета
+  Future<void> selectSuitColor(String color) async {
+    await setSuitColor(color);
+  }
+
+  /// Покупка шлема за монеты
+  Future<bool> buyHelmet(String helmetId, int price) async {
+    if (_ownedHelmets.contains(helmetId)) {
+      await selectHelmet(helmetId);
+      return true;
+    }
+    if (canAfford(price)) {
+      _totalCoins -= price;
+      _ownedHelmets.add(helmetId);
+      _selectedHelmet = helmetId;
+      await _prefs.setInt('totalCoins', _totalCoins);
+      await _prefs.setStringList('ownedHelmets', _ownedHelmets);
+      await _prefs.setString('selectedHelmet', _selectedHelmet);
+      await _saveIntegrity();
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  /// Выбор купленного шлема
+  Future<bool> selectHelmet(String helmetId) async {
+    if (_ownedHelmets.contains(helmetId)) {
+      _selectedHelmet = helmetId;
+      await _prefs.setString('selectedHelmet', _selectedHelmet);
+      await _saveIntegrity();
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  /// Покупка модели костюма за монеты
+  Future<bool> buySuit(String suitId, int price) async {
+    if (_ownedSuits.contains(suitId)) {
+      await selectSuit(suitId);
+      return true;
+    }
+    if (canAfford(price)) {
+      _totalCoins -= price;
+      _ownedSuits.add(suitId);
+      _selectedSuit = suitId;
+      await _prefs.setInt('totalCoins', _totalCoins);
+      await _prefs.setStringList('ownedSuits', _ownedSuits);
+      await _prefs.setString('selectedSuit', _selectedSuit);
+      await _saveIntegrity();
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  /// Выбор купленного костюма
+  Future<bool> selectSuit(String suitId) async {
+    if (_ownedSuits.contains(suitId)) {
+      _selectedSuit = suitId;
+      await _prefs.setString('selectedSuit', _selectedSuit);
+      await _saveIntegrity();
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
   // Переводы для локализации
   static const Map<String, Map<String, String>> _translations = {
     'ru': {
@@ -408,9 +646,37 @@ class GameState extends ChangeNotifier {
       'upgrade_cost': 'Стоимость прокачки',
       'tab_upgrades': 'МОДЕРНИЗАЦИЯ',
       'tab_cabins': 'КАБИНЫ',
+      'tab_pilot': 'ПИЛОТ',
+      'suit_color': 'ЦВЕТ СКАФАНДРА',
+      'free_color': 'БЕСПЛАТНО',
+      'helmet_type': 'ТИП ШЛЕМА',
+      'suit_model': 'МОДЕЛЬ КОСТЮМА',
+      'pilot_callsign': 'ПОЗЫВНОЙ ПИЛОТА',
+      'equip': 'ВЫБРАТЬ',
+      'equipped': 'НАДЕТО',
       'buy': 'КУПИТЬ',
       'select': 'ВЫБРАТЬ',
       'selected': 'ВЫБРАНО',
+      'color_classic_orange': 'Классический оранжевый',
+      'color_nasa_white': 'NASA Белый',
+      'color_cyber_cyan': 'Кибер-циан',
+      'color_carbon_black': 'Карбоновый черный',
+      'color_hazmat_yellow': 'Защитный желтый',
+      'color_crimson_interceptor': 'Багровый перехватчик',
+      'helmet_sphere1': 'Сфера-1',
+      'helmet_sphere1_desc': 'Ретро-купол с панорамным обзором.',
+      'helmet_cyber_visor': 'Кибер-Визор',
+      'helmet_cyber_visor_desc': 'Угловатый шлем с неоновой щелью визора.',
+      'helmet_miner_helmet': 'Шлем Шахтера',
+      'helmet_miner_helmet_desc': 'Бронированная стальная решетка и прочный корпус.',
+      'helmet_swift_aero': 'Стриж-Аэро',
+      'helmet_swift_aero_desc': 'Обтекаемый шлем перехватчика с золотым визором.',
+      'suit_sk1_cadet': 'СК-1 Курсант',
+      'suit_sk1_cadet_desc': 'Стандартный летный костюм с шевроном миссии.',
+      'suit_exo_frame': 'Экзо-Каркас',
+      'suit_exo_frame_desc': 'Усиленный наплечный каркас и кислородные трубки.',
+      'suit_cryo_suit': 'Крио-Костюм',
+      'suit_cryo_suit_desc': 'Термоизоляционные ребра и крио-трубки.',
       'map_select': 'ВЫБОР КАРТЫ',
       'map_echo': 'Каньон Эхо',
       'map_echo_desc': 'Спокойная пещера. Нормальная гравитация.',
@@ -467,9 +733,37 @@ class GameState extends ChangeNotifier {
       'upgrade_cost': 'Upgrade Cost',
       'tab_upgrades': 'UPGRADES',
       'tab_cabins': 'ROCKETS',
+      'tab_pilot': 'PILOT',
+      'suit_color': 'SUIT COLOR',
+      'free_color': 'FREE',
+      'helmet_type': 'HELMET TYPE',
+      'suit_model': 'SUIT MODEL',
+      'pilot_callsign': 'PILOT CALLSIGN',
+      'equip': 'EQUIP',
+      'equipped': 'EQUIPPED',
       'buy': 'BUY',
       'select': 'SELECT',
       'selected': 'SELECTED',
+      'color_classic_orange': 'Classic Orange',
+      'color_nasa_white': 'NASA White',
+      'color_cyber_cyan': 'Cyber Cyan',
+      'color_carbon_black': 'Carbon Black',
+      'color_hazmat_yellow': 'Hazmat Yellow',
+      'color_crimson_interceptor': 'Crimson Interceptor',
+      'helmet_sphere1': 'Sphere-1',
+      'helmet_sphere1_desc': 'Retro bubble dome with panoramic visibility.',
+      'helmet_cyber_visor': 'Cyber-Visor',
+      'helmet_cyber_visor_desc': 'Angular helmet with narrow neon visor slit.',
+      'helmet_miner_helmet': 'Miner Helmet',
+      'helmet_miner_helmet_desc': 'Armored steel cross-grate and reinforced casing.',
+      'helmet_swift_aero': 'Swift-Aero',
+      'helmet_swift_aero_desc': 'Streamlined interceptor helmet with gold-tinted visor.',
+      'suit_sk1_cadet': 'SK-1 Cadet',
+      'suit_sk1_cadet_desc': 'Standard flight suit with mission patch.',
+      'suit_exo_frame': 'Exo-Frame',
+      'suit_exo_frame_desc': 'Padded pauldron harness and dual oxygen tubes.',
+      'suit_cryo_suit': 'Cryo-Suit',
+      'suit_cryo_suit_desc': 'Thermal layered seams with illuminated cryo-piping.',
       'map_select': 'SELECT MAP',
       'map_echo': 'Echo Canyon',
       'map_echo_desc': 'Quiet cave. Normal gravity.',

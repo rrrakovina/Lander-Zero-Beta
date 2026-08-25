@@ -6,7 +6,8 @@ import '../../game/lander_zero_game.dart';
 import '../../game/components/cave.dart';
 
 /// Real-time tactical radar minimap widget rendering cave contours,
-/// player lander heading, cargo capsule beacon, docking tether, and exit zone.
+/// multi-chain branch ledges, perimeter beacons, player lander heading,
+/// cargo capsule beacon, docking tether, and exit zone.
 class MinimapWidget extends StatelessWidget {
   final LanderZeroGame game;
   final double width;
@@ -19,13 +20,13 @@ class MinimapWidget extends StatelessWidget {
     this.height = 92.0,
   });
 
-  /// Calibrated radar world bounds covering all planetary caves with margin:
+  /// Calibrated radar world bounds covering all 5 planetary maps without clipping:
   /// X in [-36.0, 36.0] (Delta X = 72.0 m)
-  /// Y in [-30.0, 16.0] (Delta Y = 46.0 m)
+  /// Y in [-30.0, 24.0] (Delta Y = 54.0 m)
   static const double minWorldX = -36.0;
   static const double maxWorldX = 36.0;
   static const double minWorldY = -30.0;
-  static const double maxWorldY = 16.0;
+  static const double maxWorldY = 24.0;
 
   /// Projects world horizontal coordinate (meters) to canvas X (pixels).
   static double projectX(double worldX, double canvasWidth) {
@@ -170,6 +171,13 @@ class _MinimapPainter extends CustomPainter {
     ..strokeCap = StrokeCap.round
     ..strokeJoin = StrokeJoin.round;
 
+  static final Paint _branchPaint = Paint()
+    ..color = const Color(0xCC00E5FF)
+    ..strokeWidth = 1.4
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round
+    ..strokeJoin = StrokeJoin.round;
+
   static final Paint _startPlatformPaint = Paint()
     ..color = const Color(0x99FFFFFF)
     ..strokeWidth = 2.0
@@ -219,25 +227,43 @@ class _MinimapPainter extends CustomPainter {
     ..strokeWidth = 1.4
     ..strokeCap = StrokeCap.round;
 
+  static final Paint _beaconPaint = Paint()
+    ..color = const Color(0xFFE040FB)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.0;
+
+  static final Paint _beaconDotPaint = Paint()
+    ..color = const Color(0xFFE040FB)
+    ..style = PaintingStyle.fill;
+
+  static final Paint _boundaryBorderPaint = Paint()
+    ..color = const Color(0x33E040FB)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 0.8;
+
   // Cached Path objects for static cave terrain
   static final Path _cachedFloorPath = Path();
   static final Path _cachedCeilingPath = Path();
+  static final Path _cachedBranchPath = Path();
   static Size _cachedSize = Size.zero;
   static Object? _cachedCaveIdentity;
   static int _cachedFloorLength = 0;
   static int _cachedCeilingLength = 0;
+  static int _cachedBranchLength = 0;
 
   static void _updateCaveCache(Cave cave, Size size) {
     if (_cachedSize == size &&
         identical(_cachedCaveIdentity, cave) &&
         _cachedFloorLength == cave.floorPoints.length &&
         _cachedCeilingLength == cave.ceilingPoints.length &&
+        _cachedBranchLength == cave.branchPoints.length &&
         cave.floorPoints.isNotEmpty) {
       return;
     }
 
     _cachedFloorPath.reset();
     _cachedCeilingPath.reset();
+    _cachedBranchPath.reset();
 
     if (cave.floorPoints.isNotEmpty) {
       _cachedFloorPath.moveTo(
@@ -265,10 +291,24 @@ class _MinimapPainter extends CustomPainter {
       }
     }
 
+    if (cave.branchPoints.isNotEmpty) {
+      _cachedBranchPath.moveTo(
+        MinimapWidget.projectX(cave.branchPoints.first.x, size.width),
+        MinimapWidget.projectY(cave.branchPoints.first.y, size.height),
+      );
+      for (int i = 1; i < cave.branchPoints.length; i++) {
+        _cachedBranchPath.lineTo(
+          MinimapWidget.projectX(cave.branchPoints[i].x, size.width),
+          MinimapWidget.projectY(cave.branchPoints[i].y, size.height),
+        );
+      }
+    }
+
     _cachedSize = size;
     _cachedCaveIdentity = cave;
     _cachedFloorLength = cave.floorPoints.length;
     _cachedCeilingLength = cave.ceilingPoints.length;
+    _cachedBranchLength = cave.branchPoints.length;
   }
 
   @override
@@ -300,8 +340,26 @@ class _MinimapPainter extends CustomPainter {
     if (_cachedCeilingLength > 0) {
       canvas.drawPath(_cachedCeilingPath, _caveCeilingPaint);
     }
+    if (_cachedBranchLength > 0) {
+      canvas.drawPath(_cachedBranchPath, _branchPaint);
+    }
 
-    // 3. Start platform marker
+    // 3. Orbital Debris perimeter beacons and boundary lines
+    if (cave.perimeterBeacons.length >= 4) {
+      final p0 = MinimapWidget.projectOffset(cave.perimeterBeacons[0], size);
+      final p2 = MinimapWidget.projectOffset(cave.perimeterBeacons[2], size);
+
+      final boundaryRect = Rect.fromLTRB(p0.dx, p0.dy, p2.dx, p2.dy);
+      canvas.drawRect(boundaryRect, _boundaryBorderPaint);
+
+      for (final beacon in cave.perimeterBeacons) {
+        final screenPos = MinimapWidget.projectOffset(beacon, size);
+        canvas.drawCircle(screenPos, 2.0, _beaconDotPaint);
+        canvas.drawCircle(screenPos, 4.0, _beaconPaint);
+      }
+    }
+
+    // 4. Start platform marker
     final startPos = cave.startPlatform;
     final double startScreenX = MinimapWidget.projectX(startPos.x, size.width);
     final double startScreenY = MinimapWidget.projectY(startPos.y, size.height);
@@ -312,7 +370,7 @@ class _MinimapPainter extends CustomPainter {
     );
     canvas.drawCircle(Offset(startScreenX, startScreenY), 1.6, _startDotPaint);
 
-    // 4. Exit extraction zone beacon & tactical brackets
+    // 5. Exit extraction zone beacon & tactical brackets
     final exitPos = cave.exitPlatform;
     final double exitScreenX = MinimapWidget.projectX(exitPos.x, size.width);
     final double exitScreenY = MinimapWidget.projectY(exitPos.y, size.height);
@@ -336,7 +394,7 @@ class _MinimapPainter extends CustomPainter {
     canvas.drawLine(Offset(exitScreenX + br, exitScreenY + br), Offset(exitScreenX + br - bn, exitScreenY + br), _exitBracketPaint);
     canvas.drawLine(Offset(exitScreenX + br, exitScreenY + br), Offset(exitScreenX + br, exitScreenY + br - bn), _exitBracketPaint);
 
-    // 5. Cargo capsule beacon
+    // 6. Cargo capsule beacon
     double cargoScreenX = 0.0;
     double cargoScreenY = 0.0;
     bool hasCargoPos = false;
@@ -352,7 +410,7 @@ class _MinimapPainter extends CustomPainter {
       canvas.drawCircle(Offset(cargoScreenX, cargoScreenY), 5.0, _cargoRingPaint);
     }
 
-    // 6. Player lander, heading vector, and pulsating radar ring
+    // 7. Player lander, heading vector, and pulsating radar ring
     if (game.lander.isMounted) {
       final landerPos = game.lander.body.position;
       final double landerScreenX = MinimapWidget.projectX(landerPos.x, size.width);
