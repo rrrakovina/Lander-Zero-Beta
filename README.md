@@ -1,9 +1,11 @@
-# Lander Zero (Rescue Ops)
+# Lander Zero: Deep Space Rescue Ops
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.44+-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
-[![Flame Engine](https://img.shields.io/badge/Flame-1.10+-E65100?logo=dart&logoColor=white)](https://flame-engine.org)
+[![Flame Engine](https://img.shields.io/badge/Flame-1.37+-E65100?logo=dart&logoColor=white)](https://flame-engine.org)
 [![Forge2D](https://img.shields.io/badge/Physics-Forge2D-29B6F6)](https://pub.dev/packages/flame_forge2d)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Security: HMAC--SHA256](https://img.shields.io/badge/Security-HMAC--SHA256-4CAF50)](https://pub.dev/packages/crypto)
+[![Tests: 376 Passing](https://img.shields.io/badge/Tests-376%20Passed-brightgreen.svg)](test/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **🎮 Play Online / Играть онлайн:** [https://rrrakovina.github.io/Lander-Zero-Beta/](https://rrrakovina.github.io/Lander-Zero-Beta/)
 
@@ -13,146 +15,142 @@
 
 ## English Version
 
-**Lander Zero (Rescue Ops)** is a 2D physics-based space lander game built using **Flutter** and the **Flame Engine** (leveraging **Forge2D** for physical simulation). 
+### Overview
+**Lander Zero: Deep Space Rescue Ops** is a retro-futuristic, physics-driven planetary salvage simulation developed with **Flutter**, **Flame Engine**, and **Forge2D**. 
 
-The gameplay focuses on rescue operations in narrow, hazardous caves. Players must descend into deep canyon shafts, dock with a cargo capsule or survivor pod via a flexible rope, and lift them back to the surface while managing the pendulum effect of the swinging cargo, gravity, and wind.
-
----
-
-### 🎮 Gameplay & Mechanics
-
-*   **Dual-Thruster Controls:** Tap the left side of the screen to fire the left thruster (tilts the ship right and gains diagonal upward thrust). Tap the right side for the right thruster. Hold both for balanced vertical lift.
-*   **Flexible Rope Physics:** The capsule is connected to the lander using a **12-segment physical cable**. The swinging cargo shifts the lander's center of gravity, requiring thruster corrections.
-*   **Two-Phase Missions:**
-    *   *Descent:* Navigate carefully into the depths to locate and dock with the capsule.
-    *   *Ascent:* Lift the heavy cargo back to the exit hatch. The ship becomes heavier and less maneuverable with increased fuel consumption.
-*   **Garage & Customization:** Upgrade the lander's engines, shield durability, and fuel capacity using collected stars, or purchase alternative ships (*Sputnik*, *Cyclone*, *Needle*).
+Piloting specialized landing craft through hazardous extraterrestrial subterranean caverns and zero-gravity orbital wreckage, players must execute high-precision navigation, tether cargo containers with multi-link elastic ropes, and safely extract assets while countering gravitational anomalies, lateral plasma winds, and structural hazards.
 
 ---
 
-### ✨ Visual & Technical Features
+### Key Game Mechanics
 
-*   **UI Design:** Cyber-industrial theme utilizing glassmorphic panels and animated perspective background grids.
-*   **Dynamic Landing Modules:** Ships float in the hangar menus. Cockpits feature dynamic glare sweeps, and the pilot's head bobs in response to physical forces.
-*   **Thruster Plumes:** Engines render with a white-hot plasma core and trailing cyan/amber spark particles.
-*   **Active Rope Tension HUD:** The cable changes color in real-time from neon cyan (slack/safe) to crimson (high tension) and changes thickness based on the load.
-*   **Collision Shields:** A temporary cyan force field dome flashes around the hull upon heavy impact.
-*   **Map Atmospheres:** Each cave map has unique visual effects (e.g. lava heat distortion inside the *Core* depths, wind streams in the *Wind Shaft*).
+#### 1. Dual-Vector Propulsion & Flight Dynamics
+* **Independent Differential Thrust:** Dual thruster controls enabling simultaneous pitch management, differential torque, and coordinated vertical ascent.
+* **Mass Multipliers & Aerodynamic Profiles:** Unique vessel weights, moments of inertia, and linear/angular damping profiles across the fleet.
+
+#### 2. Multi-Segment Tether & Pendulum Physics
+* **12-Node Discrete Elastic Cable:** Realistic tensile mechanics with visual stress-state HUD coloring (cyan for nominal load, orange for elastic strain, crimson for critical failure).
+* **Dynamic Center-of-Mass Shifts:** Oscillating cargo dynamics induce rotational momentum on the host vessel, demanding counter-thrust corrections.
+
+#### 3. Expanded Fleet & Specialization
+* **«Sputnik-1» (`sputnik`)**: Classic Soviet-era space pioneer; balanced thrust, fuel, and armor. *(Default starter, free)*
+* **«Swift-02» (`swift`)**: Lightweight high-speed interceptor ($40.0$ thrust, agile vectoring, reduced hull strength). *(Default starter, free)*
+* **«Cyclone» (`cyclone`)**: Heavy industrial transporter ($180.0$ armor rating, high-capacity propellant tanks).
+* **«Needle» (`needle`)**: Precision speedster with low aerodynamic drag and lightweight ski skids.
+* **«Titan-V» (`titan`)**: Armored dreadnought with triple-cluster main thrusters and heavy impact damping ($240.0$ shield).
+* **«Quasar-IX» (`quasar`)**: Experimental ion craft featuring bilateral reaction control micro-thrusters (RCS).
+
+#### 4. Vector Decals & Live Astronaut Simulation
+* **Procedural Vector Insignias:** High-contrast hull typography and hazard striping (`СССР-01`, `SWIFT-02`, `TITAN-V`, `QUASAR-IX`, `CY-88`, `INTERCEPTOR-07`).
+* **Dynamic Pilot Simulation:** Real-time head and ocular tracking oriented toward velocity vectors and terrain hazards, physiological $G$-force strain, and critical status pupil dilation.
+
+#### 5. Planetary Biomes & Environmental Anomalies
+* **Echo Canyon (`echo`)**: Temperate baseline cavern with falling limestone formations and standard gravity ($1.0g$).
+* **Solar Winds (`wind`)**: Exposed cosmic rift with ionized lateral plasma gusts and micro-meteorite turbulence.
+* **Deep Core (`core`)**: High-gravity anomaly ($1.5g$) with geothermal magma vents, thermal air distortion, and elevated structural collision multipliers.
+* **Europa Ice Rift (`ice`)**: Cryogenic sub-surface cavern with reduced lunar gravity ($0.65g$), ultra-low surface friction ($\mu=0.08$), and falling ice stalactites.
+* **Orbital Wreckage (`orbit`)**: Microgravity environment ($0.0g$) requiring reverse thruster deceleration and pure rotational inertia governance.
+* **Endless Rescue Mode (`endless`)**: Procedural chunk-based endless expedition featuring chained survivor extractions and outpost refuel depots.
+
+#### 6. Cybernetic Cockpit Telemetry
+* **Attitude / Artificial Horizon:** Pitch ladder and banking inclination gauges.
+* **Radial $G$-Force Meter:** Dynamic real-time acceleration tracking.
+* **Directional Proximity Radar:** Audio-visual alarms detecting imminent cavern wall collisions.
+* **Base Radio Transceiver:** Contextual procedural dialogue with animated speaker portraits.
+
+#### 7. 12 Persistent Achievements & Cryptographic Security
+* Comprehensive achievement matrix rewarding economic efficiency, terminal velocity thresholds, zero-damage landings, and fleet mastery.
+* **HMAC-SHA256 Anti-Tamper Security:** Cryptographic signature hashing protecting local `SharedPreferences` state from unauthorized modification.
 
 ---
 
-### 🚀 Getting Started
+### Technical Architecture & Directory Layout
 
-#### Prerequisites
-*   [Flutter SDK](https://flutter.dev/docs/get-started/install) (version 3.44 or higher)
-*   [Node.js](https://nodejs.org/) (optional, only needed for local web hosting)
-
-#### Running Locally (Desktop / Mobile)
-1. Install project dependencies:
-   ```bash
-   flutter pub get
-   ```
-2. Launch the game:
-   ```bash
-   flutter run
-   ```
-
-#### Web Version (WASM / Multithreading)
-Due to multithreading and WebAssembly requirements, the web version requires specific HTTP security headers (`Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy`). A local helper server is provided:
-1. Compile the web version to WebAssembly:
-   ```bash
-   flutter build web --wasm
-   ```
-2. Install server packages:
-   ```bash
-   npm install
-   ```
-3. Run the local server:
-   ```bash
-   node serve.js
-   ```
-4. Open `http://localhost:8080` in your web browser.
+```
+lander_zero/
+├── assets/audio/                 # Synthesized retro audio assets (SFX & BGM)
+├── lib/
+│   ├── game/
+│   │   ├── audio/                # GameAudioManager & sound FX controllers
+│   │   ├── components/           # Forge2D physics entities (Lander, Rope, Cave, Pickups)
+│   │   ├── config/               # Physical world constants & aesthetic palette
+│   │   ├── rendering/            # Unified vector mesh rendering engines
+│   │   ├── state/                # GameState, SaveSecurityManager, Achievements
+│   │   └── lander_zero_game.dart # Flame Forge2D central game loop
+│   ├── ui/
+│   │   ├── dialogs/              # Modals (Achievements, Settings, Leaderboards)
+│   │   ├── painters/             # ShipMeshRenderer, Radar & Holographic visualizers
+│   │   ├── screens/              # Menu, Garage, MapSelect, Flight Cadet Terminal
+│   │   └── widgets/              # MinimapWidget, CockpitHUD, GlassPanel
+│   └── main.dart                 # Application bootstrap & routing
+└── test/                         # 19 comprehensive test suites (376 unit/widget tests)
+```
 
 ---
 
 ## Русская Версия
 
-**Lander Zero (Rescue Ops)** — это 2D-симулятор космического посадочного модуля, разработанный на **Flutter** с использованием игрового движка **Flame** и физического движка **Forge2D**.
+### О проекте
+**Lander Zero: Deep Space Rescue Ops** — это научно-фантастический физический 2D-симулятор спасательных космических операций, разработанный на базе **Flutter**, **Flame Engine** и **Forge2D**.
 
-Игровой процесс сфокусирован на проведении спасательных операций. Игроку необходимо спускаться в узкие пещеры, прикреплять спасательную капсулу с помощью гибкого троса и эвакуировать её на поверхность, преодолевая гравитационные аномалии, ветер и инерцию раскачивающегося груза.
-
----
-
-### 🎮 Геймплей и Механики
-
-*   **Двухкнопочная схема управления:** Нажатие на левую часть экрана включает левый двигатель (корабль наклоняется вправо и ускоряется по диагонали вверх-вправо). Нажатие справа включает правый двигатель. Зажатие обеих сторон дает вертикальный взлет.
-*   **Физика гибкого троса:** Капсула крепится к днищу модуля с помощью **12-звенного физического кабеля**. Раскачивающийся груз смещает центр тяжести корабля, что требует компенсации маневрами.
-*   **Две фазы полета:**
-    *   *Спуск:* Аккуратный полет в глубину шахты для поиска и автоматической стыковки с капсулой.
-    *   *Эвакуация:* Подъем с тяжелым грузом к верхнему шлюзу при повышенном расходе топлива и сниженной маневренности модуля.
-*   **Гараж и Улучшения:** Улучшение двигателей модуля, прочности корпуса и емкости топливных баков за собранные звезды, а также покупка альтернативных кораблей (*Спутник*, *Ураган*, *Игла*).
+Игроку предстоит управлять специализированными посадочными модулями в недрах аномальных внеземных каньонов и в невесомости орбитальных свалок, осуществлять ювелирный спуск, захватывать спасательные контейнеры многозвенным тросом и эвакуировать груз в условиях гравитационных перегрузок, боковых солнечных ветров и сложного рельефа.
 
 ---
 
-### ✨ Графика и Оформление
+### Ключевые Механики и Особенности
 
-*   **Интерфейс:** Оформление в стиле темного неонового индастриала с эффектом матового стекла (glassmorphism) и анимированной фоновой сеткой.
-*   **Визуализация кораблей:** Анимация покачивания модулей в меню, динамические блики на стекле кабины и покачивание головы пилота под действием физических сил.
-*   **Реактивное пламя:** Выхлоп двигателей со светящимся плазменным ядром и частицами искр.
-*   **Индикация натяжения троса:** Трос меняет цвет (от бирюзового к красному) и толщину в зависимости от растяжения и физической нагрузки.
-*   **Силовой щит:** Сферическое защитное поле, кратковременно вспыхивающее вокруг обшивки при соударениях со скалами.
-*   **Климат уровней:** Тематическое оформление пещер (эффект теплового марева в «Ядре», анимированные потоки ветра на ветреном уровне).
+#### 1. Векторное Двухдвигательное Управление
+* **Дифференциальная тяга:** Независимое управление левым и правым маршевыми двигателями для регулирования угла тангажа, маневрирования и вертикального подъема.
+* **Физика массы и инерции:** Реалистичный расчет момента инерции, массы корпуса и сопротивления среды для каждого корабля.
 
----
+#### 2. Физика 12-Звенного Гибкого Троса
+* **Дискретный упругий кабель:** Динамическое натяжение с визуальной цветовой индикацией нагрузки (бирюзовый — штатно, оранжевый — натяжение, красный — критическая нагрузка/обрыв).
+* **Маятниковый эффект:** Раскачивание подвешенного контейнера смещает центр тяжести корабля, требуя постоянной компенсации вектором тяги.
 
-### 🚀 Инструкция по Запуску
+#### 3. Расширенный Флот Кораблей
+* **«Спутник-1» (`sputnik`)**: Базовый советский модуль со сбалансированными характеристиками. *(Открыт на старте бесплатно)*
+* **«Стриж / Swift-02» (`swift`)**: Высокоскоростной маневренный перехватчик с форсированной тягой ($40.0$), но облегченным корпусом. *(Открыт на старте бесплатно)*
+* **«Ураган» (`cyclone`)**: Тяжелый грузовой тягач с усиленной броней ($180.0$) и объемными баками.
+* **«Игла» (`needle`)**: Обтекаемый скоростной модуль с минимальным профилем сопротивления и посадочными лыжами.
+* **«Буран-М / Titan-V» (`titan`)**: Тяжелый спасательный дредноут с трехсопельной силовой установкой и бронезащитой ($240.0$).
+* **«Квазар / Quasar-IX» (`quasar`)**: Научный модуль на ионной тяге с боковыми импульсными маневровыми микродвигателями (RCS).
 
-#### Системные Требования
-*   [Flutter SDK](https://flutter.dev/docs/get-started/install) (версии 3.44 или выше)
-*   [Node.js](https://nodejs.org/) (опционально, только для веб-версии)
+#### 4. Векторные Декали и Живой Космонавт
+* **Четкая бортовая маркировка:** Векторные надписи, шевроны опасности и номера (`СССР-01`, `SWIFT-02`, `TITAN-V`, `QUASAR-IX`, `CY-88`, `INTERCEPTOR-07`).
+* **Анимация пилота:** Слежение взглядом и поворот шлема по вектору скорости и к опасным объектам, деформация лица при перегрузках $G$, расширение зрачков и паника при критическом уроне или нехватке топлива.
 
-#### Локальный запуск (Мобильные / Desktop)
-1. Установите библиотеки проекта:
-   ```bash
-   flutter pub get
-   ```
-2. Запустите игру:
-   ```bash
-   flutter run
-   ```
+#### 5. Планетарные Биомы и Режимы
+* **Каньон Эхо (`echo`)**: Базовая пещера со стандартной гравитацией ($1.0g$) и разрушаемыми сталактитами.
+* **Солнечные Ветра (`wind`)**: Разлом с открытым космосом, непрерывным боковым сносом плазменным ветром и турбулентностью.
+* **Глубинное Ядро (`core`)**: Тяжелая гравитация ($1.5g$), геотермальные гейзеры и повышенный урон от соударений.
+* **Ледяные Разломы Европы (`ice`)**: Криогенная шахта с пониженной гравитацией ($0.65g$), сверхскользким грунтом ($\mu=0.08$) и падающими сосульками.
+* **Орбитальные Обломки (`orbit`)**: Полная невесомость ($0.0g$), требующая реверсивного торможения и гашения угловой инерции.
+* **Бесконечная Экспедиция (`endless`)**: Процедурный бесконечный режим с цепочкой спасаемых капсул, чекпоинтами дозаправки и возрастающей сложностью.
 
-#### Запуск в Браузере (WASM / Мультипоточность)
-Для работы физического движка Flame Forge2D на WebAssembly требуются HTTP-заголовки безопасности `Cross-Origin-Opener-Policy` и `Cross-Origin-Embedder-Policy`. Запуск производится через локальный сервер:
-1. Соберите веб-версию:
-   ```bash
-   flutter build web --wasm
-   ```
-2. Установите зависимости сервера:
-   ```bash
-   npm install
-   ```
-3. Запустите веб-сервер:
-   ```bash
-   node serve.js
-   ```
-4. Откройте в браузере `http://localhost:8080`.
+#### 6. Кибернетический HUD Кокпита
+* **Авиагоризонт и шкала тангажа.**
+* **Дуговой стрелочный $G$-метр перегрузки.**
+* **Датчик опасного сближения (Proximity Warning)** со звуковым и визуальным предупреждением.
+* **Окно радиопереговоров ЦУП** с анимированными портретами и репликами.
+
+#### 7. 12 Достижений и Защита Сохранений (HMAC-SHA256)
+* Прогресс по 12 уникальным достижениям с выдачей наград.
+* Криптографическая защита локального прогресса и монет от несанкционированной модификации.
 
 ---
 
-## 📁 Project Structure / Структура проекта
+### Запуск и Разработка
 
-```
-lander_zero/
-├── android/                  # Android native configuration
-├── assets/                   # Game audio and graphic assets
-├── lib/                      # Game source code
-│   ├── game/                 # Flame & Forge2D gameplay components, physics
-│   ├── ui/                   # Flutter menus, overlays, settings and screens
-│   └── main.dart             # App entry point & Router
-├── scripts/                  # Development scripts (e.g. generate_audio.py)
-├── test/                     # Unit & widget tests
-├── web/                      # Flutter Web shell
-├── package.json              # Node.js dependencies for serve.js
-├── serve.js                  # Custom local server for Flutter Web testing
-└── pubspec.yaml              # Flutter dependencies and assets manifest
+```bash
+# 1. Установка зависимостей
+flutter pub get
+
+# 2. Запуск локального тестового набора (376 тестов)
+flutter test
+
+# 3. Сборка для Веб (WASM / CanvasKit)
+flutter build web --release --base-href="./"
+
+# 4. Локальный запуск на десктопе / мобильных устройствах
+flutter run
 ```
