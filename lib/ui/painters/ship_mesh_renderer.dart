@@ -402,9 +402,9 @@ class ShipMeshRenderer {
     }
 
     final normalizedId = _normalizeShipId(shipId);
-    final String resSuitColor = customSuitColor ?? suitColor ?? 'classic_orange';
-    final String resHelmetType = customHelmetType ?? helmetType ?? 'sphere1';
-    final String resSuitModel = customSuitModel ?? suitModel ?? 'sk1_cadet';
+    final String resSuitColor = customSuitColor ?? suitColor ?? (GameState().initialized ? GameState().suitColor : 'classic_orange');
+    final String resHelmetType = customHelmetType ?? helmetType ?? (GameState().initialized ? GameState().selectedHelmet : 'sphere1');
+    final String resSuitModel = customSuitModel ?? suitModel ?? (GameState().initialized ? GameState().selectedSuit : 'sk1_cadet');
 
     switch (normalizedId) {
       case 'swift':

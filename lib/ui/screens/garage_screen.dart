@@ -427,6 +427,9 @@ class _GarageWidgetState extends State<GarageWidget> with SingleTickerProviderSt
                       cabinColor: cabinColor,
                       isSelected: isSelected,
                       selectedText: state.translate('selected').toUpperCase(),
+                      suitColor: state.suitColor,
+                      helmetType: state.selectedHelmet,
+                      suitModel: state.selectedSuit,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1247,6 +1250,9 @@ class CabinPreviewWidget extends StatefulWidget {
   final Color cabinColor;
   final bool isSelected;
   final String selectedText;
+  final String? suitColor;
+  final String? helmetType;
+  final String? suitModel;
 
   const CabinPreviewWidget({
     super.key,
@@ -1254,6 +1260,9 @@ class CabinPreviewWidget extends StatefulWidget {
     required this.cabinColor,
     required this.isSelected,
     required this.selectedText,
+    this.suitColor,
+    this.helmetType,
+    this.suitModel,
   });
 
   @override
@@ -1321,6 +1330,9 @@ class _CabinPreviewWidgetState extends State<CabinPreviewWidget> with SingleTick
                             animationTime: _controller.value * 2 * pi,
                             glowColor: widget.isSelected ? widget.cabinColor : null,
                             isSelected: widget.isSelected,
+                            suitColor: widget.suitColor,
+                            helmetType: widget.helmetType,
+                            suitModel: widget.suitModel,
                           ),
                         ),
                       ),

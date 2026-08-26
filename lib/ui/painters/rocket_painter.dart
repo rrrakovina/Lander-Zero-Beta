@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../../game/state/game_state.dart';
 import 'ship_mesh_renderer.dart';
 
 /// Flutter [CustomPainter] wrapping [ShipMeshRenderer] for menus, garage, map select, and HUD previews.
@@ -8,6 +9,9 @@ class RocketPainter extends CustomPainter {
   final double animationTime;
   final Color? glowColor;
   final bool isSelected;
+  final String? suitColor;
+  final String? helmetType;
+  final String? suitModel;
 
   /// Exact model bounding boxes enclosing hull, landing gear/skis/feet, nozzles, and antenna tips.
   static const Map<String, Rect> modelBounds = ShipMeshRenderer.modelBounds;
@@ -25,6 +29,9 @@ class RocketPainter extends CustomPainter {
     this.animationTime = 0.0,
     this.glowColor,
     this.isSelected = false,
+    this.suitColor,
+    this.helmetType,
+    this.suitModel,
   });
 
   @override
@@ -71,6 +78,9 @@ class RocketPainter extends CustomPainter {
       animationTime: animationTime,
       legsCompression: 0.0,
       showDecals: true,
+      customSuitColor: suitColor ?? (GameState().initialized ? GameState().suitColor : null),
+      customHelmetType: helmetType ?? (GameState().initialized ? GameState().selectedHelmet : null),
+      customSuitModel: suitModel ?? (GameState().initialized ? GameState().selectedSuit : null),
     );
 
     canvas.restore();
@@ -81,6 +91,9 @@ class RocketPainter extends CustomPainter {
     return oldDelegate.rocketId != rocketId ||
         oldDelegate.animationTime != animationTime ||
         oldDelegate.glowColor != glowColor ||
-        oldDelegate.isSelected != isSelected;
+        oldDelegate.isSelected != isSelected ||
+        oldDelegate.suitColor != suitColor ||
+        oldDelegate.helmetType != helmetType ||
+        oldDelegate.suitModel != suitModel;
   }
 }
