@@ -1,11 +1,8 @@
 # Lander Zero: Deep Space Rescue Ops
 
-[![Flutter](https://img.shields.io/badge/Flutter-3.44+-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
-[![Flame Engine](https://img.shields.io/badge/Flame-1.37+-E65100?logo=dart&logoColor=white)](https://flame-engine.org)
-[![Forge2D](https://img.shields.io/badge/Physics-Forge2D-29B6F6)](https://pub.dev/packages/flame_forge2d)
-[![Security: HMAC--SHA256](https://img.shields.io/badge/Security-HMAC--SHA256-4CAF50)](https://pub.dev/packages/crypto)
-[![Tests: 484 Passing](https://img.shields.io/badge/Tests-484%20Passed-brightgreen.svg)](test/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Flutter](https://img.shields.io/badge/Platform-Web%20%7C%20PC-02569B?logo=googlechrome&logoColor=white)](https://flutter.dev)
+[![Flame Engine](https://img.shields.io/badge/Engine-Flame%20Forge2D-E65100?logo=dart&logoColor=white)](https://flame-engine.org)
+[![Genre](https://img.shields.io/badge/Genre-Space%20Physics%20Simulation-7C4DFF)]()
 
 **🎮 Play Online / Играть онлайн:** [https://rrrakovina.github.io/Lander-Zero-Beta/](https://rrrakovina.github.io/Lander-Zero-Beta/)
 
@@ -65,30 +62,6 @@ Piloting specialized landing craft through hazardous extraterrestrial subterrane
 * **Attitude / Artificial Horizon & Radial $G$-Meter:** Dynamic real-time flight data.
 * **Directional Proximity Radar:** Audio-visual alarms detecting cavern wall proximity.
 * **HMAC-SHA256 Anti-Tamper Security:** Cryptographic signature hashing protecting local `SharedPreferences` progress.
-
----
-
-### Technical Architecture
-
-```
-lander_zero/
-├── assets/audio/                 # Tactile UI audio & synthesized retro sound effects
-├── lib/
-│   ├── game/
-│   │   ├── audio/                # GameAudioManager & sound controllers
-│   │   ├── components/           # Forge2D entities (Lander, Rope, Cave, Cargo, Hazards)
-│   │   ├── config/               # Physical world constants & aesthetic palette
-│   │   ├── rendering/            # Unified vector mesh rendering engines
-│   │   ├── state/                # GameState, SaveSecurityManager, Achievements
-│   │   └── lander_zero_game.dart # Flame Forge2D central game loop
-│   ├── ui/
-│   │   ├── dialogs/              # Modals (Achievements, Settings, Leaderboards)
-│   │   ├── painters/             # ShipMeshRenderer, Radar & Map preview visualizers
-│   │   ├── screens/              # Menu, Garage, MapSelect, Flight Cadet Terminal
-│   │   └── widgets/              # MinimapWidget, CockpitHUD, GlassPanel
-│   └── main.dart                 # Application bootstrap & routing
-└── test/                         # 25 comprehensive test suites (424 unit/widget tests)
-```
 
 ---
 
@@ -153,21 +126,3 @@ lander_zero/
 #### 7. 12 Достижений и Защита Сохранений (HMAC-SHA256)
 * Прогресс по 12 уникальным достижениям с выдачей наград.
 * Криптографическая защита локального прогресса и монет от несанкционированной модификации.
-
----
-
-### Запуск и Разработка (PC / Web)
-
-```bash
-# 1. Установка зависимостей
-flutter pub get
-
-# 2. Запуск полного набора автотестов (484 теста)
-flutter test
-
-# 3. Локальный запуск в браузере (Google Chrome)
-flutter run -d chrome
-
-# 4. Сборка продакшн-версии для Веб / Яндекс Игр (CanvasKit)
-flutter build web --release --base-href="./"
-```
