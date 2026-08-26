@@ -4,7 +4,7 @@
 [![Flame Engine](https://img.shields.io/badge/Flame-1.37+-E65100?logo=dart&logoColor=white)](https://flame-engine.org)
 [![Forge2D](https://img.shields.io/badge/Physics-Forge2D-29B6F6)](https://pub.dev/packages/flame_forge2d)
 [![Security: HMAC--SHA256](https://img.shields.io/badge/Security-HMAC--SHA256-4CAF50)](https://pub.dev/packages/crypto)
-[![Tests: 424 Passing](https://img.shields.io/badge/Tests-424%20Passed-brightgreen.svg)](test/)
+[![Tests: 484 Passing](https://img.shields.io/badge/Tests-484%20Passed-brightgreen.svg)](test/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **🎮 Play Online / Играть онлайн:** [https://rrrakovina.github.io/Lander-Zero-Beta/](https://rrrakovina.github.io/Lander-Zero-Beta/)
@@ -156,18 +156,18 @@ lander_zero/
 
 ---
 
-### Запуск и Разработка
+### Запуск и Разработка (PC / Web)
 
 ```bash
 # 1. Установка зависимостей
 flutter pub get
 
-# 2. Запуск локального тестового набора (376 тестов)
+# 2. Запуск полного набора автотестов (484 теста)
 flutter test
 
-# 3. Сборка для Веб (WASM / CanvasKit)
-flutter build web --release --base-href="./"
+# 3. Локальный запуск в браузере (Google Chrome)
+flutter run -d chrome
 
-# 4. Локальный запуск на десктопе / мобильных устройствах
-flutter run
+# 4. Сборка продакшн-версии для Веб / Яндекс Игр (CanvasKit)
+flutter build web --release --base-href="./"
 ```
