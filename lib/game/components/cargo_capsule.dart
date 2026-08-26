@@ -2,6 +2,9 @@ import 'dart:math';
 import 'package:flame_forge2d/flame_forge2d.dart';
 import 'package:flutter/material.dart';
 import '../config/game_config.dart';
+import '../lander_zero_game.dart';
+import 'coin.dart';
+import 'endless_cargo_data.dart';
 
 /// Thematic cosmetic cargo types mapped per planetary biome.
 enum CargoType {
@@ -39,13 +42,15 @@ enum CargoType {
 }
 
 /// Cargo Capsule component with strict physics invariance and 5 distinct cosmetic vector models.
-class CargoCapsule extends BodyComponent {
+class CargoCapsule extends BodyComponent<LanderZeroGame> {
   final Vector2 initialPosition;
   final CargoType type;
+  final EndlessCargoInfo? endlessInfo;
 
   CargoCapsule({
     required this.initialPosition,
     this.type = CargoType.rescuePod,
+    this.endlessInfo,
   });
 
   /// Docking connection state with the lander tether
@@ -80,12 +85,33 @@ class CargoCapsule extends BodyComponent {
   void update(double dt) {
     super.update(dt);
     _animTime += dt;
+
+    if (!isMounted) return;
+
+    // 1. Modifier: Magnetic coin attraction when docked
+    if (isDocked && endlessInfo?.modifier == EndlessCargoModifier.magnetic) {
+      final coins = game.world.children.whereType<Coin>();
+      final pos = body.position;
+      for (final coin in coins) {
+        final d = coin.body.position.distanceTo(pos);
+        if (d < 6.0 && d > 0.01) {
+          final dir = (pos - coin.body.position).normalized();
+          coin.body.setTransform(coin.body.position + dir * (dt * 6.5), 0);
+          if (d < 1.3) {
+            coin.collect();
+          }
+        }
+      }
+    }
+
+    // 2. Modifier: Antigrav buoyant upward force
+    if (endlessInfo?.modifier == EndlessCargoModifier.antigrav) {
+      body.applyForce(Vector2(0, -0.4 * body.mass * 9.8));
+    }
   }
 
   @override
   Body createBody() {
-    // 100% Strict Physics Invariance across all cargo types:
-    // Identical mass (density 0.10), damping, friction, restitution, and 5-vertex polygon hitbox.
     final bodyDef = BodyDef(
       type: BodyType.dynamic,
       position: initialPosition,
@@ -108,7 +134,7 @@ class CargoCapsule extends BodyComponent {
 
     final fixtureDef = FixtureDef(
       shape,
-      density: GameConfig.cargoMass,
+      density: endlessInfo?.modifier.density ?? GameConfig.cargoMass,
       friction: 0.3,
       restitution: 0.05,
     )
@@ -123,6 +149,17 @@ class CargoCapsule extends BodyComponent {
   void render(Canvas canvas) {
     super.render(canvas);
 
+    // 1. Rarity Aura Halo Background
+    if (endlessInfo != null && endlessInfo!.rarity != EndlessCargoRarity.standard) {
+      final auraPaint = Paint()
+        ..color = endlessInfo!.rarity.glowColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.22
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.3);
+      canvas.drawPath(_capsulePath, auraPaint);
+    }
+
+    // 2. Render Archetype Body Model
     switch (type) {
       case CargoType.rescuePod:
         _renderRescuePod(canvas);
@@ -139,6 +176,35 @@ class CargoCapsule extends BodyComponent {
       case CargoType.energyCrystal:
         _renderEnergyCrystal(canvas);
         break;
+    }
+
+    // 3. Serial Code / Modifier Stamp Overlay
+    if (endlessInfo != null) {
+      _renderEndlessBadge(canvas);
+    }
+  }
+
+  void _renderEndlessBadge(Canvas canvas) {
+    final rarityColor = endlessInfo!.rarity.color;
+    
+    // Glowing Rarity Status LED in lower center
+    canvas.drawCircle(const Offset(0.0, 0.65), 0.10, Paint()..color = rarityColor);
+    canvas.drawCircle(
+      const Offset(0.0, 0.65),
+      0.18,
+      Paint()
+        ..color = rarityColor.withOpacity(0.5)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.2),
+    );
+
+    // Modifier Indicator (if special)
+    if (endlessInfo!.modifier != EndlessCargoModifier.none) {
+      final modColor = endlessInfo!.modifier == EndlessCargoModifier.volatile
+          ? const Color(0xFFFF1744)
+          : endlessInfo!.modifier == EndlessCargoModifier.magnetic
+              ? const Color(0xFF00E5FF)
+              : const Color(0xFFFFD600);
+      canvas.drawCircle(const Offset(0.0, -0.60), 0.08, Paint()..color = modColor);
     }
   }
 

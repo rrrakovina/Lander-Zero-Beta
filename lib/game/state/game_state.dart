@@ -34,6 +34,14 @@ class GameState extends ChangeNotifier {
   String _selectedSuit = 'sk1_cadet';
   List<String> _ownedSuits = ['sk1_cadet'];
 
+  // Настройки интерфейса
+  bool _showControlHints = true;
+
+  // Рекорды бесконечного режима
+  int _endlessBestDistance = 0;
+  int _endlessHighScore = 0;
+  int _endlessTotalRescues = 0;
+
   // Таблица рекордов: список заездов. Каждый элемент: {'name': name, 'map': map, 'distance': d, 'coins': c}
   List<Map<String, dynamic>> _leaderboard = [];
 
@@ -43,6 +51,10 @@ class GameState extends ChangeNotifier {
   String get language => _language;
   double get musicVolume => _musicVolume;
   double get sfxVolume => _sfxVolume;
+  bool get showControlHints => _showControlHints;
+  int get endlessBestDistance => _endlessBestDistance;
+  int get endlessHighScore => _endlessHighScore;
+  int get endlessTotalRescues => _endlessTotalRescues;
   int get totalCoins => _totalCoins;
   String get selectedRocket => _selectedRocket;
   List<String> get ownedRockets => _ownedRockets;
@@ -226,6 +238,7 @@ class GameState extends ChangeNotifier {
     _language = _prefs.getString('language') ?? 'ru';
     _musicVolume = _prefs.getDouble('musicVolume') ?? 0.7;
     _sfxVolume = _prefs.getDouble('sfxVolume') ?? 0.8;
+    _showControlHints = _prefs.getBool('showControlHints') ?? true;
 
     final storedCoins = _prefs.getInt('totalCoins');
     final storedFleet = _prefs.getStringList('ownedRockets');
@@ -392,6 +405,10 @@ class GameState extends ChangeNotifier {
       }
     }
 
+    _endlessBestDistance = _prefs.getInt('endlessBestDistance') ?? 0;
+    _endlessHighScore = _prefs.getInt('endlessHighScore') ?? 0;
+    _endlessTotalRescues = _prefs.getInt('endlessTotalRescues') ?? 0;
+
     await AchievementsManager().load(_prefs);
 
     _initialized = true;
@@ -428,6 +445,13 @@ class GameState extends ChangeNotifier {
     if (_sfxVolume == 0.0) {
       GameAudioManager().stopThrustLoop();
     }
+  }
+
+  // Переключение показа подсказок управления
+  Future<void> setShowControlHints(bool show) async {
+    _showControlHints = show;
+    await _prefs.setBool('showControlHints', _showControlHints);
+    notifyListeners();
   }
 
   // Начисление монет
@@ -629,6 +653,32 @@ class GameState extends ChangeNotifier {
     return false;
   }
 
+  /// Запись результатов бесконечного заезда с обновлением рекордов
+  Future<bool> recordEndlessRun({
+    required int distance,
+    required int score,
+    required int rescues,
+  }) async {
+    bool isNewRecord = false;
+    if (distance > _endlessBestDistance) {
+      _endlessBestDistance = distance;
+      isNewRecord = true;
+    }
+    if (score > _endlessHighScore) {
+      _endlessHighScore = score;
+    }
+    _endlessTotalRescues += rescues;
+
+    if (_initialized) {
+      await _prefs.setInt('endlessBestDistance', _endlessBestDistance);
+      await _prefs.setInt('endlessHighScore', _endlessHighScore);
+      await _prefs.setInt('endlessTotalRescues', _endlessTotalRescues);
+      await _saveIntegrity();
+    }
+    notifyListeners();
+    return isNewRecord;
+  }
+
   // Переводы для локализации
   static const Map<String, Map<String, String>> _translations = {
     'ru': {
@@ -717,6 +767,21 @@ class GameState extends ChangeNotifier {
       'rope_snapped': 'ВНИМАНИЕ: ТРОС ОБОРВАН ОТ НАТЯЖЕНИЯ!',
       'cargo_released': 'ГРУЗ ОТЦЕПЛЕН',
       'cargo_release': 'СБРОСИТЬ ГРУЗ (S / ↓)',
+      'control_hints': 'Подсказки управления',
+      'hint_turn_left': 'Поворот влево',
+      'hint_turn_right': 'Поворот вправо',
+      'hint_main_thrust': 'Основная тяга',
+      'hint_drop_brake': 'Сброс груза / Торможение',
+      'hint_pause': 'Пауза',
+      'hint_space': 'ПРОБЕЛ',
+      'endless_title': 'ЭКСПЕДИЦИЯ: БЕЗДНА',
+      'endless_desc': 'Процедурный бесконечный спуск. Спасайте грузы и доставляйте на аванпосты.',
+      'endless_best_dist': 'Рекорд глубины',
+      'endless_high_score': 'Рекорд очков',
+      'endless_rescues': 'Спасено выживших',
+      'endless_new_record': 'НОВЫЙ РЕКОРД ГЛУБИНЫ!',
+      'endless_score': 'Очки экспедиции',
+      'endless_delivered': 'Доставлено грузов',
     },
     'en': {
       'title': 'LANDER ZERO: RESCUE OPS',
@@ -804,6 +869,21 @@ class GameState extends ChangeNotifier {
       'rope_snapped': 'WARNING: TENSION TOO HIGH, TETHER SNAPPED!',
       'cargo_released': 'CARGO UNHOOKED',
       'cargo_release': 'RELEASE CARGO (S / ↓)',
+      'control_hints': 'Control Hints',
+      'hint_turn_left': 'Turn Left',
+      'hint_turn_right': 'Turn Right',
+      'hint_main_thrust': 'Main Thrust',
+      'hint_drop_brake': 'Release Cargo / RCS Brake',
+      'hint_pause': 'Pause',
+      'hint_space': 'SPACE',
+      'endless_title': 'ENDLESS EXPEDITION',
+      'endless_desc': 'Procedural infinite descent. Rescue pods and deliver to outposts.',
+      'endless_best_dist': 'Best Depth',
+      'endless_high_score': 'High Score',
+      'endless_rescues': 'Total Rescued',
+      'endless_new_record': 'NEW DEPTH RECORD!',
+      'endless_score': 'Expedition Score',
+      'endless_delivered': 'Rescued Cargo',
     }
   };
 

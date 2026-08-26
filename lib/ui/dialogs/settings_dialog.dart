@@ -158,7 +158,30 @@ class SettingsDialog extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 16),
+
+                  // Подсказки управления
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        state.translate('control_hints'),
+                        style: const TextStyle(color: Colors.white70, fontSize: 14),
+                      ),
+                      Switch(
+                        value: state.showControlHints,
+                        onChanged: (val) {
+                          state.setShowControlHints(val);
+                          GameAudioManager().playTap();
+                        },
+                        activeColor: GameConfig.colorPrimary,
+                        activeTrackColor: GameConfig.colorPrimary.withOpacity(0.3),
+                        inactiveThumbColor: Colors.white38,
+                        inactiveTrackColor: Colors.white10,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
 
                   // Кнопка закрытия
                   ElevatedButton(

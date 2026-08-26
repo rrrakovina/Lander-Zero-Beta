@@ -362,13 +362,13 @@ void main() {
       expect(find.text('МОДЕЛЬ КОСТЮМА'), findsOneWidget);
 
       // Helmet items
-      expect(find.text('Сфера-1'), findsOneWidget);
+      expect(find.text('Сфера-1'), findsAtLeastNWidgets(1));
       expect(find.text('Кибер-Визор'), findsOneWidget);
       expect(find.text('Шлем Шахтера'), findsOneWidget);
       expect(find.text('Стриж-Аэро'), findsOneWidget);
 
       // Suit model items
-      expect(find.text('СК-1 Курсант'), findsOneWidget);
+      expect(find.text('СК-1 Курсант'), findsAtLeastNWidgets(1));
       expect(find.text('Экзо-Каркас'), findsOneWidget);
       expect(find.text('Крио-Костюм'), findsOneWidget);
     });
@@ -456,12 +456,12 @@ void main() {
       expect(find.text('HELMET TYPE'), findsOneWidget);
       expect(find.text('SUIT MODEL'), findsOneWidget);
 
-      expect(find.text('Sphere-1'), findsOneWidget);
+      expect(find.text('Sphere-1'), findsAtLeastNWidgets(1));
       expect(find.text('Cyber-Visor'), findsOneWidget);
       expect(find.text('Miner Helmet'), findsOneWidget);
       expect(find.text('Swift-Aero'), findsOneWidget);
 
-      expect(find.text('SK-1 Cadet'), findsOneWidget);
+      expect(find.text('SK-1 Cadet'), findsAtLeastNWidgets(1));
       expect(find.text('Exo-Frame'), findsOneWidget);
       expect(find.text('Cryo-Suit'), findsOneWidget);
     });

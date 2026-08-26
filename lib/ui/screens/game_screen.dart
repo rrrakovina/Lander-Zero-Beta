@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +10,7 @@ import '../../game/audio/game_audio_manager.dart';
 import '../widgets/glass_panel.dart';
 import '../widgets/achievement_toast.dart';
 import '../widgets/minimap_widget.dart';
+import '../widgets/tutorial_controls_overlay.dart';
 import '../widgets/cockpit_hud/g_force_gauge.dart';
 import '../widgets/cockpit_hud/artificial_horizon.dart';
 import '../widgets/cockpit_hud/proximity_warning.dart';
@@ -31,6 +33,9 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   late LanderZeroGame _game;
   bool _isPaused = false;
+  Timer? _tutorialTimer;
+  bool _showTutorial = false;
+  double _tutorialOpacity = 0.0;
 
   @override
   void initState() {
@@ -38,11 +43,44 @@ class _GameScreenState extends State<GameScreen> {
     _initNewGame();
   }
 
+  @override
+  void dispose() {
+    _tutorialTimer?.cancel();
+    super.dispose();
+  }
+
   void _initNewGame() {
+    _tutorialTimer?.cancel();
+    final shouldShowHints = GameState().showControlHints;
     setState(() {
       _game = LanderZeroGame(mapId: widget.mapId);
       _isPaused = false;
+      _showTutorial = shouldShowHints;
+      _tutorialOpacity = shouldShowHints ? 1.0 : 0.0;
     });
+
+    if (shouldShowHints) {
+      _tutorialTimer = Timer(const Duration(seconds: 5), () {
+        _dismissTutorial();
+      });
+    }
+  }
+
+  void _dismissTutorial() {
+    if (!_showTutorial || _tutorialOpacity == 0.0) return;
+    _tutorialTimer?.cancel();
+    if (mounted) {
+      setState(() {
+        _tutorialOpacity = 0.0;
+      });
+      Future.delayed(const Duration(milliseconds: 700), () {
+        if (mounted && _tutorialOpacity == 0.0) {
+          setState(() {
+            _showTutorial = false;
+          });
+        }
+      });
+    }
   }
 
   void _togglePause() {
@@ -72,9 +110,12 @@ class _GameScreenState extends State<GameScreen> {
         child: Focus(
           autofocus: true,
           onKeyEvent: (node, event) {
-            if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
-              _togglePause();
-              return KeyEventResult.handled;
+            if (event is KeyDownEvent) {
+              _dismissTutorial();
+              if (event.logicalKey == LogicalKeyboardKey.escape) {
+                _togglePause();
+                return KeyEventResult.handled;
+              }
             }
             return KeyEventResult.ignored;
           },
@@ -214,6 +255,61 @@ class _GameScreenState extends State<GameScreen> {
                           ],
                         ),
 
+                        // Endless Mode Expedition Bar
+                        if (_game.mapId == 'endless' && _game.endlessManager != null) ...[
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0D1520).withOpacity(0.88),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFF00E5FF).withOpacity(0.5)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _game.endlessManager!.getCurrentBiomeName(state.language),
+                                  style: const TextStyle(color: Color(0xFF00E5FF), fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 10),
+                                const Icon(Icons.people_alt_rounded, color: Colors.amberAccent, size: 13),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '${_game.endlessManager!.rescuesCount}',
+                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 10),
+                                const Icon(Icons.military_tech_rounded, color: Color(0xFFE040FB), size: 13),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '${_game.endlessManager!.endlessScore}',
+                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                                if (_game.endlessManager!.activeCargoInfo != null) ...[
+                                  const SizedBox(width: 10),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: _game.endlessManager!.activeCargoInfo!.rarity.color.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: _game.endlessManager!.activeCargoInfo!.rarity.color),
+                                    ),
+                                    child: Text(
+                                      _game.endlessManager!.activeCargoInfo!.getTitle(state.language),
+                                      style: TextStyle(
+                                        color: _game.endlessManager!.activeCargoInfo!.rarity.color,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+
                         // Proximity Warning & Alerts
                         if (isProxAlert) ...[
                           const SizedBox(height: 8),
@@ -250,43 +346,43 @@ class _GameScreenState extends State<GameScreen> {
                 ),
               ),
 
-              // 3. Сенсорное управление
+              // 3. Управление мышью / кликами
               Positioned.fill(
                 child: Row(
                   children: [
                     Expanded(
                       child: Listener(
-                        onPointerDown: (_) => _game.setLeftThrust(true),
+                        onPointerDown: (_) {
+                          _dismissTutorial();
+                          _game.setLeftThrust(true);
+                        },
                         onPointerUp: (_) => _game.setLeftThrust(false),
                         onPointerCancel: (_) => _game.setLeftThrust(false),
                         child: Container(
                           color: Colors.transparent,
-                          alignment: Alignment.bottomLeft,
-                          padding: const EdgeInsets.all(30),
-                          child: _buildControlHint(
-                              state.translate('thrust_left'),
-                              Alignment.bottomLeft),
                         ),
                       ),
                     ),
                     Expanded(
                       child: Listener(
-                        onPointerDown: (_) => _game.setRightThrust(true),
+                        onPointerDown: (_) {
+                          _dismissTutorial();
+                          _game.setRightThrust(true);
+                        },
                         onPointerUp: (_) => _game.setRightThrust(false),
                         onPointerCancel: (_) => _game.setRightThrust(false),
                         child: Container(
                           color: Colors.transparent,
-                          alignment: Alignment.bottomRight,
-                          padding: const EdgeInsets.all(30),
-                          child: _buildControlHint(
-                              state.translate('thrust_right'),
-                              Alignment.bottomRight),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
+
+              // 4. Обучающий оверлей с подсказками клавиш управления для ПК
+              if (_showTutorial)
+                TutorialControlsOverlay(opacity: _tutorialOpacity),
 
               // Кнопка сброса груза для мобильных/сенсорных экранов
               Positioned(
@@ -516,26 +612,6 @@ class _GameScreenState extends State<GameScreen> {
       ),
     );
   }
-
-  Widget _buildControlHint(String text, Alignment alignment) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0x55000000),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white54,
-          fontSize: 11,
-          letterSpacing: 1,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
 }
 
 class PostRunStatsOverlay extends StatefulWidget {
@@ -560,14 +636,32 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
   late AnimationController _counterController;
   late Animation<double> _counterAnimation;
   int _animatedReward = 0;
+  bool _isNewRecord = false;
 
   @override
   void initState() {
     super.initState();
     final isWon = widget.runState == GameRunState.won;
     int reward = widget.game.coinsCollected * 10 + (isWon ? 100 : 0);
-    if (widget.game.mapId == 'endless' && widget.game.endlessManager != null) {
-      reward += widget.game.endlessManager!.rescuesCount * 100;
+
+    if (widget.game.mapId == 'endless') {
+      final int rescues = widget.game.endlessManager?.rescuesCount ?? 0;
+      final int score = widget.game.endlessManager?.endlessScore ?? 0;
+      final int dist = widget.game.maxDistance.toInt();
+      reward = widget.game.coinsCollected + rescues * 150;
+
+      // Update endless records in GameState
+      GameState().recordEndlessRun(
+        distance: dist,
+        score: score,
+        rescues: rescues,
+      ).then((isNew) {
+        if (mounted && isNew) {
+          setState(() {
+            _isNewRecord = true;
+          });
+        }
+      });
     }
 
     _counterController = AnimationController(
@@ -609,10 +703,25 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
   @override
   Widget build(BuildContext context) {
     final state = GameState();
+    final isEndless = widget.game.mapId == 'endless';
     final isWon = widget.runState == GameRunState.won;
-    final accentColor = isWon ? GameConfig.colorPrimary : GameConfig.colorDanger;
-    final titleText = isWon ? state.translate('victory') : state.translate('defeat');
-    final subTitleText = isWon ? state.translate('victory_desc') : state.translate('defeat_desc');
+
+    final Color accentColor = isEndless
+        ? (_isNewRecord ? GameConfig.colorWarning : const Color(0xFF00E5FF))
+        : (isWon ? GameConfig.colorPrimary : GameConfig.colorDanger);
+
+    final String titleText = isEndless
+        ? (_isNewRecord ? state.translate('endless_new_record') : state.translate('endless_title'))
+        : (isWon ? state.translate('victory') : state.translate('defeat'));
+
+    final String subTitleText = isEndless
+        ? state.translate('endless_desc')
+        : (isWon ? state.translate('victory_desc') : state.translate('defeat_desc'));
+
+    final IconData titleIcon = isEndless
+        ? (_isNewRecord ? Icons.emoji_events_rounded : Icons.explore_rounded)
+        : (isWon ? Icons.verified_rounded : Icons.gavel_rounded);
+
     final flightSec = widget.game.flightTime;
     final damage = widget.game.totalDamage;
 
@@ -633,18 +742,19 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        isWon ? Icons.verified_rounded : Icons.gavel_rounded,
+                        titleIcon,
                         color: accentColor,
                         size: 56,
                       ),
                       const SizedBox(height: 12),
                       Text(
                         titleText,
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           color: accentColor,
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
+                          letterSpacing: 1.5,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -659,10 +769,20 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
                       _buildStatsRow(state.translate('stats_dist'),
                           '${widget.game.maxDistance.toInt()} ${state.translate('stats_meters')}'),
                       const SizedBox(height: 8),
-                      if (widget.game.mapId == 'endless') ...[
+                      if (isEndless) ...[
                         _buildStatsRow(
-                          state.language == 'ru' ? 'Спасенных выживших' : 'Rescued survivors',
+                          state.translate('endless_score'),
+                          '${widget.game.endlessManager?.endlessScore ?? 0}',
+                        ),
+                        const SizedBox(height: 8),
+                        _buildStatsRow(
+                          state.translate('endless_delivered'),
                           '${widget.game.endlessManager?.rescuesCount ?? 0}',
+                        ),
+                        const SizedBox(height: 8),
+                        _buildStatsRow(
+                          state.translate('endless_best_dist'),
+                          '${state.endlessBestDistance} ${state.translate('stats_meters')}',
                         ),
                         const SizedBox(height: 8),
                       ],
@@ -671,8 +791,10 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
                       const SizedBox(height: 8),
                       _buildStatsRow(state.translate('stats_coins'), '${widget.game.coinsCollected}'),
                       const SizedBox(height: 8),
-                      _buildStatsRow(state.translate('stats_damage'), '${damage.toInt()}%'),
-                      const SizedBox(height: 12),
+                      if (!isEndless) ...[
+                        _buildStatsRow(state.translate('stats_damage'), '${damage.toInt()}%'),
+                        const SizedBox(height: 8),
+                      ],
                       const Divider(color: Colors.white10),
                       const SizedBox(height: 12),
                       Row(

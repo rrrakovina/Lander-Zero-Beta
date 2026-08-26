@@ -573,11 +573,15 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
     final bountyRange = isRu ? mapData.bountyRangeRu : mapData.bountyRangeEn;
 
     int bestDist = 0;
-    for (final entry in state.leaderboard) {
-      if (entry['map'] == _previewMapId) {
-        final dist = (entry['distance'] as num?)?.toInt() ?? 0;
-        if (dist > bestDist) {
-          bestDist = dist;
+    if (_previewMapId == 'endless') {
+      bestDist = state.endlessBestDistance;
+    } else {
+      for (final entry in state.leaderboard) {
+        if (entry['map'] == _previewMapId) {
+          final dist = (entry['distance'] as num?)?.toInt() ?? 0;
+          if (dist > bestDist) {
+            bestDist = dist;
+          }
         }
       }
     }
