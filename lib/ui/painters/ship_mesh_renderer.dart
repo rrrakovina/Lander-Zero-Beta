@@ -280,7 +280,7 @@ class ShipMeshRenderer {
   static final Paint _cycloneFeetPaint = Paint()..color = const Color(0xFF121214);
 
   // --- Pilot / Cockpit Shared Paints ---
-  static final Paint _pilotBgPaint = Paint()..color = const Color(0xFF1E282D);
+  static final Paint _pilotBgPaint = Paint()..color = const Color(0xFF161F28);
   static final Paint _pilotEyePaint = Paint()..color = Colors.white;
   static final Paint _pilotPupilPaint = Paint()..color = Colors.black;
   static final Paint _pilotBlinkPaint = Paint()
@@ -289,16 +289,16 @@ class ShipMeshRenderer {
     ..strokeWidth = 0.04
     ..strokeCap = StrokeCap.round;
 
-  static final Paint _glassPaint = Paint()
-    ..color = Colors.cyan.withOpacity(0.35)
-    ..style = PaintingStyle.fill;
-
   static final Paint _glassBorder = Paint()
-    ..color = Colors.white30
+    ..color = const Color(0xFF263238)
     ..style = PaintingStyle.stroke
-    ..strokeWidth = 0.05;
+    ..strokeWidth = 0.06;
 
-  static final Paint _glassHighlightPaint = Paint()..color = Colors.white.withOpacity(0.35);
+  static final Paint _glassHighlightPaint = Paint()
+    ..color = Colors.white.withOpacity(0.45)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 0.04
+    ..strokeCap = StrokeCap.round;
 
   // --- Reusable Path Objects ---
   static final Path _sputnikPath = Path()
@@ -1004,8 +1004,8 @@ class ShipMeshRenderer {
   }) {
     if (size.width <= 0 || size.height <= 0) return;
     final double minDim = min(size.width, size.height);
-    final double radius = minDim * 0.36;
-    final Offset center = Offset(size.width / 2, size.height * 0.46);
+    final double radius = minDim * 0.44;
+    final Offset center = Offset(size.width / 2, size.height * 0.50);
 
     _renderPilot(
       canvas: canvas,
@@ -1043,28 +1043,31 @@ class ShipMeshRenderer {
     String? customHelmetType,
     String? customSuitModel,
   }) {
-    // 1. Dark Cabin Background
+    // Save canvas & strictly clip all interior elements to circular cabin porthole
+    canvas.save();
+    canvas.clipPath(Path()..addOval(Rect.fromCircle(center: cabinCenter, radius: radius)));
+
+    // 1. Dark Cabin Interior Background
     canvas.drawCircle(cabinCenter, radius, _pilotBgPaint);
 
     // 2. Head Position & Inertia Offset
     double headX = cabinCenter.dx;
-    double headY = cabinCenter.dy + 0.05;
+    double headY = cabinCenter.dy - radius * 0.05;
 
     if (pilotHeadOffset != null) {
       headX += pilotHeadOffset.x;
       headY += pilotHeadOffset.y;
     } else if (animationTime > 0) {
-      // Menu hover bobbing
-      headX += sin(animationTime * 2.0) * 0.03 * radius;
+      headX += sin(animationTime * 2.0) * 0.025 * radius;
       headY += cos(animationTime * 3.5) * 0.015 * radius;
     }
 
     final headPos = Offset(headX, headY);
 
-    // G-Force Strain Vertical Compression & Squint
-    final double gCompression = (pilotGStrain.clamp(0.0, 1.0) * 0.22);
+    // G-Force Strain Vertical Compression
+    final double gCompression = (pilotGStrain.clamp(0.0, 1.0) * 0.20);
     final double headScaleY = 1.0 - gCompression;
-    final double headScaleX = 1.0 + gCompression * 0.12;
+    final double headScaleX = 1.0 + gCompression * 0.10;
 
     // Resolve Pilot Wardrobe properties
     final String resolvedSuitColor = customSuitColor ?? suitColor ?? (GameState().initialized ? GameState().suitColor : 'classic_orange');
@@ -1077,15 +1080,15 @@ class ShipMeshRenderer {
     switch (resolvedSuitColor) {
       case 'nasa_white':
         baseSuitColor = const Color(0xFFECEFF1);
-        accentSuitColor = const Color(0xFFFFFFFF);
+        accentSuitColor = const Color(0xFFB0BEC5);
         break;
       case 'cyber_cyan':
         baseSuitColor = const Color(0xFF00E5FF);
         accentSuitColor = const Color(0xFF00838F);
         break;
       case 'carbon_black':
-        baseSuitColor = const Color(0xFF212121);
-        accentSuitColor = const Color(0xFF37474F);
+        baseSuitColor = const Color(0xFF263238);
+        accentSuitColor = const Color(0xFF455A64);
         break;
       case 'hazmat_yellow':
         baseSuitColor = const Color(0xFFFFD600);
@@ -1106,41 +1109,41 @@ class ShipMeshRenderer {
     final suitOutline = Paint()
       ..color = const Color(0xFF101418)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = max(1.0, radius * 0.04);
+      ..strokeWidth = max(1.2, radius * 0.05);
 
-    // Astronaut Shoulders / Suit Base
+    // 3. Astronaut Shoulders / Suit Base
     final shoulderPath = Path()
-      ..moveTo(cabinCenter.dx - radius * 0.42, cabinCenter.dy + radius * 0.35)
-      ..lineTo(cabinCenter.dx - radius * 0.72, cabinCenter.dy + radius * 0.65)
-      ..lineTo(cabinCenter.dx - radius * 0.65, cabinCenter.dy + radius * 0.95)
-      ..lineTo(cabinCenter.dx + radius * 0.65, cabinCenter.dy + radius * 0.95)
-      ..lineTo(cabinCenter.dx + radius * 0.72, cabinCenter.dy + radius * 0.65)
-      ..lineTo(cabinCenter.dx + radius * 0.42, cabinCenter.dy + radius * 0.35)
+      ..moveTo(cabinCenter.dx - radius * 0.55, cabinCenter.dy + radius * 0.22)
+      ..lineTo(cabinCenter.dx - radius * 1.20, cabinCenter.dy + radius * 0.65)
+      ..lineTo(cabinCenter.dx - radius * 1.20, cabinCenter.dy + radius * 1.20)
+      ..lineTo(cabinCenter.dx + radius * 1.20, cabinCenter.dy + radius * 1.20)
+      ..lineTo(cabinCenter.dx + radius * 1.20, cabinCenter.dy + radius * 0.65)
+      ..lineTo(cabinCenter.dx + radius * 0.55, cabinCenter.dy + radius * 0.22)
       ..close();
 
     canvas.drawPath(shoulderPath, suitPaint);
     canvas.drawPath(shoulderPath, suitOutline);
 
-    // Suit Model Details & Pauldrons / Harness / Piping
+    // 4. Suit Model Details (Pauldrons, Harness, Cooling Pipes)
     switch (resolvedSuitModel) {
       case 'exo_frame':
-        // Heavy carbon-composite articulated shoulder pauldrons
+        // Carbon-composite articulated shoulder pauldrons
         final pauldronPaint = Paint()..color = const Color(0xFF263238)..style = PaintingStyle.fill;
-        final pauldronBorder = Paint()..color = const Color(0xFFFFB300)..style = PaintingStyle.stroke..strokeWidth = radius * 0.035;
+        final pauldronBorder = Paint()..color = const Color(0xFFFFB300)..style = PaintingStyle.stroke..strokeWidth = radius * 0.04;
         
         final leftPauldron = RRect.fromRectAndRadius(
           Rect.fromCenter(
-            center: Offset(cabinCenter.dx - radius * 0.52, cabinCenter.dy + radius * 0.55),
-            width: radius * 0.45,
-            height: radius * 0.34,
+            center: Offset(cabinCenter.dx - radius * 0.58, cabinCenter.dy + radius * 0.58),
+            width: radius * 0.52,
+            height: radius * 0.38,
           ),
           Radius.circular(radius * 0.06),
         );
         final rightPauldron = RRect.fromRectAndRadius(
           Rect.fromCenter(
-            center: Offset(cabinCenter.dx + radius * 0.52, cabinCenter.dy + radius * 0.55),
-            width: radius * 0.45,
-            height: radius * 0.34,
+            center: Offset(cabinCenter.dx + radius * 0.58, cabinCenter.dy + radius * 0.58),
+            width: radius * 0.52,
+            height: radius * 0.38,
           ),
           Radius.circular(radius * 0.06),
         );
@@ -1150,55 +1153,55 @@ class ShipMeshRenderer {
         canvas.drawRRect(rightPauldron, pauldronBorder);
 
         // Pauldron hazard stripes
-        final stripePaint = Paint()..color = const Color(0xFFFFB300)..style = PaintingStyle.stroke..strokeWidth = radius * 0.03;
-        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.62, cabinCenter.dy + radius * 0.48), Offset(cabinCenter.dx - radius * 0.42, cabinCenter.dy + radius * 0.62), stripePaint);
-        canvas.drawLine(Offset(cabinCenter.dx + radius * 0.42, cabinCenter.dy + radius * 0.48), Offset(cabinCenter.dx + radius * 0.62, cabinCenter.dy + radius * 0.62), stripePaint);
+        final stripePaint = Paint()..color = const Color(0xFFFFB300)..style = PaintingStyle.stroke..strokeWidth = radius * 0.035;
+        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.70, cabinCenter.dy + radius * 0.50), Offset(cabinCenter.dx - radius * 0.46, cabinCenter.dy + radius * 0.66), stripePaint);
+        canvas.drawLine(Offset(cabinCenter.dx + radius * 0.46, cabinCenter.dy + radius * 0.50), Offset(cabinCenter.dx + radius * 0.70, cabinCenter.dy + radius * 0.66), stripePaint);
 
-        // Crossed heavy tactical harness straps
-        final harnessPaint = Paint()..color = const Color(0xFF1E262B)..style = PaintingStyle.stroke..strokeWidth = radius * 0.065..strokeCap = StrokeCap.round;
-        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.40, cabinCenter.dy + radius * 0.38), Offset(cabinCenter.dx + radius * 0.28, cabinCenter.dy + radius * 0.85), harnessPaint);
-        canvas.drawLine(Offset(cabinCenter.dx + radius * 0.40, cabinCenter.dy + radius * 0.38), Offset(cabinCenter.dx - radius * 0.28, cabinCenter.dy + radius * 0.85), harnessPaint);
+        // Heavy tactical harness straps
+        final harnessPaint = Paint()..color = const Color(0xFF1E262B)..style = PaintingStyle.stroke..strokeWidth = radius * 0.075..strokeCap = StrokeCap.round;
+        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.42, cabinCenter.dy + radius * 0.38), Offset(cabinCenter.dx + radius * 0.30, cabinCenter.dy + radius * 0.88), harnessPaint);
+        canvas.drawLine(Offset(cabinCenter.dx + radius * 0.42, cabinCenter.dy + radius * 0.38), Offset(cabinCenter.dx - radius * 0.30, cabinCenter.dy + radius * 0.88), harnessPaint);
 
         // Center titanium rotary buckle
         final bucklePaint = Paint()..color = const Color(0xFFFFB300);
-        final buckleBorder = Paint()..color = Colors.black..style = PaintingStyle.stroke..strokeWidth = radius * 0.025;
-        canvas.drawCircle(Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.60), radius * 0.11, bucklePaint);
-        canvas.drawCircle(Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.60), radius * 0.11, buckleBorder);
-        canvas.drawCircle(Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.60), radius * 0.04, Paint()..color = Colors.black);
+        final buckleBorder = Paint()..color = Colors.black..style = PaintingStyle.stroke..strokeWidth = radius * 0.03;
+        canvas.drawCircle(Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.62), radius * 0.12, bucklePaint);
+        canvas.drawCircle(Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.62), radius * 0.12, buckleBorder);
+        canvas.drawCircle(Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.62), radius * 0.045, Paint()..color = Colors.black);
         break;
 
       case 'cryo_suit':
-        // Horizontal thermal insulation ribs with shadow depths
-        final ribPaint = Paint()..color = accentSuitColor..style = PaintingStyle.stroke..strokeWidth = radius * 0.045..strokeCap = StrokeCap.round;
-        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.38, cabinCenter.dy + radius * 0.46), Offset(cabinCenter.dx + radius * 0.38, cabinCenter.dy + radius * 0.46), ribPaint);
-        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.42, cabinCenter.dy + radius * 0.60), Offset(cabinCenter.dx + radius * 0.42, cabinCenter.dy + radius * 0.60), ribPaint);
-        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.35, cabinCenter.dy + radius * 0.74), Offset(cabinCenter.dx + radius * 0.35, cabinCenter.dy + radius * 0.74), ribPaint);
+        // Horizontal thermal insulation ribs
+        final ribPaint = Paint()..color = accentSuitColor..style = PaintingStyle.stroke..strokeWidth = radius * 0.05..strokeCap = StrokeCap.round;
+        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.42, cabinCenter.dy + radius * 0.46), Offset(cabinCenter.dx + radius * 0.42, cabinCenter.dy + radius * 0.46), ribPaint);
+        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.46, cabinCenter.dy + radius * 0.62), Offset(cabinCenter.dx + radius * 0.46, cabinCenter.dy + radius * 0.62), ribPaint);
+        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.38, cabinCenter.dy + radius * 0.78), Offset(cabinCenter.dx + radius * 0.38, cabinCenter.dy + radius * 0.78), ribPaint);
 
         // Glowing illuminated cryo coolant piping
-        final cryoPipePaint = Paint()..color = const Color(0xFF00E5FF)..style = PaintingStyle.stroke..strokeWidth = radius * 0.045..strokeCap = StrokeCap.round;
-        final cryoGlowPaint = Paint()..color = const Color(0xFF00E5FF).withOpacity(0.4)..style = PaintingStyle.stroke..strokeWidth = radius * 0.08..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5);
+        final cryoPipePaint = Paint()..color = const Color(0xFF00E5FF)..style = PaintingStyle.stroke..strokeWidth = radius * 0.05..strokeCap = StrokeCap.round;
+        final cryoGlowPaint = Paint()..color = const Color(0xFF00E5FF).withOpacity(0.5)..style = PaintingStyle.stroke..strokeWidth = radius * 0.09..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5);
         
-        final pipeLeft = Path()..moveTo(cabinCenter.dx - radius * 0.48, cabinCenter.dy + radius * 0.40)..lineTo(cabinCenter.dx - radius * 0.22, cabinCenter.dy + radius * 0.78);
-        final pipeRight = Path()..moveTo(cabinCenter.dx + radius * 0.48, cabinCenter.dy + radius * 0.40)..lineTo(cabinCenter.dx + radius * 0.22, cabinCenter.dy + radius * 0.78);
+        final pipeLeft = Path()..moveTo(cabinCenter.dx - radius * 0.50, cabinCenter.dy + radius * 0.40)..lineTo(cabinCenter.dx - radius * 0.22, cabinCenter.dy + radius * 0.82);
+        final pipeRight = Path()..moveTo(cabinCenter.dx + radius * 0.50, cabinCenter.dy + radius * 0.40)..lineTo(cabinCenter.dx + radius * 0.22, cabinCenter.dy + radius * 0.82);
         canvas.drawPath(pipeLeft, cryoGlowPaint);
         canvas.drawPath(pipeLeft, cryoPipePaint);
         canvas.drawPath(pipeRight, cryoGlowPaint);
         canvas.drawPath(pipeRight, cryoPipePaint);
 
-        // Illuminated circular chest pressure gauge
-        final gaugeCenter = Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.58);
-        canvas.drawCircle(gaugeCenter, radius * 0.09, Paint()..color = const Color(0xFF0D1B2A));
-        canvas.drawCircle(gaugeCenter, radius * 0.09, Paint()..color = const Color(0xFF00E5FF)..style = PaintingStyle.stroke..strokeWidth = radius * 0.025);
+        // Circular chest pressure gauge
+        final gaugeCenter = Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.60);
+        canvas.drawCircle(gaugeCenter, radius * 0.10, Paint()..color = const Color(0xFF0D1B2A));
+        canvas.drawCircle(gaugeCenter, radius * 0.10, Paint()..color = const Color(0xFF00E5FF)..style = PaintingStyle.stroke..strokeWidth = radius * 0.03);
         final needleAngle = (animationTime * 1.5) % (2 * pi);
-        canvas.drawLine(gaugeCenter, gaugeCenter + Offset(cos(needleAngle) * radius * 0.06, sin(needleAngle) * radius * 0.06), Paint()..color = const Color(0xFF00E5FF)..strokeWidth = radius * 0.02);
+        canvas.drawLine(gaugeCenter, gaugeCenter + Offset(cos(needleAngle) * radius * 0.07, sin(needleAngle) * radius * 0.07), Paint()..color = const Color(0xFF00E5FF)..strokeWidth = radius * 0.025);
         break;
 
       case 'sk1_cadet':
       default:
-        // Heavy pressure collar with metallic latch couplings
-        final collarPaint = Paint()..color = const Color(0xFFB0BEC5)..style = PaintingStyle.stroke..strokeWidth = radius * 0.05..strokeCap = StrokeCap.round;
+        // Heavy pressure collar
+        final collarPaint = Paint()..color = const Color(0xFFB0BEC5)..style = PaintingStyle.stroke..strokeWidth = radius * 0.06..strokeCap = StrokeCap.round;
         canvas.drawArc(
-          Rect.fromCenter(center: Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.36), width: radius * 0.68, height: radius * 0.28),
+          Rect.fromCenter(center: Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.35), width: radius * 0.72, height: radius * 0.30),
           0,
           pi,
           false,
@@ -1206,22 +1209,22 @@ class ShipMeshRenderer {
         );
 
         // Center zipper line
-        final zipPaint = Paint()..color = const Color(0xFF37474F)..style = PaintingStyle.stroke..strokeWidth = radius * 0.03;
-        canvas.drawLine(Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.48), Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.88), zipPaint);
+        final zipPaint = Paint()..color = const Color(0xFF37474F)..style = PaintingStyle.stroke..strokeWidth = radius * 0.035;
+        canvas.drawLine(Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.48), Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.90), zipPaint);
 
         // Left-chest Soviet Cadet Star Patch
-        _renderSovietStar(canvas, Offset(cabinCenter.dx - radius * 0.28, cabinCenter.dy + radius * 0.62), radius * 0.11);
+        _renderSovietStar(canvas, Offset(cabinCenter.dx - radius * 0.32, cabinCenter.dy + radius * 0.64), radius * 0.12);
         break;
     }
 
-    // Transform Canvas for Head G-Strain Deformation
+    // 5. Transform Canvas for Head G-Strain Deformation
     canvas.save();
     canvas.translate(headPos.dx, headPos.dy);
     canvas.scale(headScaleX, headScaleY);
 
     // Eye look coordinates calculation
-    final double eyeRadius = isPanicking ? (radius * 0.13) : (radius * 0.08);
-    final double pupilRadius = isPanicking ? (eyeRadius * 0.30) : (eyeRadius * 0.52);
+    final double eyeRadius = isPanicking ? (radius * 0.14) : (radius * 0.10);
+    final double pupilRadius = isPanicking ? (eyeRadius * 0.32) : (eyeRadius * 0.55);
 
     double lookShiftX = 0.0;
     double lookShiftY = 0.0;
@@ -1232,172 +1235,120 @@ class ShipMeshRenderer {
     }
 
     if (isPanicking) {
-      final double jitter = sin(animationTime * 45.0) * 0.018;
+      final double jitter = sin(animationTime * 45.0) * 0.02;
       lookShiftX += jitter;
-      lookShiftY += cos(animationTime * 35.0) * 0.018;
+      lookShiftY += cos(animationTime * 35.0) * 0.02;
     }
 
-    final double eyeSpacing = radius * 0.11;
-    final double eyeY = -radius * 0.03;
+    final double eyeSpacing = radius * 0.13;
+    final double eyeY = -radius * 0.02;
 
-    // Render Individual Bespoke Helmet Architectures
+    // 6. Render Individual Bespoke Helmet Architectures
     switch (resolvedHelmet) {
       case 'cyber_visor':
         // 1. «Кибер-Визор» (Cyber-Visor / Full Tactical Combat Armor)
-        final cyberBasePaint = Paint()..color = const Color(0xFF14191F);
-        final cyberFacetPaint = Paint()..color = const Color(0xFF222B35);
-        final cyberEdgePaint = Paint()..color = const Color(0xFF00E5FF)..style = PaintingStyle.stroke..strokeWidth = radius * 0.03;
+        final cyberBasePaint = Paint()..color = const Color(0xFF18202A);
+        final cyberFacetPaint = Paint()..color = const Color(0xFF263240);
+        final cyberEdgePaint = Paint()..color = const Color(0xFF00E5FF)..style = PaintingStyle.stroke..strokeWidth = radius * 0.035;
 
         final helmetPath = Path()
-          ..moveTo(0.0, -radius * 0.50)
-          ..lineTo(radius * 0.44, -radius * 0.30)
-          ..lineTo(radius * 0.48, radius * 0.22)
-          ..lineTo(radius * 0.26, radius * 0.45)
-          ..lineTo(-radius * 0.26, radius * 0.45)
-          ..lineTo(-radius * 0.48, radius * 0.22)
-          ..lineTo(-radius * 0.44, -radius * 0.30)
+          ..moveTo(0.0, -radius * 0.58)
+          ..lineTo(radius * 0.52, -radius * 0.32)
+          ..lineTo(radius * 0.55, radius * 0.25)
+          ..lineTo(radius * 0.30, radius * 0.50)
+          ..lineTo(-radius * 0.30, radius * 0.50)
+          ..lineTo(-radius * 0.55, radius * 0.25)
+          ..lineTo(-radius * 0.52, -radius * 0.32)
           ..close();
 
         canvas.drawPath(helmetPath, cyberBasePaint);
 
-        // Crown & Jawline armored chamfers
+        // Crown armored chamfer
         final topChamfer = Path()
-          ..moveTo(-radius * 0.32, -radius * 0.28)
-          ..lineTo(0.0, -radius * 0.48)
-          ..lineTo(radius * 0.32, -radius * 0.28)
+          ..moveTo(-radius * 0.38, -radius * 0.30)
+          ..lineTo(0.0, -radius * 0.55)
+          ..lineTo(radius * 0.38, -radius * 0.30)
           ..lineTo(0.0, -radius * 0.16)
           ..close();
         canvas.drawPath(topChamfer, cyberFacetPaint);
         canvas.drawPath(helmetPath, cyberEdgePaint);
 
-        // Side antenna fin on right side
-        canvas.drawLine(
-          Offset(radius * 0.44, -radius * 0.15),
-          Offset(radius * 0.58, -radius * 0.48),
-          Paint()..color = const Color(0xFF00E5FF)..strokeWidth = radius * 0.035..strokeCap = StrokeCap.round,
-        );
-
         // Cyber Visor Wide Glowing Bar
-        final visorRect = Rect.fromCenter(center: const Offset(0.0, -0.02), width: radius * 0.72, height: radius * 0.22);
-        canvas.drawRRect(RRect.fromRectAndRadius(visorRect, Radius.circular(radius * 0.04)), Paint()..color = const Color(0xFF0A1017));
-        canvas.drawRRect(RRect.fromRectAndRadius(visorRect, Radius.circular(radius * 0.04)), Paint()..color = const Color(0xFF00E5FF)..style = PaintingStyle.stroke..strokeWidth = radius * 0.03);
+        final visorRect = Rect.fromCenter(center: const Offset(0.0, -0.02), width: radius * 0.82, height: radius * 0.26);
+        canvas.drawRRect(RRect.fromRectAndRadius(visorRect, Radius.circular(radius * 0.04)), Paint()..color = const Color(0xFF080E14));
+        canvas.drawRRect(RRect.fromRectAndRadius(visorRect, Radius.circular(radius * 0.04)), Paint()..color = const Color(0xFF00E5FF)..style = PaintingStyle.stroke..strokeWidth = radius * 0.035);
 
-        // Inside Visor: High-Tech Cybernetic Digital Optic Scanners
+        // Digital Optic Sensor Eyes inside Visor
         final opticGlow = Paint()..color = const Color(0xFF00E5FF).withOpacity(0.7)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
         final opticCore = Paint()..color = const Color(0xFFE0F7FA);
 
         if (isBlinking) {
-          // Glitch pulse line
-          canvas.drawLine(Offset(-radius * 0.25, -0.02), Offset(radius * 0.25, -0.02), Paint()..color = const Color(0xFF00E5FF)..strokeWidth = radius * 0.025);
+          canvas.drawLine(Offset(-radius * 0.28, -0.02), Offset(radius * 0.28, -0.02), Paint()..color = const Color(0xFF00E5FF)..strokeWidth = radius * 0.03);
         } else {
-          // Left Digital Optic Sensor
           final leftOptic = Offset(-eyeSpacing + lookShiftX, eyeY + lookShiftY);
-          canvas.drawCircle(leftOptic, eyeRadius * 0.75, opticGlow);
-          canvas.drawCircle(leftOptic, eyeRadius * 0.45, opticCore);
-          canvas.drawRect(Rect.fromCenter(center: leftOptic, width: eyeRadius * 1.2, height: eyeRadius * 0.25), Paint()..color = const Color(0xFF00E5FF));
+          canvas.drawCircle(leftOptic, eyeRadius * 0.85, opticGlow);
+          canvas.drawCircle(leftOptic, eyeRadius * 0.55, opticCore);
+          canvas.drawRect(Rect.fromCenter(center: leftOptic, width: eyeRadius * 1.3, height: eyeRadius * 0.30), Paint()..color = const Color(0xFF00E5FF));
 
-          // Right Digital Optic Sensor
           final rightOptic = Offset(eyeSpacing + lookShiftX, eyeY + lookShiftY);
-          canvas.drawCircle(rightOptic, eyeRadius * 0.75, opticGlow);
-          canvas.drawCircle(rightOptic, eyeRadius * 0.45, opticCore);
-          canvas.drawRect(Rect.fromCenter(center: rightOptic, width: eyeRadius * 1.2, height: eyeRadius * 0.25), Paint()..color = const Color(0xFF00E5FF));
+          canvas.drawCircle(rightOptic, eyeRadius * 0.85, opticGlow);
+          canvas.drawCircle(rightOptic, eyeRadius * 0.55, opticCore);
+          canvas.drawRect(Rect.fromCenter(center: rightOptic, width: eyeRadius * 1.3, height: eyeRadius * 0.30), Paint()..color = const Color(0xFF00E5FF));
         }
-
-        // Tactical HUD frequency line below visor
-        final hudLine = Path()
-          ..moveTo(-radius * 0.20, radius * 0.25)
-          ..lineTo(-radius * 0.08, radius * 0.25)
-          ..lineTo(0.0, radius * 0.18)
-          ..lineTo(radius * 0.08, radius * 0.25)
-          ..lineTo(radius * 0.20, radius * 0.25);
-        canvas.drawPath(hudLine, Paint()..color = const Color(0xFF00E5FF).withOpacity(0.5)..style = PaintingStyle.stroke..strokeWidth = radius * 0.02);
         break;
 
       case 'miner_helmet':
         // 2. «Шлем Шахтера» (Miner Helmet / Heavy Armored Blast Cage)
         final minerSteelPaint = Paint()..color = const Color(0xFF455A64);
         final minerRimPaint = Paint()..color = const Color(0xFF263238)..style = PaintingStyle.stroke..strokeWidth = radius * 0.05;
-        canvas.drawCircle(Offset.zero, radius * 0.46, minerSteelPaint);
-        canvas.drawCircle(Offset.zero, radius * 0.46, minerRimPaint);
+        canvas.drawCircle(Offset.zero, radius * 0.55, minerSteelPaint);
+        canvas.drawCircle(Offset.zero, radius * 0.55, minerRimPaint);
 
         // Bolted Forehead Armor Shield
         final shieldPlate = RRect.fromRectAndRadius(
-          Rect.fromCenter(center: Offset(0.0, -radius * 0.32), width: radius * 0.62, height: radius * 0.16),
+          Rect.fromCenter(center: Offset(0.0, -radius * 0.36), width: radius * 0.72, height: radius * 0.18),
           Radius.circular(radius * 0.04),
         );
         canvas.drawRRect(shieldPlate, Paint()..color = const Color(0xFF37474F));
-        canvas.drawRRect(shieldPlate, Paint()..color = const Color(0xFF90A4AE)..style = PaintingStyle.stroke..strokeWidth = radius * 0.02);
+        canvas.drawRRect(shieldPlate, Paint()..color = const Color(0xFF90A4AE)..style = PaintingStyle.stroke..strokeWidth = radius * 0.025);
 
-        // Plate heavy rivets
-        canvas.drawCircle(Offset(-radius * 0.24, -radius * 0.32), radius * 0.025, Paint()..color = Colors.white70);
-        canvas.drawCircle(Offset(radius * 0.24, -radius * 0.32), radius * 0.025, Paint()..color = Colors.white70);
-
-        // Top Heavy Mining Searchlight & Flare
-        final lampCenter = Offset(0.0, -radius * 0.46);
+        // Searchlight & Flare on Top
+        final lampCenter = Offset(0.0, -radius * 0.54);
         final lampGlow = Paint()..color = const Color(0xFFFFD600).withOpacity(0.6)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.0);
-        canvas.drawCircle(lampCenter, radius * 0.16, lampGlow);
-        canvas.drawRect(Rect.fromCenter(center: lampCenter, width: radius * 0.26, height: radius * 0.15), Paint()..color = const Color(0xFFFFB300));
-        canvas.drawCircle(lampCenter, radius * 0.09, Paint()..color = const Color(0xFFFFFF8D));
+        canvas.drawCircle(lampCenter, radius * 0.20, lampGlow);
+        canvas.drawRect(Rect.fromCenter(center: lampCenter, width: radius * 0.32, height: radius * 0.16), Paint()..color = const Color(0xFFFFB300));
+        canvas.drawCircle(lampCenter, radius * 0.10, Paint()..color = const Color(0xFFFFFF8D));
 
         // Dark Visor Window
-        final visorRect = Rect.fromCenter(center: const Offset(0.0, -0.02), width: radius * 0.58, height: radius * 0.32);
+        final visorRect = Rect.fromCenter(center: const Offset(0.0, -0.02), width: radius * 0.68, height: radius * 0.36);
         canvas.drawRRect(RRect.fromRectAndRadius(visorRect, Radius.circular(radius * 0.06)), Paint()..color = const Color(0xFF101820));
 
-        // Eyes visible behind the grill
+        // Eyes visible behind the protective grill
         _renderEyes(canvas, eyeSpacing, eyeY, eyeRadius, pupilRadius, lookShiftX, lookShiftY, isBlinking);
 
-        // Heavy 3D Blast Protective Grate Bars
-        final gratePaint = Paint()..color = const Color(0xFFB0BEC5)..style = PaintingStyle.stroke..strokeWidth = radius * 0.04..strokeCap = StrokeCap.round;
-        final grateShadow = Paint()..color = Colors.black87..style = PaintingStyle.stroke..strokeWidth = radius * 0.045..strokeCap = StrokeCap.round;
-        
-        // Horizontal bar
-        canvas.drawLine(Offset(-radius * 0.28, -0.02), Offset(radius * 0.28, -0.02), grateShadow);
-        canvas.drawLine(Offset(-radius * 0.28, -0.02), Offset(radius * 0.28, -0.02), gratePaint);
-
-        // Vertical bars
-        canvas.drawLine(Offset(-radius * 0.16, -radius * 0.16), Offset(-radius * 0.16, radius * 0.12), grateShadow);
-        canvas.drawLine(Offset(-radius * 0.16, -radius * 0.16), Offset(-radius * 0.16, radius * 0.12), gratePaint);
-        canvas.drawLine(Offset(radius * 0.16, -radius * 0.16), Offset(radius * 0.16, radius * 0.12), grateShadow);
-        canvas.drawLine(Offset(radius * 0.16, -radius * 0.16), Offset(radius * 0.16, radius * 0.12), gratePaint);
-
-        // Dual Cheek Respirator Filter Pods
-        final filterLeft = Rect.fromCenter(center: Offset(-radius * 0.38, radius * 0.26), width: radius * 0.18, height: radius * 0.18);
-        final filterRight = Rect.fromCenter(center: Offset(radius * 0.38, radius * 0.26), width: radius * 0.18, height: radius * 0.18);
-        canvas.drawOval(filterLeft, Paint()..color = const Color(0xFF263238));
-        canvas.drawOval(filterLeft, Paint()..color = const Color(0xFF78909C)..style = PaintingStyle.stroke..strokeWidth = radius * 0.025);
-        canvas.drawOval(filterRight, Paint()..color = const Color(0xFF263238));
-        canvas.drawOval(filterRight, Paint()..color = const Color(0xFF78909C)..style = PaintingStyle.stroke..strokeWidth = radius * 0.025);
+        // Protective Blast Grate Bars
+        final gratePaint = Paint()..color = const Color(0xFFB0BEC5)..style = PaintingStyle.stroke..strokeWidth = radius * 0.045..strokeCap = StrokeCap.round;
+        canvas.drawLine(Offset(-radius * 0.32, -0.02), Offset(radius * 0.32, -0.02), gratePaint);
+        canvas.drawLine(Offset(-radius * 0.18, -radius * 0.18), Offset(-radius * 0.18, radius * 0.14), gratePaint);
+        canvas.drawLine(Offset(radius * 0.18, -radius * 0.18), Offset(radius * 0.18, radius * 0.14), gratePaint);
         break;
 
       case 'swift_aero':
         // 3. «Стриж-Аэро» (Swift-Aero / Supersonic Jet Fighter Helmet)
         final aeroShell = Path()
-          ..moveTo(0.0, -radius * 0.55)
-          ..quadraticBezierTo(radius * 0.48, -radius * 0.22, radius * 0.44, radius * 0.24)
-          ..quadraticBezierTo(0.0, radius * 0.44, -radius * 0.44, radius * 0.24)
-          ..quadraticBezierTo(-radius * 0.48, -radius * 0.22, 0.0, -radius * 0.55)
+          ..moveTo(0.0, -radius * 0.62)
+          ..quadraticBezierTo(radius * 0.54, -radius * 0.24, radius * 0.50, radius * 0.26)
+          ..quadraticBezierTo(0.0, radius * 0.48, -radius * 0.50, radius * 0.26)
+          ..quadraticBezierTo(-radius * 0.54, -radius * 0.24, 0.0, -radius * 0.62)
           ..close();
 
         final aeroPaint = Paint()..color = const Color(0xFFECEFF1);
-        final aeroBorder = Paint()..color = const Color(0xFF37474F)..style = PaintingStyle.stroke..strokeWidth = radius * 0.035;
+        final aeroBorder = Paint()..color = const Color(0xFF37474F)..style = PaintingStyle.stroke..strokeWidth = radius * 0.04;
         canvas.drawPath(aeroShell, aeroPaint);
         canvas.drawPath(aeroShell, aeroBorder);
 
-        // Top Aerodynamic Dorsal Spine
-        final crestPath = Path()
-          ..moveTo(0.0, -radius * 0.55)
-          ..lineTo(radius * 0.06, -radius * 0.28)
-          ..lineTo(-radius * 0.06, -radius * 0.28)
-          ..close();
-        canvas.drawPath(crestPath, Paint()..color = const Color(0xFF00BCD4));
-
-        // Side aerodynamic stabilizer ear fins
-        final finPaint = Paint()..color = const Color(0xFF00BCD4)..style = PaintingStyle.stroke..strokeWidth = radius * 0.045..strokeCap = StrokeCap.round;
-        canvas.drawLine(Offset(-radius * 0.42, -radius * 0.06), Offset(-radius * 0.55, radius * 0.22), finPaint);
-        canvas.drawLine(Offset(radius * 0.42, -radius * 0.06), Offset(radius * 0.55, radius * 0.22), finPaint);
-
-        // Panoramic Gold-Tinted Mirrored Visor
-        final goldVisorRect = Rect.fromCenter(center: const Offset(0.0, -0.04), width: radius * 0.68, height: radius * 0.36);
+        // Mirrored Polarized Gold Visor
+        final goldVisorRect = Rect.fromCenter(center: const Offset(0.0, -0.04), width: radius * 0.78, height: radius * 0.40);
         final goldShader = const LinearGradient(
           colors: [Color(0xFFFFD54F), Color(0xFFFF8F00), Color(0xFF4E342E)],
           begin: Alignment.topCenter,
@@ -1405,101 +1356,63 @@ class ShipMeshRenderer {
         ).createShader(goldVisorRect);
 
         canvas.drawOval(goldVisorRect, Paint()..shader = goldShader);
-        canvas.drawOval(goldVisorRect, Paint()..color = const Color(0xFF263238)..style = PaintingStyle.stroke..strokeWidth = radius * 0.03);
+        canvas.drawOval(goldVisorRect, Paint()..color = const Color(0xFF263238)..style = PaintingStyle.stroke..strokeWidth = radius * 0.035);
 
-        // Subtle pilot eyes silhouette through the gold visor
-        canvas.saveLayer(goldVisorRect, Paint()..color = Colors.white.withOpacity(0.5));
-        _renderEyes(canvas, eyeSpacing, eyeY, eyeRadius * 0.85, pupilRadius * 0.85, lookShiftX, lookShiftY, isBlinking);
-        canvas.restore();
-
-        // High-G flight HUD reticle overlay on visor
-        canvas.drawCircle(Offset.zero, radius * 0.14, Paint()..color = const Color(0xFF00E5FF).withOpacity(0.6)..style = PaintingStyle.stroke..strokeWidth = radius * 0.02);
-        canvas.drawLine(Offset(-radius * 0.18, 0), Offset(-radius * 0.08, 0), Paint()..color = const Color(0xFF00E5FF).withOpacity(0.6)..strokeWidth = radius * 0.02);
-        canvas.drawLine(Offset(radius * 0.08, 0), Offset(radius * 0.18, 0), Paint()..color = const Color(0xFF00E5FF).withOpacity(0.6)..strokeWidth = radius * 0.02);
-
-        // Central tactical oxygen mask connector
-        final maskCenter = Offset(0.0, radius * 0.28);
-        canvas.drawCircle(maskCenter, radius * 0.10, Paint()..color = const Color(0xFF263238));
-        canvas.drawCircle(maskCenter, radius * 0.06, Paint()..color = const Color(0xFF78909C));
+        // Flight HUD Reticle on Visor
+        canvas.drawCircle(Offset.zero, radius * 0.16, Paint()..color = const Color(0xFF00E5FF).withOpacity(0.6)..style = PaintingStyle.stroke..strokeWidth = radius * 0.025);
+        canvas.drawLine(Offset(-radius * 0.22, 0), Offset(-radius * 0.10, 0), Paint()..color = const Color(0xFF00E5FF).withOpacity(0.6)..strokeWidth = radius * 0.025);
+        canvas.drawLine(Offset(radius * 0.10, 0), Offset(radius * 0.22, 0), Paint()..color = const Color(0xFF00E5FF).withOpacity(0.6)..strokeWidth = radius * 0.025);
         break;
 
       case 'sphere1':
       default:
         // 4. «Сфера-1» (Sphere-1 / Classic Retro Bubble Dome)
-        final hoodRect = Rect.fromCenter(center: Offset.zero, width: radius * 0.72, height: radius * 0.75);
+        final hoodRect = Rect.fromCenter(center: Offset.zero, width: radius * 0.88, height: radius * 0.88);
         canvas.drawOval(hoodRect, Paint()..color = const Color(0xFF37474F));
 
         // Padded ear cushions
-        canvas.drawCircle(Offset(-radius * 0.32, -radius * 0.02), radius * 0.10, Paint()..color = const Color(0xFF263238));
-        canvas.drawCircle(Offset(radius * 0.32, -radius * 0.02), radius * 0.10, Paint()..color = const Color(0xFF263238));
+        canvas.drawCircle(Offset(-radius * 0.40, -radius * 0.02), radius * 0.12, Paint()..color = const Color(0xFF263238));
+        canvas.drawCircle(Offset(radius * 0.40, -radius * 0.02), radius * 0.12, Paint()..color = const Color(0xFF263238));
 
         // Cosmonaut Face
-        final faceRect = Rect.fromCenter(center: const Offset(0.0, -0.02), width: radius * 0.54, height: radius * 0.50);
-        canvas.drawOval(faceRect, Paint()..color = const Color(0xFFFFCC80));
+        final faceRect = Rect.fromCenter(center: const Offset(0.0, -0.02), width: radius * 0.68, height: radius * 0.64);
+        canvas.drawOval(faceRect, Paint()..color = const Color(0xFFFFD180));
 
         // Expressive Animated Eyes & Pupils
         _renderEyes(canvas, eyeSpacing, eyeY, eyeRadius, pupilRadius, lookShiftX, lookShiftY, isBlinking);
 
         // Side Boom Communication Microphone
-        final micPaint = Paint()..color = const Color(0xFFB0BEC5)..style = PaintingStyle.stroke..strokeWidth = radius * 0.035..strokeCap = StrokeCap.round;
-        canvas.drawLine(Offset(-radius * 0.32, radius * 0.10), Offset(-radius * 0.10, radius * 0.18), micPaint);
-        canvas.drawCircle(Offset(-radius * 0.10, radius * 0.18), radius * 0.05, Paint()..color = const Color(0xFF212121));
+        final micPaint = Paint()..color = const Color(0xFFB0BEC5)..style = PaintingStyle.stroke..strokeWidth = radius * 0.04..strokeCap = StrokeCap.round;
+        canvas.drawLine(Offset(-radius * 0.38, radius * 0.12), Offset(-radius * 0.12, radius * 0.22), micPaint);
+        canvas.drawCircle(Offset(-radius * 0.12, radius * 0.22), radius * 0.06, Paint()..color = const Color(0xFF212121));
 
-        // Panoramic Outer Spherical Glass Bubble Dome
+        // Spherical Glass Dome Highlight
         final sphereRadius = radius * 0.48;
-        final bubblePaint = Paint()..color = const Color(0x3300E5FF)..style = PaintingStyle.fill;
-        final bubbleBorder = Paint()..color = Colors.white70..style = PaintingStyle.stroke..strokeWidth = radius * 0.035;
-        canvas.drawCircle(Offset.zero, sphereRadius, bubblePaint);
-        canvas.drawCircle(Offset.zero, sphereRadius, bubbleBorder);
-
-        // Specular Arc Light Reflection
-        final arcPaint = Paint()..color = Colors.white.withOpacity(0.85)..style = PaintingStyle.stroke..strokeWidth = radius * 0.04..strokeCap = StrokeCap.round;
-        canvas.drawArc(Rect.fromCircle(center: Offset.zero, radius: sphereRadius * 0.82), -2.2, 1.2, false, arcPaint);
+        final arcPaint = Paint()..color = Colors.white.withOpacity(0.85)..style = PaintingStyle.stroke..strokeWidth = radius * 0.05..strokeCap = StrokeCap.round;
+        canvas.drawArc(Rect.fromCircle(center: Offset.zero, radius: sphereRadius * 0.85), -2.2, 1.2, false, arcPaint);
 
         // Metal Neck Collar Ring
         final baseCollar = RRect.fromRectAndRadius(
-          Rect.fromCenter(center: Offset(0.0, radius * 0.42), width: radius * 0.72, height: radius * 0.12),
+          Rect.fromCenter(center: Offset(0.0, radius * 0.48), width: radius * 0.82, height: radius * 0.14),
           Radius.circular(radius * 0.04),
         );
         canvas.drawRRect(baseCollar, Paint()..color = const Color(0xFFB0BEC5));
-        canvas.drawRRect(baseCollar, Paint()..color = const Color(0xFF37474F)..style = PaintingStyle.stroke..strokeWidth = radius * 0.02);
+        canvas.drawRRect(baseCollar, Paint()..color = const Color(0xFF37474F)..style = PaintingStyle.stroke..strokeWidth = radius * 0.025);
         break;
     }
 
     canvas.restore(); // Restore G-Strain Transform
+    canvas.restore(); // Restore Porthole Clip
 
-    // 4. Transparent Glass Cockpit Dome & Light Highlights
-    canvas.drawCircle(cabinCenter, radius, _glassPaint);
+    // 7. Outer Glass Cockpit Porthole Frame & Specular Reflection
     canvas.drawCircle(cabinCenter, radius, _glassBorder);
-
-    // Static Specular Arc Highlight
-    canvas.drawOval(
-      Rect.fromLTWH(
-        cabinCenter.dx - radius * 0.6,
-        cabinCenter.dy - radius * 0.7,
-        radius * 0.6,
-        radius * 0.35,
-      ),
+    canvas.drawArc(
+      Rect.fromCircle(center: cabinCenter, radius: radius * 0.90),
+      -2.4,
+      1.1,
+      false,
       _glassHighlightPaint,
     );
-
-    // Animated Light Sweep Across Canopy Glass
-    final double sweepProgress = (sin(animationTime * 0.8) + 1.0) / 2.0;
-    final double sweepX = cabinCenter.dx - radius + (radius * 2.0 * sweepProgress);
-    canvas.save();
-    final Path clipPath = Path()..addOval(Rect.fromCircle(center: cabinCenter, radius: radius));
-    canvas.clipPath(clipPath);
-    final Paint sweepPaint = Paint()
-      ..color = Colors.white.withOpacity(0.08)
-      ..style = PaintingStyle.fill;
-    final Path sweepPath = Path()
-      ..moveTo(sweepX - radius * 0.2, cabinCenter.dy - radius)
-      ..lineTo(sweepX + radius * 0.1, cabinCenter.dy - radius)
-      ..lineTo(sweepX - radius * 0.1, cabinCenter.dy + radius)
-      ..lineTo(sweepX - radius * 0.4, cabinCenter.dy + radius)
-      ..close();
-    canvas.drawPath(sweepPath, sweepPaint);
-    canvas.restore();
   }
 
   static void _renderEyes(
