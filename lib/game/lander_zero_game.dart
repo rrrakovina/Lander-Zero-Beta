@@ -28,10 +28,19 @@ import 'audio/game_audio_manager.dart';
 
 enum GameRunState { playing, won, lost }
 
+enum CrashReason {
+  none,
+  excessAngle,
+  excessSpeed,
+  hullBreached,
+  fuelExhausted,
+}
+
 class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
   final String mapId;
+  VoidCallback? onRestartRequested;
 
-  LanderZeroGame({required this.mapId}) : super(gravity: Vector2(0, _getGravity(mapId)));
+  LanderZeroGame({required this.mapId, this.onRestartRequested}) : super(gravity: Vector2(0, _getGravity(mapId)));
 
   static double _getGravity(String mapId) {
     if (mapId == 'core') return 5.3; // 1.5g Heavy Core
@@ -50,6 +59,18 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
   double _hitStopTimer = 0.0;
   double _accumulator = 0.0;
   static const double _fixedTimeStep = 1 / 60;
+
+  // FTUE & Crash Telemetry
+  int tutorialStep = 0; // 0 = inactive, 1 = lift off, 2 = maneuver, 3 = dock, 4 = transport, 5 = landing
+  CrashReason lastCrashReason = CrashReason.none;
+  double lastImpactSpeed = 0.0;
+  double lastImpactAngle = 0.0;
+
+  void skipTutorial() {
+    tutorialStep = 0;
+    GameState().setTutorialCompleted(true);
+    _updateStats();
+  }
 
   // Система кастомных всплывающих предупреждений
   String? _customAlert;
@@ -76,6 +97,10 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
     'maxFuel': 1.0,
     'shield': 1.0,
     'maxShield': 1.0,
+    'tutorialStep': 0,
+    'lastCrashReason': CrashReason.none,
+    'lastImpactSpeed': 0.0,
+    'lastImpactAngle': 0.0,
   });
 
   // Эффект тряски камеры
@@ -86,6 +111,10 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
   @override
   FutureOr<void> onLoad() async {
     await super.onLoad();
+
+    if (mapId == 'echo' && !GameState().tutorialCompleted) {
+      tutorialStep = 1;
+    }
 
     // Камера
     camera.viewfinder.zoom = 35.0; // 1 метр = 35 пикселей
@@ -99,7 +128,7 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
 
     if (mapId == 'endless') {
       endlessManager = EndlessCaveManager();
-      world.add(endlessManager!);
+      await world.add(endlessManager!);
     }
 
     // 2. Добавляем ландшафт пещеры
@@ -108,14 +137,14 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
 
     // 3. Спавним Лендер на стартовой платформе
     lander = Lander(initialPosition: Vector2(cave.startPlatform.x, cave.startPlatform.y - 2.0));
-    world.add(lander);
+    await world.add(lander);
 
     // 4. Спавним капсулу
     cargoCapsule = CargoCapsule(
       initialPosition: Vector2(cave.cargoPlatform.x, cave.cargoPlatform.y - 0.9),
       type: CargoType.fromMapId(mapId),
     );
-    world.add(cargoCapsule);
+    await world.add(cargoCapsule);
 
     // 5. Распределяем подбираемые предметы вдоль пещеры
     _spawnPickups();
@@ -309,6 +338,26 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
       screenFlash.trigger();
       _hitStopTimer = (impulse * 0.015).clamp(0.05, 0.15); // от 50мс до 150мс
     }
+
+    // Запись телеметрии крушения при критическом ударе
+    if (lander.shield <= 0 && lastCrashReason == CrashReason.none) {
+      lastImpactSpeed = lander.body.linearVelocity.length;
+      final rawAngle = lander.body.angle.abs() % (2 * pi);
+      lastImpactAngle = (rawAngle > pi ? (2 * pi - rawAngle) : rawAngle) * (180.0 / pi);
+
+      final distToExit = lander.body.position.distanceTo(cave.exitPlatform);
+      if (distToExit < 8.0) {
+        if (lastImpactAngle > 12.0) {
+          lastCrashReason = CrashReason.excessAngle;
+        } else if (lastImpactSpeed > 6.0) {
+          lastCrashReason = CrashReason.excessSpeed;
+        } else {
+          lastCrashReason = CrashReason.hullBreached;
+        }
+      } else {
+        lastCrashReason = CrashReason.hullBreached;
+      }
+    }
   }
 
   // Сбор монеты
@@ -340,10 +389,10 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
     bool isProxAlert = false;
     String radioMessage = '';
 
-    if (lander.isMounted) {
+    if (lander.isMounted || lander.isLoaded) {
       gForceVal = lander.gForce;
       pitchAngleVal = lander.body.angle;
-      if (cave.isMounted) {
+      if (cave.isMounted || cave.isLoaded) {
         final pos = lander.body.position;
         final floorY = cave.getFloorY(pos.x);
         final ceilY = cave.getCeilingY(pos.x);
@@ -384,11 +433,16 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
       }
     }
 
+    final bool isStuck = (lander.isMounted || lander.isLoaded) && lander.isStuck;
     if (_customAlert != null) {
       alertText = _customAlert!;
-    } else if (rope == null && lander.isMounted && cargoCapsule.isMounted && lander.body.position.distanceTo(cargoCapsule.body.position) < 8.0) {
+    } else if (isStuck) {
+      alertText = isRu
+          ? 'КОРАБЛЬ ОПРОКИНУТ! НАЖМИТЕ [ R ] ДЛЯ БЫСТРОГО ПЕРЕЗАПУСКА'
+          : 'VESSEL OVERTURNED! PRESS [ R ] FOR QUICK RESTART';
+    } else if (rope == null && (lander.isMounted || lander.isLoaded) && (cargoCapsule.isMounted || cargoCapsule.isLoaded) && lander.body.position.distanceTo(cargoCapsule.body.position) < 8.0) {
       alertText = GameState().translate('cargo_nearby');
-    } else if (rope != null && cargoCapsule.isMounted) {
+    } else if (rope != null && (cargoCapsule.isMounted || cargoCapsule.isLoaded)) {
       if (mapId == 'endless' && endlessManager != null) {
         final outpostPos = endlessManager!.nextOutpostPos;
         final outpostDist = outpostPos != null ? (outpostPos.x - lander.body.position.x) : 999.0;
@@ -418,16 +472,21 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
       'coins': coinsCollected,
       'distance': maxDistance,
       'alert': alertText,
-      'fuel': lander.isMounted ? lander.fuel : 1.0,
-      'maxFuel': lander.isMounted ? lander.maxFuel : 1.0,
-      'shield': lander.isMounted ? lander.shield : 1.0,
-      'maxShield': lander.isMounted ? lander.maxShield : 1.0,
+      'fuel': (lander.isMounted || lander.isLoaded) ? lander.fuel : 1.0,
+      'maxFuel': (lander.isMounted || lander.isLoaded) ? lander.maxFuel : 1.0,
+      'shield': (lander.isMounted || lander.isLoaded) ? lander.shield : 1.0,
+      'maxShield': (lander.isMounted || lander.isLoaded) ? lander.maxShield : 1.0,
       'hasRope': rope != null,
       'gForce': gForceVal,
       'pitchAngle': pitchAngleVal,
       'proximityDistance': proxDistance,
       'isProximityAlert': isProxAlert,
       'radioChatterMessage': radioMessage,
+      'isStuck': isStuck,
+      'tutorialStep': tutorialStep,
+      'lastCrashReason': lastCrashReason,
+      'lastImpactSpeed': lastImpactSpeed,
+      'lastImpactAngle': lastImpactAngle,
     };
   }
 
@@ -443,21 +502,22 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
     }
 
     // Внедрение Physics Accumulator для стабильной симуляции Forge2D
-    _accumulator += dt;
-    while (_accumulator >= _fixedTimeStep) {
+    // Защита от Spiral of Death при лагах браузера / рендеринга (максимум 5 подшагов за кадр)
+    _accumulator += dt.clamp(0.0, 0.1);
+    int subSteps = 0;
+    while (_accumulator >= _fixedTimeStep && subSteps < 5) {
       super.update(_fixedTimeStep);
       _accumulator -= _fixedTimeStep;
-      
       _tickPhysicsGameLogic(_fixedTimeStep);
+      subSteps++;
+    }
+    if (subSteps >= 5) {
+      _accumulator = 0.0;
     }
   }
 
   void _tickPhysicsGameLogic(double fixedDt) {
-    if (!isLoaded || 
-        !lander.isMounted || 
-        !cargoCapsule.isMounted || 
-        !cave.isMounted || 
-        runStateNotifier.value != GameRunState.playing) {
+    if (runStateNotifier.value != GameRunState.playing) {
       return;
     }
 
@@ -482,6 +542,28 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
     final currentDist = (lander.body.position.x - cave.startPlatform.x).clamp(0.0, 1000.0);
     if (currentDist > maxDistance) {
       maxDistance = currentDist;
+    }
+
+    // Обновление состояния интерактивного обучающего автомата (FTUE State Machine)
+    if (tutorialStep > 0 && mapId == 'echo') {
+      final lPos = lander.body.position;
+      if (tutorialStep == 1) {
+        if (lPos.y < cave.startPlatform.y - 1.2) {
+          tutorialStep = 2;
+        }
+      } else if (tutorialStep == 2) {
+        if (lPos.x > cave.startPlatform.x + 6.0) {
+          tutorialStep = 3;
+        }
+      } else if (tutorialStep == 3) {
+        if (rope != null) {
+          tutorialStep = 4;
+        }
+      } else if (tutorialStep == 4) {
+        if (lPos.x > cave.exitPlatform.x - 10.0) {
+          tutorialStep = 5;
+        }
+      }
     }
 
     _updateStats();
@@ -526,8 +608,12 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
 
     // Проверка поражения
     if (lander.shield <= 0) {
+      if (lastCrashReason == CrashReason.none) {
+        lastCrashReason = CrashReason.hullBreached;
+      }
       _finishGame(GameRunState.lost);
     } else if (lander.fuel <= 0 && lander.body.linearVelocity.length2 < 0.05) {
+      lastCrashReason = CrashReason.fuelExhausted;
       _finishGame(GameRunState.lost);
     }
 
@@ -605,6 +691,13 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
     GameAudioManager().stopThrustLoop();
 
     if (endState == GameRunState.lost) {
+      if (lastCrashReason == CrashReason.none) {
+        if (lander.fuel <= 0) {
+          lastCrashReason = CrashReason.fuelExhausted;
+        } else {
+          lastCrashReason = CrashReason.hullBreached;
+        }
+      }
       sparkPool.spawnExplosion(lander.body.position);
       lander.exploded = true;
       if (rope != null) {
@@ -622,6 +715,10 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
     // Монеты заезда: 10 монет за каждую собранную + бонус за успешную эвакуацию (100 монет)
     int rewardCoins = coinsCollected * 10;
     if (endState == GameRunState.won) {
+      if (mapId == 'echo' && tutorialStep > 0) {
+        tutorialStep = 0;
+        state.setTutorialCompleted(true);
+      }
       rewardCoins += 100;
       GameAudioManager().playSfx('victory.wav');
 
@@ -678,23 +775,57 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
     }
 
     final isKeyDown = event is KeyDownEvent || event is KeyRepeatEvent;
+
+    if (isKeyDown &&
+        (event.physicalKey == PhysicalKeyboardKey.keyR ||
+            event.logicalKey == LogicalKeyboardKey.keyR ||
+            event.logicalKey == LogicalKeyboardKey.keyK ||
+            event.character?.toLowerCase() == 'r' ||
+            event.character?.toLowerCase() == 'к' ||
+            event.character?.toLowerCase() == 'k')) {
+      onRestartRequested?.call();
+      return KeyEventResult.handled;
+    }
     
-    if (event.logicalKey == LogicalKeyboardKey.keyA || event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+    // Left Thruster (A / Left Arrow / Cyrillic Ф)
+    if (event.physicalKey == PhysicalKeyboardKey.keyA ||
+        event.logicalKey == LogicalKeyboardKey.keyA ||
+        event.logicalKey == LogicalKeyboardKey.arrowLeft ||
+        event.character?.toLowerCase() == 'a' ||
+        event.character?.toLowerCase() == 'ф') {
       setLeftThrust(isKeyDown);
       return KeyEventResult.handled;
     }
-    if (event.logicalKey == LogicalKeyboardKey.keyD || event.logicalKey == LogicalKeyboardKey.arrowRight) {
+
+    // Right Thruster (D / Right Arrow / Cyrillic В)
+    if (event.physicalKey == PhysicalKeyboardKey.keyD ||
+        event.logicalKey == LogicalKeyboardKey.keyD ||
+        event.logicalKey == LogicalKeyboardKey.arrowRight ||
+        event.character?.toLowerCase() == 'd' ||
+        event.character?.toLowerCase() == 'в') {
       setRightThrust(isKeyDown);
       return KeyEventResult.handled;
     }
-    if (event.logicalKey == LogicalKeyboardKey.keyW ||
+
+    // Main Dual Thruster (W / Up Arrow / Space / Cyrillic Ц)
+    if (event.physicalKey == PhysicalKeyboardKey.keyW ||
+        event.logicalKey == LogicalKeyboardKey.keyW ||
         event.logicalKey == LogicalKeyboardKey.arrowUp ||
-        event.logicalKey == LogicalKeyboardKey.space) {
+        event.logicalKey == LogicalKeyboardKey.space ||
+        event.physicalKey == PhysicalKeyboardKey.space ||
+        event.character?.toLowerCase() == 'w' ||
+        event.character?.toLowerCase() == 'ц') {
       setLeftThrust(isKeyDown);
       setRightThrust(isKeyDown);
       return KeyEventResult.handled;
     }
-    if (event.logicalKey == LogicalKeyboardKey.keyS || event.logicalKey == LogicalKeyboardKey.arrowDown) {
+
+    // Cargo Release / Reverse RCS (S / Down Arrow / Cyrillic Ы)
+    if (event.physicalKey == PhysicalKeyboardKey.keyS ||
+        event.logicalKey == LogicalKeyboardKey.keyS ||
+        event.logicalKey == LogicalKeyboardKey.arrowDown ||
+        event.character?.toLowerCase() == 's' ||
+        event.character?.toLowerCase() == 'ы') {
       if (isKeyDown && rope != null) {
         releaseCargo();
         return KeyEventResult.handled;
@@ -709,5 +840,13 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
     }
     
     return KeyEventResult.ignored;
+  }
+
+  @override
+  void onRemove() {
+    GameAudioManager().disposeGameSounds();
+    setLeftThrust(false);
+    setRightThrust(false);
+    super.onRemove();
   }
 }

@@ -385,7 +385,14 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
     required MapBriefingData mapData,
     required bool isRu,
   }) {
-    final color = mapData.themeColor;
+    final state = GameState();
+    final isUnlocked = state.isLevelUnlocked(mapData.id);
+    final stars = state.getStarsForLevel(mapData.id);
+    final reqMapId = state.getRequiredLevelToUnlock(mapData.id);
+    final reqMapData = reqMapId.isNotEmpty ? MapBriefingData.maps[reqMapId] : null;
+    final reqName = reqMapData != null ? (isRu ? reqMapData.nameRu : reqMapData.nameEn) : '';
+
+    final color = isUnlocked ? mapData.themeColor : Colors.white38;
     final name = isRu ? mapData.nameRu : mapData.nameEn;
     final desc = isRu ? mapData.descRu : mapData.descEn;
     final difficulty = isRu ? mapData.difficultyRu : mapData.difficultyEn;
@@ -411,15 +418,22 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
           width: 250,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withOpacity(0.35), width: 2),
-            color: const Color(0xFF16161E).withOpacity(0.92),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.08),
-                blurRadius: 16,
-                spreadRadius: 2,
-              ),
-            ],
+            border: Border.all(
+              color: isUnlocked ? color.withOpacity(0.35) : Colors.white12,
+              width: 2,
+            ),
+            color: isUnlocked
+                ? const Color(0xFF16161E).withOpacity(0.92)
+                : const Color(0xFF0F1014).withOpacity(0.95),
+            boxShadow: isUnlocked
+                ? [
+                    BoxShadow(
+                      color: color.withOpacity(0.08),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                    ),
+                  ]
+                : null,
           ),
           padding: const EdgeInsets.all(18),
           child: Column(
@@ -435,7 +449,11 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                       color: color.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(mapData.icon, color: color, size: 28),
+                    child: Icon(
+                      isUnlocked ? mapData.icon : Icons.lock_rounded,
+                      color: color,
+                      size: 28,
+                    ),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -454,18 +472,82 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
               const SizedBox(height: 12),
               Text(
                 name,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: isUnlocked ? Colors.white : Colors.white54,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
+
+              // 3-Star Rating or Endless Badge or Lock Requirement
+              if (!isUnlocked) ...[
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: Text(
+                    state.translate('level_requires').replaceAll('{val}', reqName.toUpperCase()),
+                    style: const TextStyle(
+                      color: Colors.white38,
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ] else if (mapData.id == 'endless') ...[
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0x33FFD700),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: const Color(0x66FFD700)),
+                  ),
+                  child: Text(
+                    state.translate('free_mode_badge'),
+                    style: const TextStyle(
+                      color: Color(0xFFFFD700),
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ] else ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: List.generate(3, (starIdx) {
+                      final isEarned = starIdx < stars;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: Icon(
+                          isEarned ? Icons.star_rounded : Icons.star_outline_rounded,
+                          color: isEarned ? const Color(0xFFFFD700) : Colors.white24,
+                          size: 18,
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 4),
               Text(
                 desc,
-                style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.35),
+                style: TextStyle(
+                  color: isUnlocked ? Colors.white70 : Colors.white30,
+                  fontSize: 12,
+                  height: 1.35,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -475,51 +557,60 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
               _buildCardParamRow(
                 label: isRu ? 'Гравитация' : 'Gravity',
                 value: gravity,
-                color: Colors.white,
+                color: isUnlocked ? Colors.white : Colors.white38,
               ),
               const SizedBox(height: 4),
               _buildCardParamRow(
                 label: isRu ? 'Ветровой снос' : 'Wind force',
                 value: wind,
-                color: mapData.id == 'wind' ? GameConfig.colorWarning : Colors.white,
+                color: isUnlocked ? (mapData.id == 'wind' ? GameConfig.colorWarning : Colors.white) : Colors.white38,
               ),
               const SizedBox(height: 4),
               _buildCardParamRow(
                 label: isRu ? 'Температура' : 'Thermal',
                 value: thermal,
-                color: mapData.id == 'core' ? GameConfig.colorDanger : (mapData.id == 'ice' ? const Color(0xFF00E5FF) : Colors.white),
+                color: isUnlocked ? (mapData.id == 'core' ? GameConfig.colorDanger : (mapData.id == 'ice' ? const Color(0xFF00E5FF) : Colors.white)) : Colors.white38,
               ),
               const SizedBox(height: 4),
               _buildCardParamRow(
                 label: isRu ? 'Радиация' : 'Radiation',
                 value: radiation,
-                color: mapData.id == 'core' ? GameConfig.colorDanger : (mapData.id == 'wind' ? GameConfig.colorWarning : Colors.white),
+                color: isUnlocked ? (mapData.id == 'core' ? GameConfig.colorDanger : (mapData.id == 'wind' ? GameConfig.colorWarning : Colors.white)) : Colors.white38,
               ),
               const SizedBox(height: 4),
               _buildCardParamRow(
                 label: isRu ? 'Награда' : 'Bounty',
                 value: bounty,
-                color: GameConfig.colorWarning,
-                isBold: true,
+                color: isUnlocked ? GameConfig.colorWarning : Colors.white38,
+                isBold: isUnlocked,
               ),
               const SizedBox(height: 10),
               Center(
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
+                    color: isUnlocked ? color.withOpacity(0.12) : Colors.white.withOpacity(0.04),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: color.withOpacity(0.3)),
+                    border: Border.all(color: isUnlocked ? color.withOpacity(0.3) : Colors.white12),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         isRu ? 'БРИФИНГ' : 'BRIEFING',
-                        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1),
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
                       ),
                       const SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_rounded, color: color, size: 14),
+                      Icon(
+                        isUnlocked ? Icons.arrow_forward_rounded : Icons.lock_outline_rounded,
+                        color: color,
+                        size: 14,
+                      ),
                     ],
                   ),
                 ),
@@ -559,6 +650,7 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
 
   Widget _buildMapPreviewScreen(GameState state, bool isRu) {
     final mapData = MapBriefingData.maps[_previewMapId] ?? MapBriefingData.maps['echo']!;
+    final isUnlocked = _previewMapId != null && state.isLevelUnlocked(_previewMapId!);
     final themeColor = mapData.themeColor;
     final name = isRu ? mapData.nameRu : mapData.nameEn;
     final difficulty = isRu ? mapData.difficultyRu : mapData.difficultyEn;
@@ -571,6 +663,9 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
     final gravity = isRu ? mapData.gravityRu : mapData.gravityEn;
     final wind = isRu ? mapData.windRu : mapData.windEn;
     final bountyRange = isRu ? mapData.bountyRangeRu : mapData.bountyRangeEn;
+    final reqLevelId = state.getRequiredLevelToUnlock(_previewMapId!);
+    final reqMapData = MapBriefingData.maps[reqLevelId];
+    final reqName = reqMapData != null ? (isRu ? reqMapData.nameRu : reqMapData.nameEn) : '';
 
     int bestDist = 0;
     if (_previewMapId == 'endless') {
@@ -878,15 +973,39 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                           const SizedBox(height: 12),
                           ElevatedButton(
                             onPressed: () {
+                              if (!isUnlocked) {
+                                GameAudioManager().playDecline();
+                                ScaffoldMessenger.of(context).clearSnackBars();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: [
+                                        const Icon(Icons.lock_rounded, color: Colors.white, size: 20),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            state.translate('level_locked_toast').replaceAll('{val}', reqName),
+                                            style: const TextStyle(fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    backgroundColor: GameConfig.colorDanger,
+                                    duration: const Duration(seconds: 2),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                                return;
+                              }
                               GameAudioManager().playTap();
                               widget.onMapSelected(_previewMapId!);
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: themeColor,
-                              foregroundColor: Colors.black,
+                              backgroundColor: isUnlocked ? themeColor : Colors.white24,
+                              foregroundColor: isUnlocked ? Colors.black : Colors.white70,
                               minimumSize: const Size.fromHeight(46),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              elevation: 6,
+                              elevation: isUnlocked ? 6 : 0,
                               shadowColor: themeColor.withOpacity(0.3),
                               textStyle: const TextStyle(
                                 fontWeight: FontWeight.bold,
@@ -894,7 +1013,9 @@ class _MapSelectWidgetState extends State<MapSelectWidget> with SingleTickerProv
                                 fontSize: 13,
                               ),
                             ),
-                            child: Text(isRu ? 'В ПУТЬ' : 'LAUNCH MISSION'),
+                            child: Text(
+                              isRu ? 'В ПУТЬ' : 'LAUNCH MISSION',
+                            ),
                           ),
                         ],
                       ),

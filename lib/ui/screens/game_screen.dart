@@ -11,6 +11,7 @@ import '../widgets/glass_panel.dart';
 import '../widgets/achievement_toast.dart';
 import '../widgets/minimap_widget.dart';
 import '../widgets/tutorial_controls_overlay.dart';
+import '../widgets/interactive_tutorial_guide.dart';
 import '../widgets/cockpit_hud/g_force_gauge.dart';
 import '../widgets/cockpit_hud/artificial_horizon.dart';
 import '../widgets/cockpit_hud/proximity_warning.dart';
@@ -30,7 +31,7 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   late LanderZeroGame _game;
   bool _isPaused = false;
   Timer? _tutorialTimer;
@@ -40,20 +41,44 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initNewGame();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tutorialTimer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden) {
+      if (!_isPaused && _game.runStateNotifier.value == GameRunState.playing) {
+        setState(() {
+          _isPaused = true;
+          _game.pauseEngine();
+        });
+      }
+      GameAudioManager().stopThrustLoop();
+      GameAudioManager().stopBgm();
+    } else if (state == AppLifecycleState.resumed) {
+      GameAudioManager().playBgm();
+      if (mounted) {
+        setState(() {});
+      }
+    }
   }
 
   void _initNewGame() {
     _tutorialTimer?.cancel();
     final shouldShowHints = GameState().showControlHints;
     setState(() {
-      _game = LanderZeroGame(mapId: widget.mapId);
+      _game = LanderZeroGame(mapId: widget.mapId, onRestartRequested: _restartGame);
       _isPaused = false;
       _showTutorial = shouldShowHints;
       _tutorialOpacity = shouldShowHints ? 1.0 : 0.0;
@@ -116,6 +141,14 @@ class _GameScreenState extends State<GameScreen> {
                 _togglePause();
                 return KeyEventResult.handled;
               }
+              if (event.logicalKey == LogicalKeyboardKey.keyR ||
+                  event.logicalKey == LogicalKeyboardKey.keyK ||
+                  event.character?.toLowerCase() == 'r' ||
+                  event.character?.toLowerCase() == 'к' ||
+                  event.character?.toLowerCase() == 'k') {
+                _restartGame();
+                return KeyEventResult.handled;
+              }
             }
             return KeyEventResult.ignored;
           },
@@ -158,6 +191,7 @@ class _GameScreenState extends State<GameScreen> {
                     final double proxDist = (stats['proximityDistance'] as num?)?.toDouble() ?? 99.0;
                     final bool isProxAlert = stats['isProximityAlert'] as bool? ?? false;
                     final String radioMsg = stats['radioChatterMessage'] as String? ?? '';
+                    final bool isStuck = stats['isStuck'] as bool? ?? false;
 
                     return Column(
                       mainAxisSize: MainAxisSize.min,
@@ -311,7 +345,48 @@ class _GameScreenState extends State<GameScreen> {
                         ],
 
                         // Proximity Warning & Alerts
-                        if (isProxAlert) ...[
+                        if (isStuck) ...[
+                          const SizedBox(height: 8),
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: _restartGame,
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black87,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: GameConfig.colorDanger, width: 1.5),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: GameConfig.colorDanger.withOpacity(0.4),
+                                      blurRadius: 10,
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.restart_alt_rounded, color: GameConfig.colorDanger, size: 18),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      state.language == 'ru'
+                                          ? 'КОРАБЛЬ ОПРОКИНУТ // [ R ] ВЗЯТЬ НОВЫЙ КОРАБЛЬ'
+                                          : 'VESSEL OVERTURNED // [ R ] QUICK RESTART',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ] else if (isProxAlert) ...[
                           const SizedBox(height: 8),
                           ProximityWarningAlarm(isAlert: isProxAlert, distance: proxDist),
                         ] else if (alertText.isNotEmpty) ...[
@@ -380,9 +455,23 @@ class _GameScreenState extends State<GameScreen> {
                 ),
               ),
 
-              // 4. Обучающий оверлей с подсказками клавиш управления для ПК
-              if (_showTutorial)
-                TutorialControlsOverlay(opacity: _tutorialOpacity),
+              // 4. Обучающий оверлей и интерактивный пошаговый гид
+              ValueListenableBuilder<Map<String, dynamic>>(
+                valueListenable: _game.statsNotifier,
+                builder: (context, stats, _) {
+                  final int tutStep = stats['tutorialStep'] as int? ?? 0;
+                  if (tutStep > 0) {
+                    return InteractiveTutorialGuide(
+                      step: tutStep,
+                      onSkip: _game.skipTutorial,
+                    );
+                  }
+                  if (_showTutorial) {
+                    return TutorialControlsOverlay(opacity: _tutorialOpacity);
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
 
               // Кнопка сброса груза для мобильных/сенсорных экранов
               Positioned(
@@ -637,6 +726,7 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
   late Animation<double> _counterAnimation;
   int _animatedReward = 0;
   bool _isNewRecord = false;
+  Map<String, dynamic>? _victoryResult;
 
   @override
   void initState() {
@@ -659,6 +749,27 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
         if (mounted && isNew) {
           setState(() {
             _isNewRecord = true;
+          });
+        }
+      });
+    }
+
+    if (isWon || widget.game.mapId == 'endless') {
+      final fuelPercent = widget.game.lander.maxFuel > 0
+          ? (widget.game.lander.fuel / widget.game.lander.maxFuel * 100).clamp(0.0, 100.0)
+          : 0.0;
+      final damagePercent = widget.game.totalDamage;
+
+      GameState().processMissionVictory(
+        widget.game.mapId,
+        remainingFuelPercent: fuelPercent,
+        damagePercent: damagePercent,
+        coinsEarned: reward,
+        distance: widget.game.maxDistance,
+      ).then((result) {
+        if (mounted) {
+          setState(() {
+            _victoryResult = result;
           });
         }
       });
@@ -700,6 +811,45 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
     );
   }
 
+  Widget _buildStarCriteriaRow({
+    required IconData icon,
+    required String label,
+    required bool achieved,
+    String? valueText,
+  }) {
+    return Row(
+      children: [
+        Icon(
+          achieved ? Icons.check_circle_rounded : Icons.cancel_outlined,
+          color: achieved ? const Color(0xFF00E676) : Colors.white24,
+          size: 14,
+        ),
+        const SizedBox(width: 6),
+        Icon(icon, color: achieved ? Colors.white70 : Colors.white24, size: 14),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: achieved ? Colors.white : Colors.white38,
+              fontSize: 11,
+              fontWeight: achieved ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+        ),
+        if (valueText != null)
+          Text(
+            valueText,
+            style: TextStyle(
+              color: achieved ? const Color(0xFF00E676) : Colors.white24,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = GameState();
@@ -724,6 +874,9 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
 
     final flightSec = widget.game.flightTime;
     final damage = widget.game.totalDamage;
+    final fuelPercent = widget.game.lander.maxFuel > 0
+        ? (widget.game.lander.fuel / widget.game.lander.maxFuel * 100).clamp(0.0, 100.0)
+        : 0.0;
 
     return Positioned.fill(
       child: BackdropFilter(
@@ -795,6 +948,248 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
                         _buildStatsRow(state.translate('stats_damage'), '${damage.toInt()}%'),
                         const SizedBox(height: 8),
                       ],
+
+                      // 3-Star Rating Card (Victory Scenario on Campaign Maps)
+                      if (isWon && !isEndless) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0x22FFD700),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0x66FFD700), width: 1.2),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.stars_rounded, color: Color(0xFFFFD700), size: 18),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        state.translate('stars_rating_title'),
+                                        style: const TextStyle(
+                                          color: Color(0xFFFFD700),
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.0,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: List.generate(3, (i) {
+                                      final earned = i < (_victoryResult?['stars'] ?? state.calculateEarnedStars(remainingFuelPercent: fuelPercent, damagePercent: damage));
+                                      return Icon(
+                                        earned ? Icons.star_rounded : Icons.star_outline_rounded,
+                                        color: earned ? const Color(0xFFFFD700) : Colors.white24,
+                                        size: 20,
+                                      );
+                                    }),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              _buildStarCriteriaRow(
+                                icon: Icons.inventory_2_rounded,
+                                label: state.translate('star_cargo_delivered'),
+                                achieved: true,
+                              ),
+                              const SizedBox(height: 4),
+                              _buildStarCriteriaRow(
+                                icon: Icons.local_gas_station_rounded,
+                                label: state.translate('star_fuel_efficiency'),
+                                achieved: fuelPercent >= 40.0,
+                                valueText: '${fuelPercent.toInt()}%',
+                              ),
+                              const SizedBox(height: 4),
+                              _buildStarCriteriaRow(
+                                icon: Icons.shield_rounded,
+                                label: state.translate('star_hull_integrity'),
+                                achieved: damage <= 0.001,
+                                valueText: '${damage.toInt()}%',
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+
+                      // Pilot XP Progression Banner
+                      if (_victoryResult != null) ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: const Color(0x2200E5FF),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0x5500E5FF)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.military_tech_rounded, color: Color(0xFF00E5FF), size: 16),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    state.translate('pilot_xp_earned').replaceAll('{val}', '${_victoryResult!['xpAwarded']}'),
+                                    style: const TextStyle(
+                                      color: Color(0xFF00E5FF),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.8,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (_victoryResult!['isRankUp'] == true)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFD700),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    state.translate('rank_up_title'),
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+
+                      // Grand Campaign Victory Celebration Banner
+                      if (isWon && !isEndless && state.completedLevels.length >= 5) ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0x33FFD700), Color(0x33E040FB)],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFFFD700), width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFFFD700).withOpacity(0.25),
+                                blurRadius: 12,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                state.translate('campaign_completed_title'),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Color(0xFFFFD700),
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                state.translate('campaign_completed_sub'),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 10.5,
+                                  height: 1.3,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.black45,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  state.translate('campaign_stars_summary').replaceAll('{val}', '${state.totalStars}'),
+                                  style: const TextStyle(
+                                    color: Color(0xFFFFD700),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+
+                      // Crash Telemetry Diagnostic Card (Defeat / Crash Scenario)
+                      if (!isWon) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0x33FF1744),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: GameConfig.colorDanger.withOpacity(0.6), width: 1.2),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.warning_amber_rounded, color: GameConfig.colorDanger, size: 16),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      state.translate('crash_telemetry_title'),
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: GameConfig.colorDanger,
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.8,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                _getCrashReasonText(state, widget.game.lastCrashReason, widget.game.lastImpactAngle, widget.game.lastImpactSpeed),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _getCrashTipText(state, widget.game.lastCrashReason),
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.6),
+                                  fontSize: 10.5,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+
                       const Divider(color: Colors.white10),
                       const SizedBox(height: 12),
                       Row(
@@ -859,10 +1254,22 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                               ),
-                              child: Text(
-                                (isWon ? state.translate('play') : state.translate('restart'))
-                                    .toUpperCase(),
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    if (!isWon) ...[
+                                      const Icon(Icons.restart_alt_rounded, size: 16),
+                                      const SizedBox(width: 6),
+                                    ],
+                                    Text(
+                                      (isWon ? state.translate('play') : state.translate('quick_restart_hint'))
+                                          .toUpperCase(),
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -877,5 +1284,33 @@ class _PostRunStatsOverlayState extends State<PostRunStatsOverlay> with SingleTi
         ),
       ),
     );
+  }
+
+  String _getCrashReasonText(GameState state, CrashReason reason, double angle, double speed) {
+    switch (reason) {
+      case CrashReason.excessAngle:
+        return state.translate('crash_excess_angle').replaceAll('{val}', angle.toStringAsFixed(1));
+      case CrashReason.excessSpeed:
+        return state.translate('crash_excess_speed').replaceAll('{val}', speed.toStringAsFixed(1));
+      case CrashReason.fuelExhausted:
+        return state.translate('crash_fuel_exhausted');
+      case CrashReason.hullBreached:
+      case CrashReason.none:
+        return state.translate('crash_hull_breached');
+    }
+  }
+
+  String _getCrashTipText(GameState state, CrashReason reason) {
+    switch (reason) {
+      case CrashReason.excessAngle:
+        return state.translate('crash_excess_angle_tip');
+      case CrashReason.excessSpeed:
+        return state.translate('crash_excess_speed_tip');
+      case CrashReason.fuelExhausted:
+        return state.translate('crash_fuel_exhausted_tip');
+      case CrashReason.hullBreached:
+      case CrashReason.none:
+        return state.translate('crash_hull_breached_tip');
+    }
   }
 }

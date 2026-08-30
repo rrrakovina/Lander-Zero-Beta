@@ -36,6 +36,12 @@ class GameState extends ChangeNotifier {
 
   // Настройки интерфейса
   bool _showControlHints = true;
+  bool _tutorialCompleted = false;
+
+  // Прогресс кампании и пилота
+  int _pilotXp = 0;
+  List<String> _completedLevels = [];
+  Map<String, int> _levelStars = {};
 
   // Рекорды бесконечного режима
   int _endlessBestDistance = 0;
@@ -52,6 +58,10 @@ class GameState extends ChangeNotifier {
   double get musicVolume => _musicVolume;
   double get sfxVolume => _sfxVolume;
   bool get showControlHints => _showControlHints;
+  bool get tutorialCompleted => _tutorialCompleted;
+  int get pilotXp => _pilotXp;
+  List<String> get completedLevels => List.unmodifiable(_completedLevels);
+  Map<String, int> get levelStars => Map.unmodifiable(_levelStars);
   int get endlessBestDistance => _endlessBestDistance;
   int get endlessHighScore => _endlessHighScore;
   int get endlessTotalRescues => _endlessTotalRescues;
@@ -225,6 +235,9 @@ class GameState extends ChangeNotifier {
       ownedHelmets: _ownedHelmets,
       selectedSuit: _selectedSuit,
       ownedSuits: _ownedSuits,
+      pilotXp: _pilotXp,
+      completedLevels: _completedLevels,
+      levelStarsJson: jsonEncode(_levelStars),
     );
   }
 
@@ -248,10 +261,22 @@ class GameState extends ChangeNotifier {
     final storedLb = _prefs.getString('leaderboard') ?? '[]';
     final storedSuitColor = _prefs.getString('suitColor') ?? 'classic_orange';
     final storedHelmet = _prefs.getString('selectedHelmet') ?? 'sphere1';
+    _tutorialCompleted = _prefs.getBool('tutorialCompleted') ?? false;
     final storedOwnedHelmets = _prefs.getStringList('ownedHelmets') ?? ['sphere1'];
     final storedSuit = _prefs.getString('selectedSuit') ?? 'sk1_cadet';
     final storedOwnedSuits = _prefs.getStringList('ownedSuits') ?? ['sk1_cadet'];
+    final storedPilotXp = _prefs.getInt('pilotXp') ?? 0;
+    final storedCompletedLevels = _prefs.getStringList('completedLevels') ?? [];
+    final storedLevelStarsJson = _prefs.getString('levelStars') ?? '{}';
     final storedSig = _prefs.getString(SaveSecurityManager.saveSignatureKey);
+
+    Map<String, int> parsedStars = {};
+    try {
+      final decodedStars = jsonDecode(storedLevelStarsJson) as Map<String, dynamic>;
+      parsedStars = decodedStars.map((k, v) => MapEntry(k, (v as num).toInt()));
+    } catch (_) {
+      parsedStars = {};
+    }
 
     if (storedCoins == null && storedFleet == null && storedSig == null) {
       // 1. Fresh install baseline
@@ -267,6 +292,9 @@ class GameState extends ChangeNotifier {
       _ownedHelmets = ['sphere1'];
       _selectedSuit = 'sk1_cadet';
       _ownedSuits = ['sk1_cadet'];
+      _pilotXp = 0;
+      _completedLevels = [];
+      _levelStars = {};
 
       await _prefs.setInt('totalCoins', _totalCoins);
       await _prefs.setStringList('ownedRockets', _ownedRockets);
@@ -280,6 +308,9 @@ class GameState extends ChangeNotifier {
       await _prefs.setStringList('ownedHelmets', _ownedHelmets);
       await _prefs.setString('selectedSuit', _selectedSuit);
       await _prefs.setStringList('ownedSuits', _ownedSuits);
+      await _prefs.setInt('pilotXp', _pilotXp);
+      await _prefs.setStringList('completedLevels', _completedLevels);
+      await _prefs.setString('levelStars', '{}');
       await _saveIntegrity();
     } else if (storedSig == null) {
       // 2. Migration from legacy save without signature
@@ -306,6 +337,10 @@ class GameState extends ChangeNotifier {
       if (!_ownedSuits.contains('sk1_cadet')) _ownedSuits.add('sk1_cadet');
       if (!_ownedSuits.contains(_selectedSuit)) _selectedSuit = 'sk1_cadet';
 
+      _pilotXp = storedPilotXp;
+      _completedLevels = List<String>.from(storedCompletedLevels);
+      _levelStars = parsedStars;
+
       try {
         final List<dynamic> decoded = jsonDecode(storedLb);
         _leaderboard = decoded.map((e) => Map<String, dynamic>.from(e)).toList();
@@ -326,6 +361,9 @@ class GameState extends ChangeNotifier {
       final loadedOwnedHelmets = List<String>.from(storedOwnedHelmets);
       final loadedSuit = storedSuit;
       final loadedOwnedSuits = List<String>.from(storedOwnedSuits);
+      final loadedPilotXp = storedPilotXp;
+      final loadedCompletedLevels = List<String>.from(storedCompletedLevels);
+      final loadedLevelStars = parsedStars;
 
       final isValid = SaveSecurityManager.verifySignature(
         coins: loadedCoins,
@@ -339,6 +377,9 @@ class GameState extends ChangeNotifier {
         ownedHelmets: loadedOwnedHelmets,
         selectedSuit: loadedSuit,
         ownedSuits: loadedOwnedSuits,
+        pilotXp: loadedPilotXp,
+        completedLevels: loadedCompletedLevels,
+        levelStarsJson: storedLevelStarsJson,
         signature: storedSig,
       );
 
@@ -367,6 +408,10 @@ class GameState extends ChangeNotifier {
         if (!_ownedSuits.contains('sk1_cadet')) _ownedSuits.add('sk1_cadet');
         if (!_ownedSuits.contains(_selectedSuit)) _selectedSuit = 'sk1_cadet';
 
+        _pilotXp = loadedPilotXp;
+        _completedLevels = loadedCompletedLevels;
+        _levelStars = loadedLevelStars;
+
         try {
           final List<dynamic> decoded = jsonDecode(storedLb);
           _leaderboard = decoded.map((e) => Map<String, dynamic>.from(e)).toList();
@@ -388,6 +433,9 @@ class GameState extends ChangeNotifier {
         _ownedHelmets = ['sphere1'];
         _selectedSuit = 'sk1_cadet';
         _ownedSuits = ['sk1_cadet'];
+        _pilotXp = 0;
+        _completedLevels = [];
+        _levelStars = {};
 
         await _prefs.setInt('totalCoins', _totalCoins);
         await _prefs.setStringList('ownedRockets', _ownedRockets);
@@ -401,6 +449,9 @@ class GameState extends ChangeNotifier {
         await _prefs.setStringList('ownedHelmets', _ownedHelmets);
         await _prefs.setString('selectedSuit', _selectedSuit);
         await _prefs.setStringList('ownedSuits', _ownedSuits);
+        await _prefs.setInt('pilotXp', _pilotXp);
+        await _prefs.setStringList('completedLevels', _completedLevels);
+        await _prefs.setString('levelStars', '{}');
         await _saveIntegrity();
       }
     }
@@ -679,6 +730,229 @@ class GameState extends ChangeNotifier {
     return isNewRecord;
   }
 
+  /// Установка статуса завершения обучения
+  Future<void> setTutorialCompleted(bool val) async {
+    _tutorialCompleted = val;
+    if (_initialized) {
+      await _prefs.setBool('tutorialCompleted', val);
+      await _saveIntegrity();
+    }
+    notifyListeners();
+  }
+
+  /// Проверка доступности уровня (последовательное открытие уровней)
+  /// Каньон Эхо ('echo') и Свободный режим ('endless') открыты всегда.
+  /// 'wind' требует прохождения 'echo', 'core' -> 'wind', 'ice' -> 'core', 'orbit' -> 'ice'.
+  bool isLevelUnlocked(String mapId) {
+    if (mapId == 'echo' || mapId == 'endless') return true;
+    if (mapId == 'wind') return _completedLevels.contains('echo');
+    if (mapId == 'core') return _completedLevels.contains('wind');
+    if (mapId == 'ice') return _completedLevels.contains('core');
+    if (mapId == 'orbit') return _completedLevels.contains('ice');
+    return true;
+  }
+
+  /// Получение ID предыдущей миссии, требуемой для открытия текущей
+  String getRequiredLevelToUnlock(String mapId) {
+    switch (mapId) {
+      case 'wind':
+        return 'echo';
+      case 'core':
+        return 'wind';
+      case 'ice':
+        return 'core';
+      case 'orbit':
+        return 'ice';
+      default:
+        return '';
+    }
+  }
+
+  /// 3-звездочная система оценки миссии:
+  /// ⭐ Звезда 1: Эвакуация груза (базовая победа)
+  /// ⭐ Звезда 2: Экономия топлива (остаток >= 40%)
+  /// ⭐ Звезда 3: Без повреждений корпуса (урон 0%)
+  int calculateEarnedStars({required double remainingFuelPercent, required double damagePercent}) {
+    int stars = 1; // Базовая эвакуация груза
+    if (remainingFuelPercent >= 40.0) stars++;
+    if (damagePercent <= 0.001) stars++;
+    return stars;
+  }
+
+  int getStarsForLevel(String mapId) {
+    return _levelStars[mapId] ?? 0;
+  }
+
+  int get totalStars {
+    return _levelStars.values.fold(0, (sum, val) => sum + val);
+  }
+
+  /// Ранговая система пилота:
+  /// Ранг 1: Курсант (0 - 299 XP)
+  /// Ранг 2: Младший пилот (300 - 799 XP)
+  /// Ранг 3: Офицер флота (800 - 1499 XP)
+  /// Ранг 4: Капитан эскадры (1500 - 2499 XP)
+  /// Ранг 5: Космический ас (2500+ XP)
+  int get pilotRank {
+    if (_pilotXp >= 2500) return 5;
+    if (_pilotXp >= 1500) return 4;
+    if (_pilotXp >= 800) return 3;
+    if (_pilotXp >= 300) return 2;
+    return 1;
+  }
+
+  String get pilotRankKey {
+    switch (pilotRank) {
+      case 5:
+        return 'rank_space_ace';
+      case 4:
+        return 'rank_fleet_captain';
+      case 3:
+        return 'rank_flight_officer';
+      case 2:
+        return 'rank_junior_pilot';
+      case 1:
+      default:
+        return 'rank_cadet';
+    }
+  }
+
+  int get currentRankBaseXp {
+    switch (pilotRank) {
+      case 5:
+        return 2500;
+      case 4:
+        return 1500;
+      case 3:
+        return 800;
+      case 2:
+        return 300;
+      case 1:
+      default:
+        return 0;
+    }
+  }
+
+  int get nextRankXp {
+    switch (pilotRank) {
+      case 5:
+        return 2500;
+      case 4:
+        return 2500;
+      case 3:
+        return 1500;
+      case 2:
+        return 800;
+      case 1:
+      default:
+        return 300;
+    }
+  }
+
+  double get rankProgress {
+    if (pilotRank >= 5) return 1.0;
+    final base = currentRankBaseXp;
+    final target = nextRankXp;
+    if (target <= base) return 1.0;
+    return ((_pilotXp - base) / (target - base)).clamp(0.0, 1.0);
+  }
+
+  /// Начисление опыта пилота
+  Future<bool> addPilotXp(int amount) async {
+    if (amount <= 0) return false;
+    final previousRank = pilotRank;
+    _pilotXp += amount;
+    if (_initialized) {
+      await _prefs.setInt('pilotXp', _pilotXp);
+      await _saveIntegrity();
+    }
+    notifyListeners();
+    return pilotRank > previousRank;
+  }
+
+  /// Обработка победы в миссии: расчет звезд, опыта, открытие следующего уровня
+  Future<Map<String, dynamic>> processMissionVictory(
+    String mapId, {
+    required double remainingFuelPercent,
+    required double damagePercent,
+    required int coinsEarned,
+    double distance = 0.0,
+  }) async {
+    final previousRank = pilotRank;
+    final wasAlreadyCompleted = _completedLevels.contains(mapId);
+    
+    if (mapId != 'endless' && !wasAlreadyCompleted) {
+      _completedLevels.add(mapId);
+      if (_initialized) {
+        await _prefs.setStringList('completedLevels', _completedLevels);
+      }
+    }
+
+    final int starsEarned = mapId == 'endless'
+        ? 0
+        : calculateEarnedStars(
+            remainingFuelPercent: remainingFuelPercent,
+            damagePercent: damagePercent,
+          );
+
+    int newStars = 0;
+    if (mapId != 'endless') {
+      final prevStars = _levelStars[mapId] ?? 0;
+      if (starsEarned > prevStars) {
+        newStars = starsEarned - prevStars;
+        _levelStars[mapId] = starsEarned;
+        if (_initialized) {
+          await _prefs.setString('levelStars', jsonEncode(_levelStars));
+        }
+      }
+    }
+
+    int xpAwarded = 0;
+    if (mapId == 'endless') {
+      xpAwarded = (distance / 10).floor() + (coinsEarned / 10).floor();
+    } else {
+      xpAwarded = 100 + (starsEarned * 50) + (coinsEarned / 10).floor();
+    }
+
+    _pilotXp += xpAwarded;
+    if (_initialized) {
+      await _prefs.setInt('pilotXp', _pilotXp);
+      await _saveIntegrity();
+    }
+    notifyListeners();
+
+    final isRankUp = pilotRank > previousRank;
+
+    return {
+      'stars': starsEarned,
+      'newStars': newStars,
+      'star1Cargo': true,
+      'star2Fuel': remainingFuelPercent >= 40.0,
+      'star3Hull': damagePercent <= 0.001,
+      'xpAwarded': xpAwarded,
+      'isRankUp': isRankUp,
+      'newRank': pilotRank,
+      'rankTitleKey': pilotRankKey,
+      'isNewLevelUnlocked': mapId != 'endless' && !wasAlreadyCompleted,
+      'unlockedMapId': getNextMapId(mapId),
+    };
+  }
+
+  String getNextMapId(String mapId) {
+    switch (mapId) {
+      case 'echo':
+        return 'wind';
+      case 'wind':
+        return 'core';
+      case 'core':
+        return 'ice';
+      case 'ice':
+        return 'orbit';
+      default:
+        return '';
+    }
+  }
+
   // Переводы для локализации
   static const Map<String, Map<String, String>> _translations = {
     'ru': {
@@ -736,37 +1010,37 @@ class GameState extends ChangeNotifier {
       'map_core_desc': 'Сильная гравитация (1.5x). Опасный спуск.',
       'esc_paused': 'ИГРА ПРИОСТАНОВЛЕНА',
       'resume': 'ПРОДОЛЖИТЬ',
-      'restart': 'НАЧАТЬ ЗАНОВО',
+      'restart': 'ПЕРЕЗАПУСК',
       'exit_menu': 'В ГЛАВНОЕ МЕНЮ',
       'victory': 'МИССИЯ ВЫПОЛНЕНА',
-      'victory_desc': 'Груз благополучно доставлен к выходному шлюзу.',
-      'defeat': 'КРАХ МОДУЛЯ',
-      'defeat_desc': 'Модуль разрушен или закончилось топливо.',
+      'victory_desc': 'Контейнер успешно эвакуирован в спасательный отсек.',
+      'defeat': 'КРИТИЧЕСКИЙ СБОЙ',
+      'defeat_desc': 'Кабина получила фатальные повреждения или кончилось топливо.',
       'stats_time': 'Время полета',
       'stats_dist': 'Дистанция',
       'stats_coins': 'Собрано монет',
-      'stats_damage': 'Получено урона',
-      'stats_reward': 'Награда',
+      'stats_damage': 'Полученный урон',
+      'stats_reward': 'Итоговая награда',
       'stats_sec': 'сек',
       'stats_meters': 'м',
       'menu_coins': 'Баланс монет',
       'leaderboard_title': 'ТАБЛИЦА РЕКОРДОВ',
-      'no_records': 'Рекордов пока нет. Будь первым!',
-      'docked_alert': 'ГРУЗ ЗАФИКСИРОВАН! ДОСТАВЬТЕ ЕГО К ВЫХОДНОМУ ШЛЮЗУ!',
-      'exit_gate_alert': 'ВЫХОДНОЙ ШЛЮЗ БЛИЗКО! ПРИЗЕМЛИТЕСЬ НА ОРАНЖЕВУЮ ПЛАТФОРМУ.',
+      'no_records': 'Нет записей. Будьте первым!',
+      'docked_alert': 'ГРУЗ ЗАХВАЧЕН! ДОСТАВЬТЕ В ОРАНЖЕВУЮ ШАХТУ!',
+      'exit_gate_alert': 'ШЛЮЗ РЯДОМ! МЯГКО ПОСАДИТЕ КАПСУЛУ НА ПЛАТФОРМУ.',
       'settings': 'НАСТРОЙКИ',
       'volume_music': 'Музыка',
-      'volume_sfx': 'Эффекты',
+      'volume_sfx': 'Звуки',
       'close': 'ЗАКРЫТЬ',
-      'cargo_nearby': 'ПРИБЛИЖЕНИЕ К ГРУЗУ. СБЛИЗЬТЕСЬ ДЛЯ ЗАЦЕПА',
-      'approach_speed_alert': 'СЛИШКОМ БЫСТРОЕ СБЛИЖЕНИЕ С ГРУЗОМ!',
+      'cargo_nearby': 'ГРУЗ РЯДОМ. ПОДЛЕТИТЕ БЛИЖЕ ДЛЯ ЗАХВАТА',
+      'approach_speed_alert': 'СЛИШКОМ ВЫСОКАЯ СКОРОСТЬ СБЛИЖЕНИЯ!',
       'align_landing_alert': 'ВЫРОВНЯЙТЕ КОРАБЛЬ ДЛЯ ПОСАДКИ!',
-      'thrust_left': 'ТЯГА СЛЕВА (A / ←)',
-      'thrust_right': 'ТЯГА СПРАВА (D / →)',
+      'thrust_left': 'ЛЕВЫЙ ДВИГАТЕЛЬ (A / ←)',
+      'thrust_right': 'ПРАВЫЙ ДВИГАТЕЛЬ (D / →)',
       'error_empty_nick': 'Никнейм не может быть пустым',
-      'rope_snapped': 'ВНИМАНИЕ: ТРОС ОБОРВАН ОТ НАТЯЖЕНИЯ!',
+      'rope_snapped': 'ВНИМАНИЕ: КРИТИЧЕСКОЕ НАТЯЖЕНИЕ, ТРОС ОБОРВАН!',
       'cargo_released': 'ГРУЗ ОТЦЕПЛЕН',
-      'cargo_release': 'СБРОСИТЬ ГРУЗ (S / ↓)',
+      'cargo_release': 'ОТЦЕПИТЬ ГРУЗ (S / ↓)',
       'control_hints': 'Подсказки управления',
       'hint_turn_left': 'Поворот влево',
       'hint_turn_right': 'Поворот вправо',
@@ -775,13 +1049,59 @@ class GameState extends ChangeNotifier {
       'hint_pause': 'Пауза',
       'hint_space': 'ПРОБЕЛ',
       'endless_title': 'ЭКСПЕДИЦИЯ: БЕЗДНА',
-      'endless_desc': 'Процедурный бесконечный спуск. Спасайте грузы и доставляйте на аванпосты.',
+      'endless_desc': 'Процедурный бесконечный спуск. Спасайте капсулы и доставляйте на аванпосты.',
       'endless_best_dist': 'Рекорд глубины',
       'endless_high_score': 'Рекорд очков',
       'endless_rescues': 'Спасено выживших',
       'endless_new_record': 'НОВЫЙ РЕКОРД ГЛУБИНЫ!',
       'endless_score': 'Очки экспедиции',
       'endless_delivered': 'Доставлено грузов',
+      // FTUE & Interactive Tutorial
+      'tut_step1_title': 'ШАГ 1/5: ВЗЛЕТ',
+      'tut_step1_desc': 'Зажмите [W], [↑] или [ПРОБЕЛ], чтобы оторваться от платформы.',
+      'tut_step2_title': 'ШАГ 2/5: МАНЕВРИРОВАНИЕ',
+      'tut_step2_desc': 'Используйте [A] и [D] для раздельного управления соплами и наклоном.',
+      'tut_step3_title': 'ШАГ 3/5: СТЫКОВКА С ГРУЗОМ',
+      'tut_step3_desc': 'Осторожно зависните над капсулой в низине. Лазер захватит ее автоматически.',
+      'tut_step4_title': 'ШАГ 4/5: ТРАНСПОРТИРОВКА',
+      'tut_step4_desc': 'Учитывайте раскачку троса! Летите вправо к выходному ангару.',
+      'tut_step5_title': 'ШАГ 5/5: ТОЧНАЯ ПОСАДКА',
+      'tut_step5_desc': 'Посадите капсулу на платформу: скорость < 6.0 м/с, наклон < 12°.',
+      'tut_skip': 'ПРОПУСТИТЬ ОБУЧЕНИЕ [ESC]',
+      'tut_completed': 'КУРС ОБУЧЕНИЯ ЗАВЕРШЕН!',
+      // Crash Telemetry
+      'crash_telemetry_title': 'БОРТОВОЙ САМОПИСЕЦ // ПРИЧИНА КРУШЕНИЯ',
+      'crash_excess_angle': 'КРИТИЧЕСКИЙ УГОЛ ПОСАДКИ: {val}° (ДОПУСК: 12.0°)',
+      'crash_excess_angle_tip': 'СОВЕТ: Выравнивайте горизонт клавишами [A] и [D] перед самым касанием.',
+      'crash_excess_speed': 'ПРЕВЫШЕНИЕ СКОРОСТИ КАСАНИЯ: {val} М/С (ДОПУСК: 6.0 М/С)',
+      'crash_excess_speed_tip': 'СОВЕТ: Дайте короткий импульс тяги [W] за секунду до касания опорами.',
+      'crash_hull_breached': 'КОРПУС РАЗРУШЕН: СТОЛКНОВЕНИЕ СО СКАЛЬНОЙ ПОРОДОЙ',
+      'crash_hull_breached_tip': 'СОВЕТ: Следите за габаритами корабля и индикатором сближения вверху.',
+      'crash_fuel_exhausted': 'ТОПЛИВНЫЕ БАКИ ПОЛНОСТЬЮ ОПУСТОШЕНЫ',
+      'crash_fuel_exhausted_tip': 'СОВЕТ: Летите по баллистической дуге, не держите тягу включенной постоянно.',
+      'quick_restart_hint': '[ R ] БЫСТРЫЙ ПЕРЕЗАПУСК',
+      // Stage 2: Ranks, Stars & Sequential Progression
+      'rank_cadet': 'КУРСАНТ',
+      'rank_junior_pilot': 'МЛАДШИЙ ПИЛОТ',
+      'rank_flight_officer': 'ОФИЦЕР ФЛОТА',
+      'rank_fleet_captain': 'КАПИТАН ЭСКАДРЫ',
+      'rank_space_ace': 'КОСМИЧЕСКИЙ АС',
+      'level_locked': 'СЕКТОР ЗАБЛОКИРОВАН',
+      'level_requires': 'ТРЕБУЕТСЯ: {val}',
+      'level_locked_toast': 'Сектор заблокирован! Пройдите миссию "{val}" для допуска.',
+      'free_mode_badge': 'СВОБОДНЫЙ РЕЖИМ // БЕЗ ОГРАНИЧЕНИЙ',
+      'stars_rating_title': 'РЕЙТИНГ МИССИИ',
+      'star_cargo_delivered': 'Эвакуация груза',
+      'star_fuel_efficiency': 'Запас топлива > 40%',
+      'star_hull_integrity': 'Без повреждений корпуса (0%)',
+      'pilot_xp_earned': 'ОПЫТ ПИЛОТА: +{val} XP',
+      'rank_up_title': 'ПОВЫШЕНИЕ В ЗВАНИИ!',
+      'rank_up_desc': 'Вам присвоено новое звание: {val}',
+      'next_rank': 'След. ранг: {val}',
+      'max_rank_reached': 'МАКСИМАЛЬНЫЙ РАНГ ДОСТИГНУТ',
+      'campaign_completed_title': '🏆 КАМПАНИЯ ПОЛНОСТЬЮ ЗАВЕРШЕНА!',
+      'campaign_completed_sub': 'Спасательная служба признана Высшим Флотом Галактики! Все 5 секторов освобождены.',
+      'campaign_stars_summary': 'Звезды кампании: {val} / 15',
     },
     'en': {
       'title': 'LANDER ZERO: RESCUE OPS',
@@ -884,6 +1204,52 @@ class GameState extends ChangeNotifier {
       'endless_new_record': 'NEW DEPTH RECORD!',
       'endless_score': 'Expedition Score',
       'endless_delivered': 'Rescued Cargo',
+      // FTUE & Interactive Tutorial
+      'tut_step1_title': 'STEP 1/5: LIFT OFF',
+      'tut_step1_desc': 'Hold [W], [↑] or [SPACE] to lift off from the launch pad.',
+      'tut_step2_title': 'STEP 2/5: MANEUVERING',
+      'tut_step2_desc': 'Use [A] and [D] for differential thrust and banking.',
+      'tut_step3_title': 'STEP 3/5: CARGO DOCKING',
+      'tut_step3_desc': 'Hover gently over the capsule below. Docking laser attaches automatically.',
+      'tut_step4_title': 'STEP 4/5: TRANSPORT',
+      'tut_step4_desc': 'Compensate for pendulum swing! Fly right towards the exit hangar.',
+      'tut_step5_title': 'STEP 5/5: PRECISION LANDING',
+      'tut_step5_desc': 'Touch down on the landing platform: speed < 6.0 m/s, tilt < 12°.',
+      'tut_skip': 'SKIP TUTORIAL [ESC]',
+      'tut_completed': 'TRAINING COMPLETED!',
+      // Crash Telemetry
+      'crash_telemetry_title': 'FLIGHT RECORDER // CRASH TELEMETRY',
+      'crash_excess_angle': 'CRITICAL LANDING TILT: {val}° (LIMIT: 12.0°)',
+      'crash_excess_angle_tip': 'TIP: Level your craft using [A] and [D] right before touchdown.',
+      'crash_excess_speed': 'EXCESSIVE IMPACT SPEED: {val} M/S (LIMIT: 6.0 M/S)',
+      'crash_excess_speed_tip': 'TIP: Fire a brief thrust burst [W] right before gear contact.',
+      'crash_hull_breached': 'HULL BREACHED: TERMINAL TERRAIN IMPACT',
+      'crash_hull_breached_tip': 'TIP: Monitor craft clearances and proximity alarms.',
+      'crash_fuel_exhausted': 'FUEL TANKS COMPLETELY EXHAUSTED',
+      'crash_fuel_exhausted_tip': 'TIP: Coast on momentum, avoid holding continuous full throttle.',
+      'quick_restart_hint': '[ R ] QUICK RESTART',
+      // Stage 2: Ranks, Stars & Sequential Progression
+      'rank_cadet': 'CADET',
+      'rank_junior_pilot': 'JUNIOR PILOT',
+      'rank_flight_officer': 'FLIGHT OFFICER',
+      'rank_fleet_captain': 'FLEET CAPTAIN',
+      'rank_space_ace': 'SPACE ACE',
+      'level_locked': 'SECTOR LOCKED',
+      'level_requires': 'REQUIRES: {val}',
+      'level_locked_toast': 'Sector locked! Complete mission "{val}" for flight clearance.',
+      'free_mode_badge': 'FREE EXPEDITION // UNLOCKED',
+      'stars_rating_title': 'MISSION RATING',
+      'star_cargo_delivered': 'Cargo Evacuated',
+      'star_fuel_efficiency': 'Fuel Remaining > 40%',
+      'star_hull_integrity': 'Zero Hull Damage (0%)',
+      'pilot_xp_earned': 'PILOT XP: +{val} XP',
+      'rank_up_title': 'PROMOTED IN RANK!',
+      'rank_up_desc': 'You have been promoted to: {val}',
+      'next_rank': 'Next rank: {val}',
+      'max_rank_reached': 'MAX RANK ACHIEVED',
+      'campaign_completed_title': '🏆 CAMPAIGN FULLY COMPLETED!',
+      'campaign_completed_sub': 'Rescue Division recognized as Supreme Galactic Fleet! All 5 sectors secured.',
+      'campaign_stars_summary': 'Campaign Stars: {val} / 15',
     }
   };
 

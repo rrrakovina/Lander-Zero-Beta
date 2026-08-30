@@ -77,7 +77,9 @@ class Rope extends Component with HasGameReference<LanderZeroGame> {
 
   @override
   void onRemove() {
-    game.world.destroyJoint(_joint);
+    try {
+      game.world.destroyJoint(_joint);
+    } catch (_) {}
     capsule.isDocked = false;
     super.onRemove();
   }

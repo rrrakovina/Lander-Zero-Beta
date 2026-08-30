@@ -329,6 +329,131 @@ class _MinimapPainter extends CustomPainter {
 
     if (!game.isLoaded) return;
 
+    final isEndless = game.mapId == 'endless';
+    if (isEndless) {
+      _paintEndlessRadar(canvas, size);
+    } else {
+      _paintStaticStoryRadar(canvas, size);
+    }
+  }
+
+  void _paintEndlessRadar(Canvas canvas, Size size) {
+    final landerPos = game.lander.isMounted ? game.lander.body.position : Vector2.zero();
+    final double minX = landerPos.x - 16.0;
+    final double maxX = landerPos.x + 48.0;
+    const double minY = -26.0;
+    const double maxY = 18.0;
+
+    double pX(double wx) => ((wx - minX) / (maxX - minX)) * size.width;
+    double pY(double wy) => ((wy - minY) / (maxY - minY)) * size.height;
+
+    // 1. Dynamic local terrain wireframe sampling
+    final floorPath = Path();
+    final ceilPath = Path();
+    bool firstPoint = true;
+
+    for (double x = minX; x <= maxX + 1.0; x += 1.8) {
+      final fy = game.cave.getFloorY(x);
+      final cy = game.cave.getCeilingY(x);
+      final sx = pX(x);
+      final sfy = pY(fy);
+      final scy = pY(cy);
+
+      if (firstPoint) {
+        floorPath.moveTo(sx, sfy);
+        ceilPath.moveTo(sx, scy);
+        firstPoint = false;
+      } else {
+        floorPath.lineTo(sx, sfy);
+        ceilPath.lineTo(sx, scy);
+      }
+    }
+
+    canvas.drawPath(floorPath, _caveFloorPaint);
+    canvas.drawPath(ceilPath, _caveCeilingPaint);
+
+    // 2. Animated vertical radar scanline
+    final double scanProgress = (DateTime.now().millisecondsSinceEpoch % 2000) / 2000.0;
+    final double scanX = scanProgress * size.width;
+    final scanPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          const Color(0x0000E5FF),
+          const Color(0x4400E5FF),
+          const Color(0x0000E5FF),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTRB(scanX - 2, 0, scanX + 2, size.height))
+      ..strokeWidth = 1.5;
+    canvas.drawLine(Offset(scanX, 0), Offset(scanX, size.height), scanPaint);
+
+    // 3. Outpost Station Beacon & landing pad
+    final outpostPos = game.endlessManager?.nextOutpostPos;
+    if (outpostPos != null) {
+      final double ox = pX(outpostPos.x);
+      final double oy = pY(outpostPos.y);
+
+      if (outpostPos.x >= minX - 5.0 && outpostPos.x <= maxX + 5.0) {
+        // Outpost pad runway line
+        final double padLeft = pX(outpostPos.x - 4.5);
+        final double padRight = pX(outpostPos.x + 4.5);
+        canvas.drawLine(Offset(padLeft, oy), Offset(padRight, oy), _exitPlatformPaint..strokeWidth = 2.5);
+
+        // Pulsing Outpost beacon
+        final double pulse = (sin(DateTime.now().millisecondsSinceEpoch * 0.005) + 1.0) / 2.0;
+        final beaconColor = Color.lerp(const Color(0xFF00E5FF), const Color(0xFF00E676), pulse)!;
+        canvas.drawCircle(Offset(ox, oy - 3), 3.0, Paint()..color = beaconColor);
+        canvas.drawCircle(Offset(ox, oy - 3), 6.0 + pulse * 4.0, Paint()..color = beaconColor.withOpacity(0.3)..style = PaintingStyle.stroke..strokeWidth = 1.0);
+      }
+    }
+
+    // 4. Rescue Capsule Target Beacon
+    if (game.cargoCapsule.isMounted) {
+      final cargoPos = game.cargoCapsule.body.position;
+      final double cx = pX(cargoPos.x);
+      final double cy = pY(cargoPos.y);
+
+      if (cargoPos.x >= minX - 10.0 && cargoPos.x <= maxX + 10.0) {
+        canvas.drawCircle(Offset(cx, cy), 2.8, _cargoPaint);
+        canvas.drawCircle(Offset(cx, cy), 5.5, _cargoRingPaint);
+      }
+
+      // Tether line if attached
+      if (game.lander.isMounted && MinimapWidget.isTethered(game)) {
+        final lx = pX(landerPos.x);
+        final ly = pY(landerPos.y);
+        canvas.drawLine(Offset(lx, ly), Offset(cx, cy), _tetherPaint);
+      }
+    }
+
+    // 5. Player Lander Marker & Heading
+    if (game.lander.isMounted) {
+      final double lx = pX(landerPos.x);
+      final double ly = pY(landerPos.y);
+
+      // Radar pulse
+      final double pulseProgress = (DateTime.now().millisecondsSinceEpoch % 1200) / 1200.0;
+      final double pulseRadius = 3.5 + pulseProgress * 6.5;
+      _pulsePaint.color = GameConfig.colorPrimary.withOpacity((1.0 - pulseProgress) * 0.7);
+      canvas.drawCircle(Offset(lx, ly), pulseRadius, _pulsePaint);
+
+      // Lander core
+      canvas.drawCircle(Offset(lx, ly), 3.2, _landerPaint);
+      canvas.drawCircle(Offset(lx, ly), 1.5, _landerGlowPaint);
+
+      // Heading vector
+      final double angle = game.lander.body.angle;
+      final Offset heading = MinimapWidget.calculateHeadingVector(angle, 7.5);
+      canvas.drawLine(
+        Offset(lx, ly),
+        Offset(lx + heading.dx, ly + heading.dy),
+        _headingPaint,
+      );
+    }
+  }
+
+  void _paintStaticStoryRadar(Canvas canvas, Size size) {
     final cave = game.cave;
     if (!cave.isMounted) return;
 

@@ -359,6 +359,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       String? chosenMap;
+      await GameState().processMissionVictory('echo', remainingFuelPercent: 80, damagePercent: 0, coinsEarned: 100);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -409,6 +410,8 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await GameState().setLanguage('en');
+      await GameState().processMissionVictory('echo', remainingFuelPercent: 80, damagePercent: 0, coinsEarned: 100);
+      await GameState().processMissionVictory('wind', remainingFuelPercent: 80, damagePercent: 0, coinsEarned: 100);
 
       await tester.pumpWidget(
         MaterialApp(

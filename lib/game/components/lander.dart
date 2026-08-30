@@ -81,6 +81,10 @@ class Lander extends BodyComponent with ContactCallbacks {
   bool get isGrounded => contactCount > 0;
   double legsCompression = 0.0;
 
+  // Overturned / Stuck State Tracking
+  bool isStuck = false;
+  double _stuckDuration = 0.0;
+
   void triggerSquash(double targetX, double targetY, double duration) {
     scaleX = targetX;
     scaleY = targetY;
@@ -277,6 +281,13 @@ class Lander extends BodyComponent with ContactCallbacks {
     } else {
       GameAudioManager().stopThrustLoop();
     }
+    super.update(dt);
+
+    try {
+      final _ = body;
+    } catch (_) {
+      return;
+    }
 
     final leftNozzle = _getLeftNozzleOffset();
     final rightNozzle = _getRightNozzleOffset();
@@ -429,6 +440,22 @@ class Lander extends BodyComponent with ContactCallbacks {
       legsCompression += (0.0 - legsCompression) * 6.0 * dt;
     }
 
+    // Overturned / Stuck Ship Detector (Angle > 80 deg while grounded & stationary)
+    final double rawAngle = body.angle.abs() % (2 * pi);
+    final double normAngle = rawAngle > pi ? (2 * pi - rawAngle) : rawAngle;
+    final bool isOverturned = normAngle > 1.35; // ~77-90+ degrees
+    final bool isStationary = body.linearVelocity.length < 0.4 && body.angularVelocity.abs() < 0.3;
+
+    if (isGrounded && isOverturned && isStationary) {
+      _stuckDuration += dt;
+      if (_stuckDuration >= 1.5) {
+        isStuck = true;
+      }
+    } else {
+      _stuckDuration = 0.0;
+      isStuck = false;
+    }
+
     // Smoke Emitters for Damaged Ship
     if (maxShield > 0 && shield / maxShield < 0.4 && gameRef != null && gameRef.isLoaded == true) {
       _smokeTimer += dt;
@@ -471,19 +498,52 @@ class Lander extends BodyComponent with ContactCallbacks {
       }
     }
 
-    if (maxNormalImpulse > 5.0) {
-      final damage = (maxNormalImpulse - 5.0) * 2.5;
-      shield = (shield - damage).clamp(0.0, maxShield);
-      _shieldHitTimer = 0.6;
-
-      triggerSquash(1.15, 0.82, 0.35);
-
+    if (maxNormalImpulse > 3.0) {
       final contactPoints = contact.manifold.localPoint;
       final worldContact = body.worldPoint(contactPoints);
 
-      final dynamic gameRef = game;
-      if (gameRef != null) {
-        gameRef.onCollisionImpact(worldContact, maxNormalImpulse);
+      // Check landing gear upright contact
+      final double rawAngle = body.angle.abs() % (2 * pi);
+      final double normAngle = rawAngle > pi ? (2 * pi - rawAngle) : rawAngle;
+      final bool isUpright = normAngle < 0.40; // ~23 degrees
+      final bool isLegsContact = contactPoints.y > 0.4;
+
+      // Suspension absorption on gentle/moderate touchdown
+      if (isUpright && isLegsContact && maxNormalImpulse <= 8.0) {
+        legsCompression = 1.0;
+        triggerSquash(1.08, 0.92, 0.2);
+        return; // Absorbed cleanly without hull damage
+      }
+
+      // Forgiving shield deflect calculation
+      final state = GameState();
+      final double shieldMitigation = (0.35 + (state.shieldLevel * 0.12)).clamp(0.35, 0.80);
+
+      // Near-miss deflect bounce impulse
+      if (maxNormalImpulse < 14.0 && shield > 0) {
+        // Oblique / moderate graze deflected with shield bounce
+        final damage = ((maxNormalImpulse - 3.0) * 1.4) * (1.0 - shieldMitigation);
+        shield = (shield - damage).clamp(0.0, maxShield);
+        _shieldHitTimer = 0.6;
+        triggerSquash(1.12, 0.88, 0.25);
+
+        final dynamic gameRef = game;
+        if (gameRef is LanderZeroGame) {
+          gameRef.sparkPool.spawnDeflectSparks(worldContact, Vector2(0, -1.0));
+          gameRef.shakeCamera(2.5, 0.15);
+          GameAudioManager().playShieldDeflect();
+        }
+      } else {
+        // High-speed catastrophic impact
+        final damage = (maxNormalImpulse - 4.0) * 2.5 * (1.0 - shieldMitigation);
+        shield = (shield - damage).clamp(0.0, maxShield);
+        _shieldHitTimer = 0.8;
+        triggerSquash(1.20, 0.78, 0.4);
+
+        final dynamic gameRef = game;
+        if (gameRef != null) {
+          gameRef.onCollisionImpact(worldContact, maxNormalImpulse);
+        }
       }
     }
   }

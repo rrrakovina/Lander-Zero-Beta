@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flame_forge2d/flame_forge2d.dart';
 import 'package:flutter/material.dart';
 import '../lander_zero_game.dart';
+import 'endless_cave_manager.dart';
 
 class Cave extends BodyComponent {
   LanderZeroGame get gameRef => game as LanderZeroGame;
@@ -261,6 +262,11 @@ class Cave extends BodyComponent {
     );
 
     final body = world.createBody(bodyDef);
+
+    if (mapId == 'endless') {
+      // In endless mode, terrain collision fixtures and rendering are managed dynamically per chunk
+      return body;
+    }
 
     _generateCaveGeometry();
 
@@ -617,6 +623,7 @@ class Cave extends BodyComponent {
 
   @override
   void render(Canvas canvas) {
+    if (mapId == 'endless') return;
     if (floorPoints.isEmpty || ceilingPoints.isEmpty) return;
 
     final double camX = gameRef.camera.viewfinder.position.x;
@@ -830,7 +837,29 @@ class Cave extends BodyComponent {
     return p0.y + (p1.y - p0.y) * t;
   }
 
-  double getFloorY(double x) => _getYFromPoints(floorPoints, x);
+  double getFloorY(double x) {
+    if (mapId == 'endless') {
+      try {
+        final em = gameRef.endlessManager;
+        if (em != null) {
+          return em.getFloorY(x);
+        }
+      } catch (_) {}
+      return EndlessTerrainGenerator().getFloorY(x);
+    }
+    return _getYFromPoints(floorPoints, x);
+  }
 
-  double getCeilingY(double x) => _getYFromPoints(ceilingPoints, x);
+  double getCeilingY(double x) {
+    if (mapId == 'endless') {
+      try {
+        final em = gameRef.endlessManager;
+        if (em != null) {
+          return em.getCeilingY(x);
+        }
+      } catch (_) {}
+      return EndlessTerrainGenerator().getCeilingY(x);
+    }
+    return _getYFromPoints(ceilingPoints, x);
+  }
 }

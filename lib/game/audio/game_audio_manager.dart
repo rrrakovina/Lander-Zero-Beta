@@ -98,6 +98,9 @@ class GameAudioManager {
   /// 4. Переключение вкладок / навигация (мягкий пневматический шелест воздуха)
   void playSwoosh({double volumeMultiplier = 1.0}) => playSfx('ui_swoosh.wav', volumeMultiplier: volumeMultiplier);
 
+  /// 5. Скользящее касание / отражение щитом (смягченный металлический звон)
+  void playShieldDeflect({double volumeMultiplier = 1.0}) => playSfx('collision.wav', volumeMultiplier: volumeMultiplier * 0.6);
+
   bool _isThrustPlaying = false;
 
   void startThrustLoop() async {

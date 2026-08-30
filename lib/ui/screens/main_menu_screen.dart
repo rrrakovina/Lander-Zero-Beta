@@ -35,6 +35,8 @@ class MainMenuWidget extends StatelessWidget {
         final unlockedAchievementsCount = AchievementsManager().achievements.where((a) => a.isUnlocked).length;
         final totalUpgrades = state.engineLevel + state.fuelLevel + state.shieldLevel;
         final rankInfo = PilotRankingInfo.calculate(
+          pilotRank: state.pilotRank,
+          pilotXp: state.pilotXp,
           unlockedAchievementsCount: unlockedAchievementsCount,
           totalUpgradeLevels: totalUpgrades,
           ownedShipsCount: state.ownedRockets.length,
@@ -52,28 +54,32 @@ class MainMenuWidget extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Title
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          state.translate('title'),
-                          style: const TextStyle(
-                            color: GameConfig.colorPrimary,
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2,
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            state.translate('title'),
+                            style: const TextStyle(
+                              color: GameConfig.colorPrimary,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          isRu ? 'КОСМИЧЕСКАЯ СПАСАТЕЛЬНАЯ СЛУЖБА' : 'COSMIC RESCUE DIVISION',
-                          style: const TextStyle(
-                            color: Colors.white38,
-                            fontSize: 12,
-                            letterSpacing: 1.5,
+                          const SizedBox(height: 2),
+                          Text(
+                            isRu ? 'КОСМИЧЕСКАЯ СПАСАТЕЛЬНАЯ СЛУЖБА' : 'COSMIC RESCUE DIVISION',
+                            style: const TextStyle(
+                              color: Colors.white38,
+                              fontSize: 12,
+                              letterSpacing: 1.5,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     // Coins, Nick, Lang
                     Row(
@@ -223,16 +229,20 @@ class MainMenuWidget extends StatelessWidget {
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text(
-                                            state.nickname.isEmpty ? (isRu ? 'Пилот' : 'Pilot') : state.nickname,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
+                                          Expanded(
+                                            child: Text(
+                                              state.nickname.isEmpty ? (isRu ? 'Пилот' : 'Pilot') : state.nickname,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
+                                          const SizedBox(width: 8),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                                             decoration: BoxDecoration(
                                               color: rankInfo.color.withOpacity(0.15),
                                               borderRadius: BorderRadius.circular(6),
@@ -257,9 +267,9 @@ class MainMenuWidget extends StatelessWidget {
                                                   isRu ? rankInfo.badgeTextRu : rankInfo.badgeTextEn,
                                                   style: TextStyle(
                                                     color: rankInfo.color,
-                                                    fontSize: 9,
+                                                    fontSize: 8.5,
                                                     fontWeight: FontWeight.bold,
-                                                    letterSpacing: 1.0,
+                                                    letterSpacing: 0.8,
                                                   ),
                                                 ),
                                               ],
@@ -269,12 +279,46 @@ class MainMenuWidget extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       _buildTelemetryIndicators(state, isRu),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            '${state.pilotXp} XP',
+                                            style: const TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 10.5,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            state.pilotRank >= 5
+                                                ? (isRu ? 'МАКС. РАНГ' : 'MAX RANK')
+                                                : (isRu ? 'СЛЕД. РАНГ: ${state.nextRankXp} XP' : 'NEXT: ${state.nextRankXp} XP'),
+                                            style: const TextStyle(
+                                              color: Colors.white38,
+                                              fontSize: 9.5,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 3),
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(3),
+                                        child: LinearProgressIndicator(
+                                          value: state.rankProgress,
+                                          minHeight: 4,
+                                          backgroundColor: Colors.white10,
+                                          valueColor: AlwaysStoppedAnimation<Color>(rankInfo.color),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 14),
                             const Divider(color: Colors.white10),
                             const SizedBox(height: 8),
                             Row(
@@ -371,8 +415,8 @@ class MainMenuWidget extends StatelessWidget {
     final readinessPercent = min(100, (60 + ((totalUpgrades - 3) / 12.0) * 40).round());
 
     return Container(
-      margin: const EdgeInsets.only(top: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.4),
         borderRadius: BorderRadius.circular(6),
@@ -381,63 +425,45 @@ class MainMenuWidget extends StatelessWidget {
       child: Row(
         children: [
           const TelemetryPulseDot(color: Color(0xFF00E676)),
-          const SizedBox(width: 6),
-          Text(
-            isRu ? 'ТЕЛЕМЕТРИЯ: АКТИВНА' : 'TELEMETRY: ACTIVE',
-            style: const TextStyle(
-              color: Color(0xFF00E676),
-              fontSize: 9,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.6,
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              isRu ? 'ТЕЛЕМЕТРИЯ: АКТИВНА' : 'TELEMETRY: ACTIVE',
+              style: const TextStyle(
+                color: Color(0xFF00E676),
+                fontSize: 8.5,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 5),
           Container(width: 1, height: 10, color: Colors.white24),
-          const SizedBox(width: 6),
-          Text(
-            isRu ? 'СВЯЗЬ: 99.8%' : 'LINK: 99.8%',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              isRu ? 'СВЯЗЬ: 99.8%' : 'LINK: 99.8%',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 8.5,
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 5),
           Container(width: 1, height: 10, color: Colors.white24),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    isRu ? 'ГОТОВНОСТЬ: $readinessPercent%' : 'SYS READY: $readinessPercent%',
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: readinessPercent >= 90 ? GameConfig.colorPrimary : GameConfig.colorWarning,
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                SizedBox(
-                  width: 24,
-                  height: 4,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(2),
-                    child: LinearProgressIndicator(
-                      value: readinessPercent / 100.0,
-                      backgroundColor: Colors.white12,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        readinessPercent >= 90 ? GameConfig.colorPrimary : GameConfig.colorWarning,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              isRu ? 'ГОТОВНОСТЬ: $readinessPercent%' : 'SYS READY: $readinessPercent%',
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: readinessPercent >= 90 ? GameConfig.colorPrimary : GameConfig.colorWarning,
+                fontSize: 8.5,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -554,6 +580,10 @@ enum PilotRankTier {
   officer,
   veteran,
   commander,
+  juniorPilot,
+  flightOfficer,
+  fleetCaptain,
+  spaceAce,
 }
 
 class PilotRankingInfo {
@@ -576,12 +606,59 @@ class PilotRankingInfo {
   });
 
   static PilotRankingInfo calculate({
-    required int unlockedAchievementsCount,
-    required int totalUpgradeLevels,
-    required int ownedShipsCount,
-    required int totalCoins,
-    required int completedRecordsCount,
+    int? pilotRank,
+    int? pilotXp,
+    int unlockedAchievementsCount = 0,
+    int totalUpgradeLevels = 3,
+    int ownedShipsCount = 2,
+    int totalCoins = 0,
+    int completedRecordsCount = 0,
   }) {
+    if (pilotXp != null && pilotXp > 0 && pilotRank != null && pilotRank > 1) {
+      switch (pilotRank) {
+        case 5:
+          return const PilotRankingInfo(
+            tier: PilotRankTier.commander,
+            titleRu: 'Космический Ас',
+            titleEn: 'Space Ace',
+            color: Color(0xFFFFD700),
+            badgeTextRu: 'РАНГ: КОСМИЧЕСКИЙ АС',
+            badgeTextEn: 'RANK: SPACE ACE',
+            icon: Icons.workspace_premium_rounded,
+          );
+        case 4:
+          return const PilotRankingInfo(
+            tier: PilotRankTier.veteran,
+            titleRu: 'Капитан Эскадры',
+            titleEn: 'Fleet Captain',
+            color: Color(0xFFE040FB),
+            badgeTextRu: 'РАНГ: КАПИТАН ЭСКАДРЫ',
+            badgeTextEn: 'RANK: FLEET CAPTAIN',
+            icon: Icons.military_tech_rounded,
+          );
+        case 3:
+          return const PilotRankingInfo(
+            tier: PilotRankTier.officer,
+            titleRu: 'Офицер Флота',
+            titleEn: 'Flight Officer',
+            color: Color(0xFFFF9100),
+            badgeTextRu: 'РАНГ: ОФИЦЕР',
+            badgeTextEn: 'RANK: OFFICER',
+            icon: Icons.shield_rounded,
+          );
+        case 2:
+          return const PilotRankingInfo(
+            tier: PilotRankTier.pilot,
+            titleRu: 'Младший Пилот',
+            titleEn: 'Junior Pilot',
+            color: Color(0xFF00E5FF),
+            badgeTextRu: 'РАНГ: МЛАДШИЙ ПИЛОТ',
+            badgeTextEn: 'RANK: JUNIOR PILOT',
+            icon: Icons.flight_takeoff_rounded,
+          );
+      }
+    }
+
     if (unlockedAchievementsCount >= 4 || totalUpgradeLevels >= 13 || (unlockedAchievementsCount >= 3 && ownedShipsCount >= 3)) {
       return const PilotRankingInfo(
         tier: PilotRankTier.commander,
@@ -800,16 +877,19 @@ class _HoverMenuButtonState extends State<HoverMenuButton> {
                 children: [
                   Icon(widget.icon, color: color, size: 28),
                   const SizedBox(width: 14),
-                  Text(
-                    widget.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
+                  Expanded(
+                    child: Text(
+                      widget.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 8),
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     transform: Matrix4.identity()..translate(_isHovered ? 4.0 : 0.0),

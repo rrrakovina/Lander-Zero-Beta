@@ -10,8 +10,32 @@ class SaveSecurityManager {
   static const String saveSignatureKey = 'save_integrity_signature';
   static const String achievementsSignatureKey = 'achievements_integrity_signature';
 
-  /// Generates canonical payload string for core game state save data
+  /// Generates canonical payload string for core game state save data (v2 format)
   static String buildSavePayload({
+    required int coins,
+    required List<String> ownedRockets,
+    int engineLevel = 1,
+    int fuelLevel = 1,
+    int shieldLevel = 1,
+    String leaderboardJson = '[]',
+    String suitColor = 'classic_orange',
+    String selectedHelmet = 'sphere1',
+    List<String> ownedHelmets = const ['sphere1'],
+    String selectedSuit = 'sk1_cadet',
+    List<String> ownedSuits = const ['sk1_cadet'],
+    int pilotXp = 0,
+    List<String> completedLevels = const [],
+    String levelStarsJson = '{}',
+  }) {
+    final normalizedFleet = [...ownedRockets]..sort();
+    final normalizedHelmets = [...ownedHelmets]..sort();
+    final normalizedSuits = [...ownedSuits]..sort();
+    final normalizedLevels = [...completedLevels]..sort();
+    return 'v2|coins:$coins|fleet:${normalizedFleet.join(",")}|upgrades:$engineLevel,$fuelLevel,$shieldLevel|lb:$leaderboardJson|wardrobe:$suitColor,$selectedHelmet,${normalizedHelmets.join(",")},$selectedSuit,${normalizedSuits.join(",")}|xp:$pilotXp|levels:${normalizedLevels.join(",")}|stars:$levelStarsJson';
+  }
+
+  /// Legacy v1 payload builder for backward compatibility
+  static String buildLegacyV1Payload({
     required int coins,
     required List<String> ownedRockets,
     int engineLevel = 1,
@@ -43,8 +67,47 @@ class SaveSecurityManager {
     List<String> ownedHelmets = const ['sphere1'],
     String selectedSuit = 'sk1_cadet',
     List<String> ownedSuits = const ['sk1_cadet'],
+    int pilotXp = 0,
+    List<String> completedLevels = const [],
+    String levelStarsJson = '{}',
   }) {
     final payload = buildSavePayload(
+      coins: coins,
+      ownedRockets: ownedRockets,
+      engineLevel: engineLevel,
+      fuelLevel: fuelLevel,
+      shieldLevel: shieldLevel,
+      leaderboardJson: leaderboardJson,
+      suitColor: suitColor,
+      selectedHelmet: selectedHelmet,
+      ownedHelmets: ownedHelmets,
+      selectedSuit: selectedSuit,
+      ownedSuits: ownedSuits,
+      pilotXp: pilotXp,
+      completedLevels: completedLevels,
+      levelStarsJson: levelStarsJson,
+    );
+    final keyBytes = utf8.encode(_masterSecretKey);
+    final hmac = Hmac(sha256, keyBytes);
+    final digest = hmac.convert(utf8.encode(payload));
+    return digest.toString();
+  }
+
+  /// Computes legacy v1 signature for backward compatibility
+  static String computeLegacyV1Signature({
+    required int coins,
+    required List<String> ownedRockets,
+    int engineLevel = 1,
+    int fuelLevel = 1,
+    int shieldLevel = 1,
+    String leaderboardJson = '[]',
+    String suitColor = 'classic_orange',
+    String selectedHelmet = 'sphere1',
+    List<String> ownedHelmets = const ['sphere1'],
+    String selectedSuit = 'sk1_cadet',
+    List<String> ownedSuits = const ['sk1_cadet'],
+  }) {
+    final payload = buildLegacyV1Payload(
       coins: coins,
       ownedRockets: ownedRockets,
       engineLevel: engineLevel,
@@ -76,6 +139,9 @@ class SaveSecurityManager {
     List<String> ownedHelmets = const ['sphere1'],
     String selectedSuit = 'sk1_cadet',
     List<String> ownedSuits = const ['sk1_cadet'],
+    int pilotXp = 0,
+    List<String> completedLevels = const [],
+    String levelStarsJson = '{}',
   }) {
     return computeSignature(
       coins: coins,
@@ -89,10 +155,13 @@ class SaveSecurityManager {
       ownedHelmets: ownedHelmets,
       selectedSuit: selectedSuit,
       ownedSuits: ownedSuits,
+      pilotXp: pilotXp,
+      completedLevels: completedLevels,
+      levelStarsJson: levelStarsJson,
     );
   }
 
-  /// Verifies if the provided signature matches the state
+  /// Verifies if the provided signature matches the state (accepts v2 or legacy v1)
   static bool verifySignature({
     required int coins,
     required List<String> ownedRockets,
@@ -105,10 +174,31 @@ class SaveSecurityManager {
     List<String> ownedHelmets = const ['sphere1'],
     String selectedSuit = 'sk1_cadet',
     List<String> ownedSuits = const ['sk1_cadet'],
+    int pilotXp = 0,
+    List<String> completedLevels = const [],
+    String levelStarsJson = '{}',
     required String? signature,
   }) {
     if (signature == null || signature.isEmpty) return false;
-    final expected = computeSignature(
+    final expectedV2 = computeSignature(
+      coins: coins,
+      ownedRockets: ownedRockets,
+      engineLevel: engineLevel,
+      fuelLevel: fuelLevel,
+      shieldLevel: shieldLevel,
+      leaderboardJson: leaderboardJson,
+      suitColor: suitColor,
+      selectedHelmet: selectedHelmet,
+      ownedHelmets: ownedHelmets,
+      selectedSuit: selectedSuit,
+      ownedSuits: ownedSuits,
+      pilotXp: pilotXp,
+      completedLevels: completedLevels,
+      levelStarsJson: levelStarsJson,
+    );
+    if (expectedV2 == signature) return true;
+
+    final expectedV1 = computeLegacyV1Signature(
       coins: coins,
       ownedRockets: ownedRockets,
       engineLevel: engineLevel,
@@ -121,7 +211,7 @@ class SaveSecurityManager {
       selectedSuit: selectedSuit,
       ownedSuits: ownedSuits,
     );
-    return expected == signature;
+    return expectedV1 == signature;
   }
 
   /// Alias matching interface contract verifyHmac
@@ -138,6 +228,9 @@ class SaveSecurityManager {
     List<String> ownedHelmets = const ['sphere1'],
     String selectedSuit = 'sk1_cadet',
     List<String> ownedSuits = const ['sk1_cadet'],
+    int pilotXp = 0,
+    List<String> completedLevels = const [],
+    String levelStarsJson = '{}',
   }) {
     return verifySignature(
       coins: coins,
@@ -151,6 +244,9 @@ class SaveSecurityManager {
       ownedHelmets: ownedHelmets,
       selectedSuit: selectedSuit,
       ownedSuits: ownedSuits,
+      pilotXp: pilotXp,
+      completedLevels: completedLevels,
+      levelStarsJson: levelStarsJson,
       signature: signature,
     );
   }
@@ -208,6 +304,9 @@ class SaveSecurityManager {
     List<String> ownedHelmets = const ['sphere1'],
     String selectedSuit = 'sk1_cadet',
     List<String> ownedSuits = const ['sk1_cadet'],
+    int pilotXp = 0,
+    List<String> completedLevels = const [],
+    String levelStarsJson = '{}',
   }) async {
     final sig = computeSignature(
       coins: coins,
@@ -221,6 +320,9 @@ class SaveSecurityManager {
       ownedHelmets: ownedHelmets,
       selectedSuit: selectedSuit,
       ownedSuits: ownedSuits,
+      pilotXp: pilotXp,
+      completedLevels: completedLevels,
+      levelStarsJson: levelStarsJson,
     );
     await prefs.setString(saveSignatureKey, sig);
   }

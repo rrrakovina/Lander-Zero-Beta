@@ -46,6 +46,39 @@ class SparkPoolManager extends Component {
     }
   }
 
+  // Спавн неоновых защитных искр при отражении удара щитом
+  void spawnDeflectSparks(Vector2 worldContact, Vector2 normal) {
+    int spawned = 0;
+    const int sparksToSpawn = 22;
+    final baseAngle = atan2(normal.y, normal.x);
+
+    for (final spark in _pool) {
+      if (spark.life <= 0.0) {
+        final spread = (_random.nextDouble() - 0.5) * 1.5;
+        final angle = baseAngle + spread;
+        final speed = 3.5 + _random.nextDouble() * 6.5;
+
+        spark.position.setFrom(worldContact);
+        spark.velocity.setValues(cos(angle) * speed, sin(angle) * speed);
+        spark.maxLife = 0.35 + _random.nextDouble() * 0.35;
+        spark.life = spark.maxLife;
+
+        final rng = _random.nextDouble();
+        if (rng < 0.45) {
+          spark.color = const Color(0xFF00E5FF); // Neon cyan
+        } else if (rng < 0.75) {
+          spark.color = const Color(0xFF80D8FF); // Electric light blue
+        } else {
+          spark.color = const Color(0xFFFFD700); // Gold spark
+        }
+        spark.isSmoke = false;
+
+        spawned++;
+        if (spawned >= sparksToSpawn) break;
+      }
+    }
+  }
+
   // Спавн поднимающегося дыма при критическом состоянии корабля
   void spawnSmoke(Vector2 worldPosition) {
     int spawned = 0;
