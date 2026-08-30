@@ -11,25 +11,25 @@ class FuelPickup extends BodyComponent<LanderZeroGame> {
 
   // Оптимизированные Paint объекты — кэш для render()
   final Paint _glowPaint = Paint()
-    ..color = Colors.orange.withOpacity(0.35)
+    ..color = const Color(0xFFFF1744).withOpacity(0.40)
     ..style = PaintingStyle.fill
-    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.15);
+    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.18);
 
   final Paint _bodyPaint = Paint()
-    ..color = Colors.amber.shade700
+    ..color = const Color(0xFFD50000)
     ..style = PaintingStyle.fill;
 
   final Paint _borderPaint = Paint()
-    ..color = Colors.yellowAccent
+    ..color = const Color(0xFFFF5252)
     ..style = PaintingStyle.stroke
     ..strokeWidth = 0.05;
 
   final Paint _capPaint = Paint()
-    ..color = Colors.black87
+    ..color = const Color(0xFF212121)
     ..style = PaintingStyle.fill;
 
   final Paint _handlePaint = Paint()
-    ..color = Colors.yellowAccent
+    ..color = const Color(0xFFFF8A80)
     ..style = PaintingStyle.stroke
     ..strokeWidth = 0.04;
 
