@@ -134,6 +134,7 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
   }
 
   void _spawnPickups() {
+    if (mapId == 'endless') return;
     final random = Random(888);
 
     if (mapId == 'core') {
@@ -209,6 +210,7 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
   }
 
   void _spawnObstacles() {
+    if (mapId == 'endless') return;
     if (mapId == 'orbit') {
       // Spawn rotating solar panel debris obstacles and wreckage
       world.add(RotatingDebris(
@@ -329,6 +331,8 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
   }
 
   void _updateStats() {
+    final state = GameState();
+    final isRu = state.language == 'ru';
     String alertText = '';
     double gForceVal = 1.0;
     double pitchAngleVal = 0.0;
@@ -352,8 +356,6 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
         }
       }
 
-      final state = GameState();
-      final isRu = state.language == 'ru';
       final fuelPct = lander.maxFuel > 0 ? lander.fuel / lander.maxFuel : 1.0;
 
       if (isProxAlert) {
@@ -361,11 +363,21 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
       } else if (fuelPct < 0.20 && lander.fuel > 0) {
         radioMessage = isRu ? 'ВНИМАНИЕ: Критический остаток топлива (< 20%)!' : 'WARNING: Fuel reserves critical (< 20%)!';
       } else if (rope != null) {
-        final exitDist = cargoCapsule.isMounted ? cargoCapsule.body.position.distanceTo(cave.exitPlatform) : 99.0;
-        if (exitDist < 12.0) {
-          radioMessage = isRu ? 'База: Выходной шлюз на прицеле, погасите скорость!' : 'Base: Extraction bay in sight, slow down!';
+        if (mapId == 'endless' && endlessManager != null) {
+          final outpostPos = endlessManager!.nextOutpostPos;
+          final outpostDist = outpostPos != null ? (outpostPos.x - lander.body.position.x) : 999.0;
+          if (outpostDist < 20.0 && outpostDist > -10.0) {
+            radioMessage = isRu ? 'База: Аванпост на прицеле, садитесь на платформу с маяком!' : 'Base: Outpost in sight, land on beacon platform!';
+          } else {
+            radioMessage = isRu ? 'Пилот: Груз зафиксирован, транспортирую на аванпост.' : 'Pilot: Cargo secured on tether, flying to outpost.';
+          }
         } else {
-          radioMessage = isRu ? 'Пилот: Груз зафиксирован, начинаю транспортировку.' : 'Pilot: Cargo secured on tether, proceeding to exit.';
+          final exitDist = cargoCapsule.isMounted ? cargoCapsule.body.position.distanceTo(cave.exitPlatform) : 99.0;
+          if (exitDist < 12.0) {
+            radioMessage = isRu ? 'База: Выходной шлюз на прицеле, погасите скорость!' : 'Base: Extraction bay in sight, slow down!';
+          } else {
+            radioMessage = isRu ? 'Пилот: Груз зафиксирован, начинаю транспортировку.' : 'Pilot: Cargo secured on tether, proceeding to exit.';
+          }
         }
       } else if (flightTime < 4.0) {
         radioMessage = isRu ? 'База: Старт разрешен, контролируйте вектор тяги.' : 'Base: Clearance granted, monitor thrust vector.';
@@ -377,11 +389,28 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
     } else if (rope == null && lander.isMounted && cargoCapsule.isMounted && lander.body.position.distanceTo(cargoCapsule.body.position) < 8.0) {
       alertText = GameState().translate('cargo_nearby');
     } else if (rope != null && cargoCapsule.isMounted) {
-      final exitDistance = cargoCapsule.body.position.distanceTo(cave.exitPlatform);
-      if (exitDistance < 12.0) {
-        alertText = GameState().translate('exit_gate_alert');
+      if (mapId == 'endless' && endlessManager != null) {
+        final outpostPos = endlessManager!.nextOutpostPos;
+        final outpostDist = outpostPos != null ? (outpostPos.x - lander.body.position.x) : 999.0;
+        if (outpostDist < 20.0 && outpostDist > -8.0) {
+          alertText = isRu
+              ? 'АВАНПОСТ БЛИЗКО! ПРИЗЕМЛИТЕСЬ НА ПЛАТФОРМУ С МАЯКОМ'
+              : 'OUTPOST IN SIGHT! LAND ON BEACON PLATFORM';
+        } else if (outpostDist > 0) {
+          final distInt = outpostDist.toInt();
+          alertText = isRu
+              ? 'ГРУЗ ЗАХВАЧЕН! ВЕЗИТЕ НА АВАНПОСТ (ЕЩЕ $distInt М ВПЕРЕД ➔)'
+              : 'CARGO SECURED! DELIVER TO OUTPOST ($distInt M AHEAD ➔)';
+        } else {
+          alertText = isRu ? 'ГРУЗ ЗАХВАЧЕН! ТРАНСПОРТИРУЙТЕ НА СЛЕДУЮЩИЙ АВАНПОСТ ➔' : 'CARGO SECURED! TRANSPORT TO NEXT OUTPOST ➔';
+        }
       } else {
-        alertText = GameState().translate('docked_alert');
+        final exitDistance = cargoCapsule.body.position.distanceTo(cave.exitPlatform);
+        if (exitDistance < 12.0) {
+          alertText = GameState().translate('exit_gate_alert');
+        } else {
+          alertText = GameState().translate('docked_alert');
+        }
       }
     }
 
@@ -470,11 +499,28 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
     // Автоматический зацеп капсулы тросом при сближении
     if (rope == null) {
       final landerHook = lander.body.worldPoint(Vector2(0, 0.8));
-      final cargoHook = cargoCapsule.body.worldPoint(Vector2(0, -0.9));
-      
-      final distance = landerHook.distanceTo(cargoHook);
-      if (distance <= GameConfig.dockingRange) {
-        _dockCargo();
+      if (mapId == 'endless') {
+        final capsules = world.children.whereType<CargoCapsule>();
+        CargoCapsule? closestCapsule;
+        double minDistance = double.infinity;
+        for (final c in capsules) {
+          if (!c.isMounted) continue;
+          final d = landerHook.distanceTo(c.body.worldPoint(Vector2(0, -0.9)));
+          if (d < minDistance) {
+            minDistance = d;
+            closestCapsule = c;
+          }
+        }
+        if (closestCapsule != null && minDistance <= GameConfig.dockingRange) {
+          cargoCapsule = closestCapsule;
+          _dockCargo();
+        }
+      } else if (cargoCapsule.isMounted) {
+        final cargoHook = cargoCapsule.body.worldPoint(Vector2(0, -0.9));
+        final distance = landerHook.distanceTo(cargoHook);
+        if (distance <= GameConfig.dockingRange) {
+          _dockCargo();
+        }
       }
     }
 

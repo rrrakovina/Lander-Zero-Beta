@@ -762,14 +762,16 @@ class Cave extends BodyComponent {
             ? const Color(0xFFE040FB)
             : (mapId == 'core' ? const Color(0xFFFF5722) : Colors.blueAccent));
 
-    if (startPlatform.x >= leftX - 6.0 && startPlatform.x <= rightX + 6.0) {
-      _drawPlatformOverlay(canvas, startPlatform, 4.5, platformNeon);
-    }
-    if (cargoPlatform.x >= leftX - 7.0 && cargoPlatform.x <= rightX + 7.0) {
-      _drawPlatformOverlay(canvas, cargoPlatform, 5.5, Colors.greenAccent);
-    }
-    if (exitPlatform.x >= leftX - 6.0 && exitPlatform.x <= rightX + 6.0) {
-      _drawPlatformOverlay(canvas, exitPlatform, 4.5, Colors.orangeAccent);
+    if (mapId != 'endless') {
+      if (startPlatform.x >= leftX - 6.0 && startPlatform.x <= rightX + 6.0) {
+        _drawPlatformOverlay(canvas, startPlatform, 4.5, platformNeon);
+      }
+      if (cargoPlatform.x >= leftX - 7.0 && cargoPlatform.x <= rightX + 7.0) {
+        _drawPlatformOverlay(canvas, cargoPlatform, 5.5, Colors.greenAccent);
+      }
+      if (exitPlatform.x >= leftX - 6.0 && exitPlatform.x <= rightX + 6.0) {
+        _drawPlatformOverlay(canvas, exitPlatform, 4.5, Colors.orangeAccent);
+      }
     }
   }
 
