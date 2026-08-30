@@ -838,11 +838,11 @@ class ShipMeshRenderer {
     _renderRcsPod(canvas, const Offset(-1.25, 0.35), rcsThrust < 0);
     _renderRcsPod(canvas, const Offset(1.25, 0.35), rcsThrust > 0);
 
-    // Vector Decals: "QUASAR-52" Neon Digital Typography
+    // Vector Decals: "NEEDLE-52" Neon Digital Typography
     if (showDecals) {
       _renderVectorText(
         canvas: canvas,
-        text: 'QUASAR-52',
+        text: 'NEEDLE-52',
         position: const Offset(0.0, -0.75),
         fontSize: 9.0,
         color: const Color(0xFF00E5FF),

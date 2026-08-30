@@ -396,7 +396,7 @@ void main() {
 
       // Check Cavern Diagnostics
       expect(find.text('ТАКТИЧЕСКИЙ АНАЛИЗ'), findsOneWidget);
-      expect(find.text('Квазар-52 (Маневренность / Мин. лобовое сопротивление)'), findsOneWidget);
+      expect(find.text('Игла-52 (Маневренность / Мин. лобовое сопротивление)'), findsOneWidget);
 
       // Test Launch Button
       await tester.tap(find.text('В ПУТЬ'));
