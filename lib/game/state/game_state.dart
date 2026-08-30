@@ -164,8 +164,8 @@ class GameState extends ChangeNotifier {
   // Характеристики 5 кораблей флота
   static const Map<String, Map<String, dynamic>> rocketConfigs = {
     'sputnik': {
-      'nameRu': 'Спутник-1',
-      'nameEn': 'Sputnik-1',
+      'nameRu': 'Спутник-11',
+      'nameEn': 'Sputnik-11',
       'descRu': 'Базовая кабина. Хорошо сбалансирована.',
       'descEn': 'Starter cabin. Well balanced.',
       'price': 0,
@@ -175,8 +175,8 @@ class GameState extends ChangeNotifier {
       'mass': 1.0,
     },
     'swift': {
-      'nameRu': 'Стриж',
-      'nameEn': 'Swift-02',
+      'nameRu': 'Стриж-28',
+      'nameEn': 'Swift-28',
       'descRu': 'Скоростной перехватчик. Высокая тяга, легкий корпус, малый щит.',
       'descEn': 'High-speed interceptor. Agile and lightweight, low shielding.',
       'price': 0,
@@ -186,8 +186,8 @@ class GameState extends ChangeNotifier {
       'mass': 0.75,
     },
     'cyclone': {
-      'nameRu': 'Ураган',
-      'nameEn': 'Cyclone',
+      'nameRu': 'Ураган-47',
+      'nameEn': 'Cyclone-47',
       'descRu': 'Тяжелый грузовик. Очень прочный, мощная тяга, но прожорлив.',
       'descEn': 'Heavy cargo ship. High shield and thrust, but heavy and thirsty.',
       'price': 800,
@@ -197,8 +197,8 @@ class GameState extends ChangeNotifier {
       'mass': 1.6,
     },
     'needle': {
-      'nameRu': 'Игла',
-      'nameEn': 'Needle',
+      'nameRu': 'Игла-52',
+      'nameEn': 'Needle-52',
       'descRu': 'Высокотехнологичный ионный перехватчик «Квазар». Маневренный и экономичный.',
       'descEn': 'High-tech Quasar ion RCS maneuvering vessel. Sleek and agile.',
       'price': 1500,
@@ -208,8 +208,8 @@ class GameState extends ChangeNotifier {
       'mass': 0.7,
     },
     'titan': {
-      'nameRu': 'Буран-М',
-      'nameEn': 'Titan-V',
+      'nameRu': 'Буран-67',
+      'nameEn': 'Titan-67',
       'descRu': 'Тяжелый трехсопловый бронекатер. Максимальный щит и стабильность.',
       'descEn': 'Heavy triple-thruster armored rescue ship. Maximum shield.',
       'price': 2200,

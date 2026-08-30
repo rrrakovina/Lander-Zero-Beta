@@ -358,7 +358,7 @@ void main() {
       expect(find.text('LINK: 99.8%'), findsOneWidget);
       expect(find.textContaining('SYS READY: 60%'), findsOneWidget);
       expect(find.text('SELECTED VESSEL:'), findsOneWidget);
-      expect(find.text('Sputnik-1'), findsOneWidget);
+      expect(find.text('Sputnik-11'), findsOneWidget);
       expect(find.text('THRUST'), findsOneWidget);
       expect(find.text('FUEL'), findsOneWidget);
       expect(find.text('SHIELD'), findsOneWidget);
@@ -427,9 +427,9 @@ void main() {
       }
 
       // Check ships in EN
-      expect(find.text('Sputnik-1'), findsOneWidget);
-      expect(find.text('Cyclone'), findsOneWidget);
-      expect(find.text('Needle'), findsOneWidget);
+      expect(find.text('Sputnik-11'), findsOneWidget);
+      expect(find.text('Cyclone-47'), findsOneWidget);
+      expect(find.text('Needle-52'), findsOneWidget);
       expect(find.text('SELECTED'), findsWidgets);
       expect(find.text('800'), findsOneWidget);
       expect(find.text('1500'), findsOneWidget);
@@ -449,9 +449,9 @@ void main() {
       expect(find.text('ГАРАЖ'), findsOneWidget);
       expect(find.text('МОДЕРНИЗАЦИЯ'), findsOneWidget);
       expect(find.text('КАБИНЫ'), findsOneWidget);
-      expect(find.text('Спутник-1'), findsOneWidget);
-      expect(find.text('Ураган'), findsOneWidget);
-      expect(find.text('Игла'), findsOneWidget);
+      expect(find.text('Спутник-11'), findsOneWidget);
+      expect(find.text('Ураган-47'), findsOneWidget);
+      expect(find.text('Игла-52'), findsOneWidget);
       expect(find.text('ВЫБРАНО'), findsWidgets);
       expect(find.text('ВЫБРАТЬ'), findsWidgets); // Sputnik and Swift now available to select
     });

@@ -546,11 +546,11 @@ class ShipMeshRenderer {
     canvas.drawCircle(const Offset(1.1, 0.5), 0.06, _rivetPaint);
     canvas.drawCircle(const Offset(0.0, 0.7), 0.05, _rivetPaint);
 
-    // Vector Decals: "СССР-01" + Soviet Red Stars
+    // Vector Decals: "СССР-11" + Soviet Red Stars
     if (showDecals) {
       _renderVectorText(
         canvas: canvas,
-        text: 'СССР-01',
+        text: 'СССР-11',
         position: const Offset(0.0, -0.78),
         fontSize: 10.0,
         color: const Color(0xFFFF5252),
@@ -635,11 +635,11 @@ class ShipMeshRenderer {
     canvas.drawRect(Rect.fromCenter(center: const Offset(-0.6, 0.95), width: 0.35, height: 0.2), _swiftNozzlePaint);
     canvas.drawRect(Rect.fromCenter(center: const Offset(0.6, 0.95), width: 0.35, height: 0.2), _swiftNozzlePaint);
 
-    // Vector Decals: "SWIFT-02" + "INTERCEPTOR-07" + Chevrons + Nozzle IDs
+    // Vector Decals: "SWIFT-28" + "INTERCEPTOR-07" + Chevrons + Nozzle IDs
     if (showDecals) {
       _renderVectorText(
         canvas: canvas,
-        text: 'SWIFT-02',
+        text: 'SWIFT-28',
         position: const Offset(0.0, -0.65),
         fontSize: 8.5,
         color: const Color(0xFF00E5FF),
@@ -735,11 +735,11 @@ class ShipMeshRenderer {
     canvas.drawRect(Rect.fromCenter(center: const Offset(0.0, 1.30), width: 0.55, height: 0.28), _titanNozzlePaint);
     canvas.drawRect(Rect.fromCenter(center: const Offset(1.2, 1.25), width: 0.45, height: 0.25), _titanNozzlePaint);
 
-    // Vector Decals: "TITAN-V" + Triple Cluster IDs "TH-A", "TH-B", "TH-C"
+    // Vector Decals: "TITAN-67" + Triple Cluster IDs "TH-A", "TH-B", "TH-C"
     if (showDecals) {
       _renderVectorText(
         canvas: canvas,
-        text: 'TITAN-V',
+        text: 'TITAN-67',
         position: const Offset(0.0, -0.85),
         fontSize: 10.5,
         color: const Color(0xFFFFB300),
@@ -838,11 +838,11 @@ class ShipMeshRenderer {
     _renderRcsPod(canvas, const Offset(-1.25, 0.35), rcsThrust < 0);
     _renderRcsPod(canvas, const Offset(1.25, 0.35), rcsThrust > 0);
 
-    // Vector Decals: "QUASAR-IX" Neon Digital Typography
+    // Vector Decals: "QUASAR-52" Neon Digital Typography
     if (showDecals) {
       _renderVectorText(
         canvas: canvas,
-        text: 'QUASAR-IX',
+        text: 'QUASAR-52',
         position: const Offset(0.0, -0.75),
         fontSize: 9.0,
         color: const Color(0xFF00E5FF),
@@ -928,11 +928,11 @@ class ShipMeshRenderer {
     canvas.drawRect(Rect.fromCenter(center: const Offset(-1.3, 1.15), width: 0.5, height: 0.3), _cycloneNozzlePaint);
     canvas.drawRect(Rect.fromCenter(center: const Offset(1.3, 1.15), width: 0.5, height: 0.3), _cycloneNozzlePaint);
 
-    // Vector Decals: "CY-88" Industrial Stamp
+    // Vector Decals: "CY-47" Industrial Stamp
     if (showDecals) {
       _renderVectorText(
         canvas: canvas,
-        text: 'CY-88',
+        text: 'CY-47',
         position: const Offset(0.0, -0.8),
         fontSize: 11.0,
         color: const Color(0xFF212121),

@@ -92,11 +92,11 @@ void main() {
       await switchToCabinsTab(tester);
 
       // Vessel names
-      expect(find.text('Спутник-1'), findsOneWidget);
-      expect(find.text('Стриж'), findsOneWidget);
-      expect(find.text('Ураган'), findsOneWidget);
-      expect(find.text('Игла'), findsOneWidget);
-      expect(find.text('Буран-М'), findsOneWidget);
+      expect(find.text('Спутник-11'), findsOneWidget);
+      expect(find.text('Стриж-28'), findsOneWidget);
+      expect(find.text('Ураган-47'), findsOneWidget);
+      expect(find.text('Игла-52'), findsOneWidget);
+      expect(find.text('Буран-67'), findsOneWidget);
 
       // Preview cards
       expect(find.byType(CabinPreviewWidget), findsNWidgets(5));
@@ -131,7 +131,7 @@ void main() {
       expect(state.selectedRocket, equals('cyclone'));
       expect(state.totalCoins, equals(1200));
 
-      // Re-select Sputnik-1
+      // Re-select Sputnik-11
       final selectSputnik = find.text('ВЫБРАТЬ');
       expect(selectSputnik, findsWidgets);
       await tester.tap(selectSputnik.first);
@@ -156,11 +156,11 @@ void main() {
       // Switch to cabins tab in English
       await switchToCabinsTab(tester, tabText: 'ROCKETS');
 
-      expect(find.text('Sputnik-1'), findsOneWidget);
-      expect(find.text('Swift-02'), findsOneWidget);
-      expect(find.text('Cyclone'), findsOneWidget);
-      expect(find.text('Needle'), findsOneWidget);
-      expect(find.text('Titan-V'), findsOneWidget);
+      expect(find.text('Sputnik-11'), findsOneWidget);
+      expect(find.text('Swift-28'), findsOneWidget);
+      expect(find.text('Cyclone-47'), findsOneWidget);
+      expect(find.text('Needle-52'), findsOneWidget);
+      expect(find.text('Titan-67'), findsOneWidget);
       expect(find.text('SELECTED'), findsWidgets);
       expect(find.text('BUY'), findsWidgets);
     });
