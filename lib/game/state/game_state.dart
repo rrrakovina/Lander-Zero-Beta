@@ -197,9 +197,9 @@ class GameState extends ChangeNotifier {
       'mass': 1.6,
     },
     'needle': {
-      'nameRu': 'Игла-52',
-      'nameEn': 'Needle-52',
-      'descRu': 'Высокотехнологичный ионный перехватчик «Квазар». Маневренный и экономичный.',
+      'nameRu': 'Квазар-52',
+      'nameEn': 'Quasar-52',
+      'descRu': 'Высокотехнологичный ионный перехватчик. Маневренный и экономичный.',
       'descEn': 'High-tech Quasar ion RCS maneuvering vessel. Sleek and agile.',
       'price': 1500,
       'baseThrust': 38.0,

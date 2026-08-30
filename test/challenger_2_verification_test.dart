@@ -429,7 +429,7 @@ void main() {
       // Check ships in EN
       expect(find.text('Sputnik-11'), findsOneWidget);
       expect(find.text('Cyclone-47'), findsOneWidget);
-      expect(find.text('Needle-52'), findsOneWidget);
+      expect(find.text('Quasar-52'), findsOneWidget);
       expect(find.text('SELECTED'), findsWidgets);
       expect(find.text('800'), findsOneWidget);
       expect(find.text('1500'), findsOneWidget);
@@ -451,7 +451,7 @@ void main() {
       expect(find.text('КАБИНЫ'), findsOneWidget);
       expect(find.text('Спутник-11'), findsOneWidget);
       expect(find.text('Ураган-47'), findsOneWidget);
-      expect(find.text('Игла-52'), findsOneWidget);
+      expect(find.text('Квазар-52'), findsOneWidget);
       expect(find.text('ВЫБРАНО'), findsWidgets);
       expect(find.text('ВЫБРАТЬ'), findsWidgets); // Sputnik and Swift now available to select
     });

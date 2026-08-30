@@ -95,7 +95,7 @@ void main() {
       expect(find.text('Спутник-11'), findsOneWidget);
       expect(find.text('Стриж-28'), findsOneWidget);
       expect(find.text('Ураган-47'), findsOneWidget);
-      expect(find.text('Игла-52'), findsOneWidget);
+      expect(find.text('Квазар-52'), findsOneWidget);
       expect(find.text('Буран-67'), findsOneWidget);
 
       // Preview cards
@@ -159,7 +159,7 @@ void main() {
       expect(find.text('Sputnik-11'), findsOneWidget);
       expect(find.text('Swift-28'), findsOneWidget);
       expect(find.text('Cyclone-47'), findsOneWidget);
-      expect(find.text('Needle-52'), findsOneWidget);
+      expect(find.text('Quasar-52'), findsOneWidget);
       expect(find.text('Titan-67'), findsOneWidget);
       expect(find.text('SELECTED'), findsWidgets);
       expect(find.text('BUY'), findsWidgets);
