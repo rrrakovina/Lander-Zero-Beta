@@ -440,8 +440,23 @@ class LanderZeroGame extends Forge2DGame with HasKeyboardHandlerComponents {
       alertText = isRu
           ? 'КОРАБЛЬ ОПРОКИНУТ! НАЖМИТЕ [ R ] ДЛЯ БЫСТРОГО ПЕРЕЗАПУСКА'
           : 'VESSEL OVERTURNED! PRESS [ R ] FOR QUICK RESTART';
-    } else if (rope == null && (lander.isMounted || lander.isLoaded) && (cargoCapsule.isMounted || cargoCapsule.isLoaded) && lander.body.position.distanceTo(cargoCapsule.body.position) < 8.0) {
-      alertText = GameState().translate('cargo_nearby');
+    } else if (rope == null && (lander.isMounted || lander.isLoaded)) {
+      bool isNearCargo = false;
+      if (mapId == 'endless') {
+        final landerPos = lander.body.position;
+        final capsules = world.children.whereType<CargoCapsule>();
+        for (final c in capsules) {
+          if (c.isMounted && landerPos.distanceTo(c.body.position) < 8.0) {
+            isNearCargo = true;
+            break;
+          }
+        }
+      } else if (cargoCapsule.isMounted && lander.body.position.distanceTo(cargoCapsule.body.position) < 8.0) {
+        isNearCargo = true;
+      }
+      if (isNearCargo) {
+        alertText = GameState().translate('cargo_nearby');
+      }
     } else if (rope != null && (cargoCapsule.isMounted || cargoCapsule.isLoaded)) {
       if (mapId == 'endless' && endlessManager != null) {
         final outpostPos = endlessManager!.nextOutpostPos;

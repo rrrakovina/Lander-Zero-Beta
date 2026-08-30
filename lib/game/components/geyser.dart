@@ -37,6 +37,13 @@ class Geyser extends PositionComponent with HasGameReference<LanderZeroGame> {
   Future<void> onLoad() async {
     await super.onLoad();
 
+    try {
+      final y1 = game.cave.getFloorY(position.x - 0.6);
+      final y2 = game.cave.getFloorY(position.x + 0.6);
+      final slopeAngle = atan2(y2 - y1, 1.2);
+      angle = slopeAngle;
+    } catch (_) {}
+
     final isCryo = biome == 'ice';
 
     _nozzlePaint = Paint()
@@ -72,10 +79,10 @@ class Geyser extends PositionComponent with HasGameReference<LanderZeroGame> {
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.15);
 
     _nozzlePath = Path()
-      ..moveTo(-0.8, 0.0)
-      ..lineTo(-0.5, -0.6)
-      ..lineTo(0.5, -0.6)
-      ..lineTo(0.8, 0.0)
+      ..moveTo(-0.7, 0.0)
+      ..lineTo(-0.45, -0.45)
+      ..lineTo(0.45, -0.45)
+      ..lineTo(0.7, 0.0)
       ..close();
   }
 
@@ -106,16 +113,21 @@ class Geyser extends PositionComponent with HasGameReference<LanderZeroGame> {
       final lander = game.lander;
       if (lander.isMounted && !lander.isGrounded) {
         final landerPos = lander.body.position;
-        // Проверяем, находится ли Лендер в створе гейзера (над соплом)
-        if (landerPos.x >= position.x - rangeWidth / 2 &&
-            landerPos.x <= position.x + rangeWidth / 2 &&
-            landerPos.y >= position.y - rangeHeight &&
-            landerPos.y <= position.y) {
-          
-          // Выталкивающая сила направлена строго вверх
-          // Сила ослабевает с расстоянием от сопла гейзера
-          final distanceFactor = (1.0 - ((position.y - landerPos.y) / rangeHeight)).clamp(0.1, 1.0);
-          final force = Vector2(0.0, -forceMagnitude * distanceFactor * lander.body.mass);
+        // Перевод вектора позиции Лендера в локальную систему координат гейзера
+        final relX = landerPos.x - position.x;
+        final relY = landerPos.y - position.y;
+        final cosA = cos(-angle);
+        final sinA = sin(-angle);
+        final localX = relX * cosA - relY * sinA;
+        final localY = relX * sinA + relY * cosA;
+
+        // Проверяем, находится ли Лендер в створе гейзера
+        if (localX.abs() <= rangeWidth / 2 && localY <= 0.0 && localY >= -rangeHeight) {
+          final distanceFactor = (1.0 - (-localY / rangeHeight)).clamp(0.1, 1.0);
+          final mag = -forceMagnitude * distanceFactor * lander.body.mass;
+          final worldForceX = -sin(angle) * mag;
+          final worldForceY = cos(angle) * mag;
+          final force = Vector2(worldForceX, worldForceY);
           lander.body.applyForce(force);
 
           // Наносим периодический урон щиту Лендера

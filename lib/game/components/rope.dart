@@ -11,7 +11,7 @@ class Rope extends Component with HasGameReference<LanderZeroGame> {
   final Lander lander;
   final CargoCapsule capsule;
 
-  late final RopeJoint _joint;
+  RopeJoint? _joint;
 
   // Накопитель времени высокого натяжения для обрыва
   double _tensionTimer = 0.0;
@@ -38,7 +38,6 @@ class Rope extends Component with HasGameReference<LanderZeroGame> {
     final landerBody = lander.body;
     final capsuleBody = capsule.body;
     // Используем встроенный в Box2D RopeJoint для абсолютно стабильного физического ограничения максимальной длины.
-    // Он не создает промежуточных тел, не дает раскачки и идеально решает уравнения масс.
     final jointDef = RopeJointDef()
       ..bodyA = landerBody
       ..bodyB = capsuleBody
@@ -48,7 +47,7 @@ class Rope extends Component with HasGameReference<LanderZeroGame> {
       ..collideConnected = false;
 
     _joint = RopeJoint(jointDef);
-    world.createJoint(_joint);
+    world.createJoint(_joint!);
 
     capsule.isDocked = true;
   }
@@ -63,7 +62,6 @@ class Rope extends Component with HasGameReference<LanderZeroGame> {
     final double maxLength = GameConfig.ropeLength;
 
     // Проверяем растяжение троса для его обрыва
-    // Так как суставы Box2D могут растягиваться под большой нагрузкой, ставим порог 1.25 (5.0м)
     if (currentLength > maxLength * 1.25) {
       _tensionTimer += dt;
       if (_tensionTimer >= 1.2) {
@@ -77,9 +75,12 @@ class Rope extends Component with HasGameReference<LanderZeroGame> {
 
   @override
   void onRemove() {
-    try {
-      game.world.destroyJoint(_joint);
-    } catch (_) {}
+    if (_joint != null) {
+      try {
+        game.world.destroyJoint(_joint!);
+      } catch (_) {}
+      _joint = null;
+    }
     capsule.isDocked = false;
     super.onRemove();
   }
@@ -122,10 +123,11 @@ class Rope extends Component with HasGameReference<LanderZeroGame> {
     _ropePaint.color = ropeColor;
     _ropePaint.strokeWidth = 0.07 + (tension * 0.05);
 
-    // Рассчитываем визуальное провисание (sag)
+    // Рассчитываем визуальное провисание (sag) с защитой от NaN
     double sag = 0.0;
     if (currentLength < maxLength) {
-      sag = 0.5 * sqrt(maxLength * maxLength - currentLength * currentLength);
+      final double diff = (maxLength * maxLength - currentLength * currentLength).clamp(0.0, double.infinity);
+      sag = 0.5 * sqrt(diff);
     }
 
     // Дрожание при критическом натяжении

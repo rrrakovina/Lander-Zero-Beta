@@ -574,6 +574,7 @@ class Lander extends BodyComponent with ContactCallbacks {
 
     // Unified Ship & Dynamic Astronaut Rendering
     final isAnyThrust = leftThrustActive || rightThrustActive;
+    final state = GameState();
     ShipMeshRenderer.renderShip(
       canvas: canvas,
       shipId: rocketId,
@@ -589,6 +590,9 @@ class Lander extends BodyComponent with ContactCallbacks {
       animationTime: _totalTime,
       legsCompression: legsCompression,
       showDecals: true,
+      customSuitColor: state.initialized ? state.suitColor : null,
+      customHelmetType: state.initialized ? state.selectedHelmet : null,
+      customSuitModel: state.initialized ? state.selectedSuit : null,
     );
 
     canvas.restore();

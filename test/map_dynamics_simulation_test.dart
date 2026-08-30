@@ -487,6 +487,7 @@ void main() {
       game.lander.body = game.lander.createBody();
 
       final manager = game.endlessManager!;
+      game.update(0.016);
 
       // Initial 4 chunks generated
       expect(game.world.children.whereType<CargoCapsule>().length, greaterThanOrEqualTo(1));

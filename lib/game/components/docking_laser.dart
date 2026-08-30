@@ -2,6 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../config/game_config.dart';
 import '../lander_zero_game.dart';
+import 'cargo_capsule.dart';
 
 class DockingLaser extends Component with HasGameReference<LanderZeroGame> {
   final Paint _laserPaint = Paint()
@@ -12,10 +13,30 @@ class DockingLaser extends Component with HasGameReference<LanderZeroGame> {
     super.render(canvas);
 
     final lander = game.lander;
-    final cargo = game.cargoCapsule;
 
-    // Отрисовываем луч только если трос не подключен и оба тела живы
-    if (game.rope != null || !lander.isMounted || !cargo.isMounted || lander.exploded) {
+    // Отрисовываем луч только если трос не подключен и корабль жив
+    if (game.rope != null || !lander.isMounted || lander.exploded) {
+      return;
+    }
+
+    CargoCapsule? cargo;
+    if (game.mapId == 'endless') {
+      final landerHook = lander.body.worldPoint(Vector2(0, 0.8));
+      final capsules = game.world.children.whereType<CargoCapsule>();
+      double minD = double.infinity;
+      for (final c in capsules) {
+        if (!c.isMounted) continue;
+        final d = landerHook.distanceTo(c.body.worldPoint(Vector2(0, -0.9)));
+        if (d < minD) {
+          minD = d;
+          cargo = c;
+        }
+      }
+    } else if (game.cargoCapsule.isMounted) {
+      cargo = game.cargoCapsule;
+    }
+
+    if (cargo == null || !cargo.isMounted) {
       return;
     }
 

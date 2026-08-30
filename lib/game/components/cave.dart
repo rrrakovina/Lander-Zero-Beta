@@ -691,15 +691,35 @@ class Cave extends BodyComponent {
       canvas.drawRect(magmaRect, _magmaPoolPaint);
     }
 
-    // 3. Stalactites & Stalagmites
+    // 3. Stalactites & Stalagmites (Precisely aligned to surface normals)
     for (final index in stalactiteIndices) {
       if (index < ceilingPoints.length) {
         final p = ceilingPoints[index];
         if (p.x >= leftX - 2.0 && p.x <= rightX + 2.0) {
+          final pPrev = index > 0 ? ceilingPoints[index - 1] : p;
+          final pNext = index < ceilingPoints.length - 1 ? ceilingPoints[index + 1] : p;
+          final dx = pNext.x - pPrev.x;
+          final dy = pNext.y - pPrev.y;
+          final len = sqrt(dx * dx + dy * dy);
+          final tx = len > 0.001 ? (dx / len) : 1.0;
+          final ty = len > 0.001 ? (dy / len) : 0.0;
+          final nx = -ty;
+          final ny = tx;
+
+          const baseHalfW = 0.55;
+          final h = 1.6 + sin(p.x) * 0.35;
+
+          final b1x = p.x - tx * baseHalfW;
+          final b1y = p.y - ty * baseHalfW;
+          final b2x = p.x + tx * baseHalfW;
+          final b2y = p.y + ty * baseHalfW;
+          final tipX = p.x + nx * h;
+          final tipY = p.y + ny * h;
+
           _spikePath.reset();
-          _spikePath.moveTo(p.x - 0.6, p.y);
-          _spikePath.lineTo(p.x + 0.6, p.y);
-          _spikePath.lineTo(p.x, p.y + 1.8 + sin(p.x) * 0.4);
+          _spikePath.moveTo(b1x, b1y);
+          _spikePath.lineTo(b2x, b2y);
+          _spikePath.lineTo(tipX, tipY);
           _spikePath.close();
           canvas.drawPath(_spikePath, _spikePaint);
           canvas.drawPath(_spikePath, _spikeBorderPaint);
@@ -711,10 +731,30 @@ class Cave extends BodyComponent {
       if (index < floorPoints.length) {
         final p = floorPoints[index];
         if (p.x >= leftX - 2.0 && p.x <= rightX + 2.0) {
+          final pPrev = index > 0 ? floorPoints[index - 1] : p;
+          final pNext = index < floorPoints.length - 1 ? floorPoints[index + 1] : p;
+          final dx = pNext.x - pPrev.x;
+          final dy = pNext.y - pPrev.y;
+          final len = sqrt(dx * dx + dy * dy);
+          final tx = len > 0.001 ? (dx / len) : 1.0;
+          final ty = len > 0.001 ? (dy / len) : 0.0;
+          final nx = ty;
+          final ny = -tx;
+
+          const baseHalfW = 0.55;
+          final h = 1.6 + cos(p.x) * 0.35;
+
+          final b1x = p.x - tx * baseHalfW;
+          final b1y = p.y - ty * baseHalfW;
+          final b2x = p.x + tx * baseHalfW;
+          final b2y = p.y + ty * baseHalfW;
+          final tipX = p.x + nx * h;
+          final tipY = p.y + ny * h;
+
           _spikePath.reset();
-          _spikePath.moveTo(p.x - 0.6, p.y);
-          _spikePath.lineTo(p.x + 0.6, p.y);
-          _spikePath.lineTo(p.x, p.y - 1.8 - cos(p.x) * 0.4);
+          _spikePath.moveTo(b1x, b1y);
+          _spikePath.lineTo(b2x, b2y);
+          _spikePath.lineTo(tipX, tipY);
           _spikePath.close();
           canvas.drawPath(_spikePath, _spikePaint);
           canvas.drawPath(_spikePath, _spikeBorderPaint);

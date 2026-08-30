@@ -1127,47 +1127,54 @@ class ShipMeshRenderer {
     // 4. Suit Model Details (Pauldrons, Harness, Cooling Pipes)
     switch (resolvedSuitModel) {
       case 'exo_frame':
-        // Carbon-composite articulated shoulder pauldrons
-        final pauldronPaint = Paint()..color = const Color(0xFF263238)..style = PaintingStyle.fill;
-        final pauldronBorder = Paint()..color = const Color(0xFFFFB300)..style = PaintingStyle.stroke..strokeWidth = radius * 0.04;
-        
+        // High-tech Exoskeleton framework overlaying the vibrant flight suit
+        final exoStrutPaint = Paint()
+          ..color = const Color(0xFF1E262B)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = radius * 0.05
+          ..strokeCap = StrokeCap.round;
+
+        final exoJointPaint = Paint()..color = const Color(0xFFFFB300);
+        final exoJointBorder = Paint()..color = const Color(0xFF101418)..style = PaintingStyle.stroke..strokeWidth = radius * 0.02;
+
+        // Shoulder composite articulated armor caps (sleek, letting base suit color shine)
         final leftPauldron = RRect.fromRectAndRadius(
           Rect.fromCenter(
-            center: Offset(cabinCenter.dx - radius * 0.58, cabinCenter.dy + radius * 0.58),
-            width: radius * 0.52,
-            height: radius * 0.38,
+            center: Offset(cabinCenter.dx - radius * 0.65, cabinCenter.dy + radius * 0.62),
+            width: radius * 0.38,
+            height: radius * 0.22,
           ),
-          Radius.circular(radius * 0.06),
+          Radius.circular(radius * 0.04),
         );
         final rightPauldron = RRect.fromRectAndRadius(
           Rect.fromCenter(
-            center: Offset(cabinCenter.dx + radius * 0.58, cabinCenter.dy + radius * 0.58),
-            width: radius * 0.52,
-            height: radius * 0.38,
+            center: Offset(cabinCenter.dx + radius * 0.65, cabinCenter.dy + radius * 0.62),
+            width: radius * 0.38,
+            height: radius * 0.22,
           ),
-          Radius.circular(radius * 0.06),
+          Radius.circular(radius * 0.04),
         );
-        canvas.drawRRect(leftPauldron, pauldronPaint);
-        canvas.drawRRect(leftPauldron, pauldronBorder);
-        canvas.drawRRect(rightPauldron, pauldronPaint);
-        canvas.drawRRect(rightPauldron, pauldronBorder);
 
-        // Pauldron hazard stripes
-        final stripePaint = Paint()..color = const Color(0xFFFFB300)..style = PaintingStyle.stroke..strokeWidth = radius * 0.035;
-        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.70, cabinCenter.dy + radius * 0.50), Offset(cabinCenter.dx - radius * 0.46, cabinCenter.dy + radius * 0.66), stripePaint);
-        canvas.drawLine(Offset(cabinCenter.dx + radius * 0.46, cabinCenter.dy + radius * 0.50), Offset(cabinCenter.dx + radius * 0.70, cabinCenter.dy + radius * 0.66), stripePaint);
+        canvas.drawRRect(leftPauldron, Paint()..color = const Color(0xDD1E262B));
+        canvas.drawRRect(leftPauldron, Paint()..color = const Color(0xFFFFB300)..style = PaintingStyle.stroke..strokeWidth = radius * 0.03);
+        canvas.drawRRect(rightPauldron, Paint()..color = const Color(0xDD1E262B));
+        canvas.drawRRect(rightPauldron, Paint()..color = const Color(0xFFFFB300)..style = PaintingStyle.stroke..strokeWidth = radius * 0.03);
 
-        // Heavy tactical harness straps
-        final harnessPaint = Paint()..color = const Color(0xFF1E262B)..style = PaintingStyle.stroke..strokeWidth = radius * 0.075..strokeCap = StrokeCap.round;
-        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.42, cabinCenter.dy + radius * 0.38), Offset(cabinCenter.dx + radius * 0.30, cabinCenter.dy + radius * 0.88), harnessPaint);
-        canvas.drawLine(Offset(cabinCenter.dx + radius * 0.42, cabinCenter.dy + radius * 0.38), Offset(cabinCenter.dx - radius * 0.30, cabinCenter.dy + radius * 0.88), harnessPaint);
+        // Armored hydraulic struts connecting shoulders to torso
+        canvas.drawLine(Offset(cabinCenter.dx - radius * 0.46, cabinCenter.dy + radius * 0.50), Offset(cabinCenter.dx - radius * 0.15, cabinCenter.dy + radius * 0.85), exoStrutPaint);
+        canvas.drawLine(Offset(cabinCenter.dx + radius * 0.46, cabinCenter.dy + radius * 0.50), Offset(cabinCenter.dx + radius * 0.15, cabinCenter.dy + radius * 0.85), exoStrutPaint);
 
-        // Center titanium rotary buckle
-        final bucklePaint = Paint()..color = const Color(0xFFFFB300);
-        final buckleBorder = Paint()..color = Colors.black..style = PaintingStyle.stroke..strokeWidth = radius * 0.03;
-        canvas.drawCircle(Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.62), radius * 0.12, bucklePaint);
-        canvas.drawCircle(Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.62), radius * 0.12, buckleBorder);
-        canvas.drawCircle(Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.62), radius * 0.045, Paint()..color = Colors.black);
+        // Hydraulic rotary joint pivots
+        canvas.drawCircle(Offset(cabinCenter.dx - radius * 0.46, cabinCenter.dy + radius * 0.50), radius * 0.06, exoJointPaint);
+        canvas.drawCircle(Offset(cabinCenter.dx - radius * 0.46, cabinCenter.dy + radius * 0.50), radius * 0.06, exoJointBorder);
+        canvas.drawCircle(Offset(cabinCenter.dx + radius * 0.46, cabinCenter.dy + radius * 0.50), radius * 0.06, exoJointPaint);
+        canvas.drawCircle(Offset(cabinCenter.dx + radius * 0.46, cabinCenter.dy + radius * 0.50), radius * 0.06, exoJointBorder);
+
+        // Center titanium power core / rotary buckle
+        final buckleCenter = Offset(cabinCenter.dx, cabinCenter.dy + radius * 0.65);
+        canvas.drawCircle(buckleCenter, radius * 0.12, Paint()..color = const Color(0xFF1E262B));
+        canvas.drawCircle(buckleCenter, radius * 0.12, Paint()..color = const Color(0xFFFFB300)..style = PaintingStyle.stroke..strokeWidth = radius * 0.03);
+        canvas.drawCircle(buckleCenter, radius * 0.06, Paint()..color = const Color(0xFFFFD600));
         break;
 
       case 'cryo_suit':
